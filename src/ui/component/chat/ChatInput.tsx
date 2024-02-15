@@ -106,8 +106,12 @@ function ChatButtonGroup({
 export function ChatInput() {
 	const [role, setRole] = useState<ChatRole>(ChatRole.User);
 	const [prompt, setPrompt] = useState<string>("");
-	const { requestCompletion, addMessage, currentConversation } =
-		useConversationContext();
+	const {
+		requestCompletion,
+		addMessage,
+		currentConversation,
+		lastStopReason,
+	} = useConversationContext();
 	const [isLoading, setLoading] = useState(false);
 	const onAppend = useCallback(() => {
 		setPrompt("");
@@ -135,8 +139,9 @@ export function ChatInput() {
 	) : (
 		<Stack paddingTop={2} spacing={2}>
 			{currentConversation.length > 0 &&
-				currentConversation[currentConversation.length - 1].role ==
+				currentConversation[currentConversation.length - 1].role ===
 					ChatRole.Assistant &&
+				lastStopReason === "length" &&
 				!isLoading && (
 					<Box textAlign={"center"}>
 						<Button

@@ -11,12 +11,14 @@ type ConversationData = {
 	currentConversation: ChatMessage[];
 	addMessage: (role: ChatRole, message: string) => void;
 	requestCompletion: (role?: ChatRole, message?: string) => Promise<void>;
+	lastStopReason: string;
 };
 
 const defaultData: ConversationData = {
 	currentConversation: [],
 	addMessage: (role: ChatRole, message: string) => {},
 	requestCompletion: async () => {},
+	lastStopReason: "",
 };
 
 const ConversationContext = React.createContext<ConversationData>(defaultData);
@@ -26,6 +28,7 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
 	const [conversationHistory, setConversationHistory] = React.useState<
 		ChatMessage[]
 	>([]);
+	const [lastStopReason, setLastStopReason] = React.useState<string>("init");
 	const { currentModel } = useModelContext();
 	const addMessage = (role: ChatRole, message: string) => {
 		setConversationHistory([
@@ -57,6 +60,7 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
 				messages: newConversationHistory,
 			},
 		});
+		setLastStopReason(response.stopReason);
 		setConversationHistory([
 			...newConversationHistory,
 			{
@@ -76,6 +80,7 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
 				currentConversation: conversationHistory,
 				addMessage,
 				requestCompletion,
+				lastStopReason,
 			}}
 		>
 			{props.children}
