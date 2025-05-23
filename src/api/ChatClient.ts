@@ -1,6 +1,6 @@
 import { IChatClient } from "./interface/ApiClient.interface";
 import { IHttpContext } from "./interface/HttpContext.interface";
-import { ChatResponse } from "./interface/data/common/Chat";
+import { ChatResponse, PartialChatResponse } from "./interface/data/common/Chat";
 import { ChatCompletionRequest } from "./interface/data/requests/chat/ChatRequests";
 
 export class ChatClient implements IChatClient {
@@ -16,5 +16,23 @@ export class ChatClient implements IChatClient {
 			throw Error("Failed to request completion");
 		}
 		return response.data;
+	}
+
+	public async *requestCompletionStream(
+		request: ChatCompletionRequest
+	): AsyncGenerator<PartialChatResponse> {
+		console.log("ChatClient: Starting stream request with:", request);
+		try {
+			const response = this.context.postStream<
+				ChatCompletionRequest,
+				PartialChatResponse
+			>("/chat/streamingCompletion", request);
+			for await (const chunk of response) {
+				yield chunk;
+			}
+		} catch (error) {
+			console.error("ChatClient: Error in completion stream:", error);
+			throw error;
+		}
 	}
 }

@@ -25,3 +25,9 @@ export type ChatResponse = {
     responseTokens: number,
     totalTokens: number
 }
+
+export type PartialChatResponse = {
+    data: string,
+    finishReason: string,
+    isEnd: boolean
+}

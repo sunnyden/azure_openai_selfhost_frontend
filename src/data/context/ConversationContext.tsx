@@ -54,25 +54,59 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
 			];
 			setConversationHistory(newConversationHistory);
 		}
-		const response = await chatClient.requestCompletion({
+		const response = chatClient.requestCompletionStream({
 			model: currentModel.identifier,
 			request: {
 				messages: newConversationHistory,
 			},
 		});
-		setLastStopReason(response.stopReason);
+		
+		const newMessage = {
+			role: ChatRole.Assistant,
+			content: [
+				{
+					type: ChatMessageContentType.Text,
+					text: "",
+				}
+			]
+		};
+		
+		// Add the empty message right away so the user sees a response is coming
 		setConversationHistory([
 			...newConversationHistory,
-			{
-				role: ChatRole.Assistant,
-				content: [
-					{
-						type: ChatMessageContentType.Text,
-						text: response.message,
-					},
-				],
-			},
+			newMessage,
 		]);
+		
+		let stopReason = "";
+		try {			
+			for await (const chunk of response) {				
+				// Update the message with the new data
+				newMessage.content[0].text += chunk.data;
+				
+				// Force React to re-render with the updated message
+				setConversationHistory(current => {
+					// Create a new array reference to trigger re-render
+					const updated = [...current];
+					// Replace the last message with our updated one
+					updated[updated.length - 1] = { ...newMessage };
+					return updated;
+				});
+				
+				if (!!chunk.finishReason){
+					stopReason = chunk.finishReason;
+				}
+			}
+		} catch (error) {
+			// Handle any errors in streaming
+			setConversationHistory(current => {
+				const updated = [...current];
+				// Add error info to the message if needed
+				updated[updated.length - 1].content[0].text += "\n\n[Error receiving complete response]";
+				return updated;
+			});
+		}
+		
+		setLastStopReason(stopReason);
 	};
 	return (
 		<ConversationContext.Provider

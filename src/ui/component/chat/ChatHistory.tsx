@@ -5,13 +5,14 @@ import {
 	ListItem,
 	ListItemAvatar,
 	ListItemText,
+	Box,
 } from "@mui/material";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import PersonIcon from "@mui/icons-material/Person";
 import { useConversationContext } from "../../../data/context/ConversationContext";
 import { ChatRole } from "../../../api/interface/data/common/Chat";
-import { useMemo } from "react";
+import React, { useMemo, useRef, useEffect } from "react";
 import Markdown from "react-markdown";
 import { CopyBlock, dracula } from "react-code-blocks";
 import { CodeBlockWrapper } from "./CodeBlockWrapper";
@@ -86,20 +87,32 @@ function ChatItem({ role, message }: { role: ChatRole; message: string }) {
 }
 export function ChatHistory() {
 	const { currentConversation } = useConversationContext();
+	const messagesEndRef = useRef<HTMLDivElement>(null);
+
+	const scrollToBottom = () => {
+		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+	};
+
+	useEffect(() => {
+		scrollToBottom();
+	}, [currentConversation]);
+
 	return (
-		<List sx={{ width: "100%", bgcolor: "background.paper" }}>
-			{currentConversation.map((message, index, array) => (
-				<>
-					<ChatItem
-						key={index}
-						role={message.role}
-						message={message.content[0].text || ""}
-					/>
-					{index !== array.length - 1 && (
-						<Divider variant="inset" component="li" />
-					)}
-				</>
-			))}
-		</List>
+		<Box sx={{ height: "100%", overflow: "auto", display: "flex", flexDirection: "column" }}>
+			<List sx={{ width: "100%", bgcolor: "background.paper", flexGrow: 1 }}>
+				{currentConversation.map((message, index, array) => (
+					<React.Fragment key={index}>
+						<ChatItem
+							role={message.role}
+							message={message.content[0].text || ""}
+						/>
+						{index !== array.length - 1 && (
+							<Divider variant="inset" component="li" />
+						)}
+					</React.Fragment>
+				))}
+			</List>
+			<div ref={messagesEndRef} />
+		</Box>
 	);
 }

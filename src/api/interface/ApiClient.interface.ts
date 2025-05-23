@@ -4,7 +4,7 @@ import { Model } from "./data/common/Model";
 import { ModelAssignRequest } from "./data/requests/model/ModelRequests";
 import { Transaction } from "./data/common/Transaction";
 import { ChatCompletionRequest } from "./data/requests/chat/ChatRequests";
-import { ChatResponse } from "./data/common/Chat";
+import { ChatResponse, PartialChatResponse } from "./data/common/Chat";
 
 export interface IApiClient {
 	get userClient(): IUserClient;
@@ -42,4 +42,5 @@ export interface ITransactionClient {
 
 export interface IChatClient {
 	requestCompletion(request: ChatCompletionRequest): Promise<ChatResponse>;
+	requestCompletionStream(request: ChatCompletionRequest): AsyncGenerator<PartialChatResponse>;
 }
