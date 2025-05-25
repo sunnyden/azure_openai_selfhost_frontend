@@ -10,11 +10,19 @@ import {
 	Tooltip,
 	Snackbar,
 	Alert,
+	Dialog,
+	DialogTitle,
+	DialogContent,
+	DialogActions,
+	Button,
+	TextField,
 } from "@mui/material";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import PersonIcon from "@mui/icons-material/Person";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import { useConversationContext } from "../../../data/context/ConversationContext";
 import { ChatRole, ToolInfo } from "../../../api/interface/data/common/Chat";
 import React, { useMemo, useRef, useEffect, useState } from "react";
@@ -58,10 +66,13 @@ function getBlockCode(message: string, node: any) {
 	}
 	return "";
 }
-function ChatItem({ role, message }: { role: ChatRole; message: string }) {
+function ChatItem({ role, message, messageIndex }: { role: ChatRole; message: string; messageIndex: number }) {
 	const [isHovered, setIsHovered] = useState(false);
 	const [showCopySuccess, setShowCopySuccess] = useState(false);
 	const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+	const [editDialogOpen, setEditDialogOpen] = useState(false);
+	const [editedMessage, setEditedMessage] = useState(message);
+	const { deleteMessage, updateMessage } = useConversationContext();
 
 	const userRoleText = useMemo(() => {
 		switch (role) {
@@ -119,6 +130,25 @@ function ChatItem({ role, message }: { role: ChatRole; message: string }) {
 		setShowCopySuccess(false);
 	};
 
+	const handleDeleteMessage = () => {
+		deleteMessage(messageIndex);
+	};
+
+	const handleEditMessage = () => {
+		setEditedMessage(message);
+		setEditDialogOpen(true);
+	};
+
+	const handleSaveEdit = () => {
+		updateMessage(messageIndex, editedMessage);
+		setEditDialogOpen(false);
+	};
+
+	const handleCancelEdit = () => {
+		setEditedMessage(message);
+		setEditDialogOpen(false);
+	};
+
 	return (
 		<>
 			<ListItem 
@@ -170,6 +200,8 @@ function ChatItem({ role, message }: { role: ChatRole; message: string }) {
 							backgroundColor: 'background.paper',
 							borderRadius: 1,
 							boxShadow: 1,
+							display: 'flex',
+							gap: 0.5,
 						}}
 					>
 						<Tooltip title="Copy message">
@@ -181,6 +213,29 @@ function ChatItem({ role, message }: { role: ChatRole; message: string }) {
 								}}
 							>
 								<ContentCopyIcon fontSize="small" />
+							</IconButton>
+						</Tooltip>
+						<Tooltip title="Edit message">
+							<IconButton
+								size="small"
+								onClick={handleEditMessage}
+								sx={{
+									padding: 0.5,
+								}}
+							>
+								<EditIcon fontSize="small" />
+							</IconButton>
+						</Tooltip>
+						<Tooltip title="Delete message">
+							<IconButton
+								size="small"
+								onClick={handleDeleteMessage}
+								sx={{
+									padding: 0.5,
+								}}
+								color="error"
+							>
+								<DeleteIcon fontSize="small" />
 							</IconButton>
 						</Tooltip>
 					</Box>
@@ -200,6 +255,36 @@ function ChatItem({ role, message }: { role: ChatRole; message: string }) {
 					Message copied to clipboard!
 				</Alert>
 			</Snackbar>
+			
+			{/* Edit Dialog */}
+			<Dialog 
+				open={editDialogOpen} 
+				onClose={handleCancelEdit}
+				maxWidth="md"
+				fullWidth
+			>
+				<DialogTitle>Edit Message</DialogTitle>
+				<DialogContent>
+					<TextField
+						autoFocus
+						margin="dense"
+						label="Message"
+						type="text"
+						fullWidth
+						variant="outlined"
+						multiline
+						rows={4}
+						value={editedMessage}
+						onChange={(e) => setEditedMessage(e.target.value)}
+					/>
+				</DialogContent>
+				<DialogActions>
+					<Button onClick={handleCancelEdit}>Cancel</Button>
+					<Button onClick={handleSaveEdit} variant="contained">
+						Save
+					</Button>
+				</DialogActions>
+			</Dialog>
 		</>
 	);
 }
@@ -269,6 +354,7 @@ export function ChatHistory() {
 						<ChatItem
 							role={message.role}
 							message={message.content[0].text || ""}
+							messageIndex={index}
 						/>
 						{index !== array.length - 1 && (
 							<Divider variant="inset" component="li" />

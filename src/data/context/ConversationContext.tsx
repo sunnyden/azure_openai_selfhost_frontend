@@ -17,6 +17,8 @@ type ConversationData = {
 	lastStopReason: string;
 	toolUsed: ToolInfo[];
 	usingTool: boolean;
+	deleteMessage: (messageIndex: number) => void;
+	updateMessage: (messageIndex: number, newContent: string) => void;
 };
 
 const defaultData: ConversationData = {
@@ -27,6 +29,8 @@ const defaultData: ConversationData = {
 	lastStopReason: "",
 	toolUsed: [],
 	usingTool: false,
+	deleteMessage: (messageIndex: number) => {},
+	updateMessage: (messageIndex: number, newContent: string) => {},
 };
 
 const ConversationContext = React.createContext<ConversationData>(defaultData);
@@ -36,7 +40,9 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
 	const { 
 		getCurrentConversation, 
 		updateCurrentConversation, 
-		currentConversationId 
+		currentConversationId,
+		deleteMessage,
+		updateMessage 
 	} = useConversationHistory();
 	const [toolUsed, setToolUsed] = React.useState<ToolInfo[]>([]);
 	const [usingTool, setUsingTool] = React.useState<boolean>(false);
@@ -149,6 +155,8 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
 				lastStopReason,
 				toolUsed,
 				usingTool,
+				deleteMessage,
+				updateMessage,
 			}}
 		>
 			{props.children}

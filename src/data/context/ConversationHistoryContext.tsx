@@ -18,6 +18,8 @@ interface ConversationHistoryData {
 	selectConversation: (id: string) => void;
 	updateCurrentConversation: (messages: ChatMessage[]) => void;
 	getCurrentConversation: () => ConversationItem | null;
+	deleteMessage: (messageIndex: number) => void;
+	updateMessage: (messageIndex: number, newContent: string) => void;
 }
 
 const ConversationHistoryContext = createContext<ConversationHistoryData | null>(null);
@@ -205,6 +207,46 @@ export function ConversationHistoryProvider({ children }: { children: React.Reac
 		return conversations.find(conv => conv.id === currentConversationId) || null;
 	}, [conversations, currentConversationId]);
 
+	const deleteMessage = useCallback((messageIndex: number) => {
+		if (currentConversationId === null) return;
+
+		setConversations(prev => 
+			prev.map(conv => 
+				conv.id === currentConversationId 
+					? { 
+						...conv, 
+						messages: conv.messages.filter((_, index) => index !== messageIndex), 
+						updatedAt: new Date() 
+					}
+					: conv
+			)
+		);
+	}, [currentConversationId]);
+
+	const updateMessage = useCallback((messageIndex: number, newContent: string) => {
+		if (currentConversationId === null) return;
+
+		setConversations(prev => 
+			prev.map(conv => 
+				conv.id === currentConversationId 
+					? { 
+						...conv, 
+						messages: conv.messages.map((msg, index) => 
+							index === messageIndex ? { 
+								...msg, 
+								content: [{ 
+									...msg.content[0], 
+									text: newContent 
+								}] 
+							} : msg
+						), 
+						updatedAt: new Date() 
+					}
+					: conv
+			)
+		);
+	}, [currentConversationId]);
+
 	const value: ConversationHistoryData = {
 		conversations,
 		currentConversationId,
@@ -214,6 +256,8 @@ export function ConversationHistoryProvider({ children }: { children: React.Reac
 		selectConversation,
 		updateCurrentConversation,
 		getCurrentConversation,
+		deleteMessage,
+		updateMessage,
 	};
 
 	return (
