@@ -47,8 +47,7 @@ export class HttpContext implements IHttpContext {
       // Important: for streaming responses
       cache: "no-store",
       // Ensure we don't buffer the response
-      credentials: "same-origin",
-      keepalive: true
+      credentials: "same-origin"
     });
     
     if (!response.ok) {
