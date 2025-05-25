@@ -17,6 +17,7 @@ import {
 	Button,
 	TextField,
 } from "@mui/material";
+import Editor from "@monaco-editor/react";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import PersonIcon from "@mui/icons-material/Person";
@@ -260,23 +261,30 @@ function ChatItem({ role, message, messageIndex }: { role: ChatRole; message: st
 			<Dialog 
 				open={editDialogOpen} 
 				onClose={handleCancelEdit}
-				maxWidth="md"
+				maxWidth="lg"
 				fullWidth
 			>
 				<DialogTitle>Edit Message</DialogTitle>
 				<DialogContent>
-					<TextField
-						autoFocus
-						margin="dense"
-						label="Message"
-						type="text"
-						fullWidth
-						variant="outlined"
-						multiline
-						rows={4}
-						value={editedMessage}
-						onChange={(e) => setEditedMessage(e.target.value)}
-					/>
+					<Box sx={{ height: 400, border: '1px solid #e0e0e0', borderRadius: 1, mt: 1 }}>
+						<Editor
+							height="400px"
+							defaultLanguage="markdown"
+							value={editedMessage}
+							onChange={(value) => setEditedMessage(value || '')}
+							options={{
+								minimap: { enabled: false },
+								wordWrap: 'on',
+								lineNumbers: 'on',
+								scrollBeyondLastLine: false,
+								automaticLayout: true,
+								fontSize: 14,
+								lineHeight: 20,
+								padding: { top: 10, bottom: 10 }
+							}}
+							theme="vs-light"
+						/>
+					</Box>
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={handleCancelEdit}>Cancel</Button>
