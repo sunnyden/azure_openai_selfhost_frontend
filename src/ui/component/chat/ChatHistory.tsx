@@ -6,13 +6,18 @@ import {
 	ListItemAvatar,
 	ListItemText,
 	Box,
+	IconButton,
+	Tooltip,
+	Snackbar,
+	Alert,
 } from "@mui/material";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
 import CampaignIcon from "@mui/icons-material/Campaign";
 import PersonIcon from "@mui/icons-material/Person";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useConversationContext } from "../../../data/context/ConversationContext";
 import { ChatRole, ToolInfo } from "../../../api/interface/data/common/Chat";
-import React, { useMemo, useRef, useEffect } from "react";
+import React, { useMemo, useRef, useEffect, useState } from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeKatex from "rehype-katex";
@@ -54,6 +59,10 @@ function getBlockCode(message: string, node: any) {
 	return "";
 }
 function ChatItem({ role, message }: { role: ChatRole; message: string }) {
+	const [isHovered, setIsHovered] = useState(false);
+	const [showCopySuccess, setShowCopySuccess] = useState(false);
+	const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+
 	const userRoleText = useMemo(() => {
 		switch (role) {
 			case ChatRole.Assistant:
@@ -66,35 +75,132 @@ function ChatItem({ role, message }: { role: ChatRole; message: string }) {
 				return "Unknown";
 		}
 	}, [role]);
+
+	const handleCopyToClipboard = async () => {
+		try {
+			await navigator.clipboard.writeText(message);
+			setShowCopySuccess(true);
+		} catch (err) {
+			console.error('Failed to copy text: ', err);
+			// Fallback for older browsers
+			const textArea = document.createElement('textarea');
+			textArea.value = message;
+			textArea.style.position = 'fixed';
+			textArea.style.left = '-999999px';
+			textArea.style.top = '-999999px';
+			document.body.appendChild(textArea);
+			textArea.focus();
+			textArea.select();
+			try {
+				document.execCommand('copy');
+				setShowCopySuccess(true);
+			} catch (err) {
+				console.error('Fallback copy failed: ', err);
+			}
+			document.body.removeChild(textArea);
+		}
+	};
+
+	const handleTouchStart = () => {
+		const timer = setTimeout(() => {
+			handleCopyToClipboard();
+		}, 500); // 500ms for long press
+		setLongPressTimer(timer);
+	};
+
+	const handleTouchEnd = () => {
+		if (longPressTimer) {
+			clearTimeout(longPressTimer);
+			setLongPressTimer(null);
+		}
+	};
+
+	const handleCloseCopySuccess = () => {
+		setShowCopySuccess(false);
+	};
+
 	return (
-		<ListItem alignItems="flex-start">
-			<ListItemAvatar>
-				<Avatar alt={role}>{renderAvatar(role)}</Avatar>
-			</ListItemAvatar>
-			<ListItemText
-				primary={userRoleText}
-				secondary={
-					<Markdown
-						remarkPlugins={[remarkGfm, remarkMath]}
-						rehypePlugins={[rehypeKatex]}
-						components={{
-							code: ({ node, ...props }) => {
-								if (isBlockCode(message, node)) {
-									return (
-										<CodeBlockWrapper
-											code={props.children as string}
-										/>
-									);
-								}
-								return <code>{props.children}</code>;
-							},
+		<>
+			<ListItem 
+				alignItems="flex-start"
+				onMouseEnter={() => setIsHovered(true)}
+				onMouseLeave={() => setIsHovered(false)}
+				onTouchStart={handleTouchStart}
+				onTouchEnd={handleTouchEnd}
+				onTouchCancel={handleTouchEnd}
+				sx={{ 
+					position: 'relative',
+					'&:hover': {
+						backgroundColor: 'action.hover',
+					}
+				}}
+			>
+				<ListItemAvatar>
+					<Avatar alt={role}>{renderAvatar(role)}</Avatar>
+				</ListItemAvatar>
+				<ListItemText
+					primary={userRoleText}
+					secondary={
+						<Markdown
+							remarkPlugins={[remarkGfm, remarkMath]}
+							rehypePlugins={[rehypeKatex]}
+							components={{
+								code: ({ node, ...props }) => {
+									if (isBlockCode(message, node)) {
+										return (
+											<CodeBlockWrapper
+												code={props.children as string}
+											/>
+										);
+									}
+									return <code>{props.children}</code>;
+								},
+							}}
+						>
+							{message}
+						</Markdown>
+					}
+				/>
+				{isHovered && (
+					<Box
+						sx={{
+							position: 'absolute',
+							top: 8,
+							right: 8,
+							backgroundColor: 'background.paper',
+							borderRadius: 1,
+							boxShadow: 1,
 						}}
 					>
-						{message}
-					</Markdown>
-				}
-			/>
-		</ListItem>
+						<Tooltip title="Copy message">
+							<IconButton
+								size="small"
+								onClick={handleCopyToClipboard}
+								sx={{
+									padding: 0.5,
+								}}
+							>
+								<ContentCopyIcon fontSize="small" />
+							</IconButton>
+						</Tooltip>
+					</Box>
+				)}
+			</ListItem>
+			<Snackbar
+				open={showCopySuccess}
+				autoHideDuration={2000}
+				onClose={handleCloseCopySuccess}
+				anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+			>
+				<Alert 
+					onClose={handleCloseCopySuccess} 
+					severity="success" 
+					sx={{ width: '100%' }}
+				>
+					Message copied to clipboard!
+				</Alert>
+			</Snackbar>
+		</>
 	);
 }
 

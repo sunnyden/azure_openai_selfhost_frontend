@@ -18,9 +18,10 @@ import {
 } from "@mui/material";
 import React, { useCallback, useState } from "react";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import BorderColorIcon from "@mui/icons-material/BorderColor";
+import ClearIcon from "@mui/icons-material/Clear";
 import { ChatRole } from "../../../api/interface/data/common/Chat";
 import { useConversationContext } from "../../../data/context/ConversationContext";
-import BorderColorIcon from "@mui/icons-material/BorderColor";
 function ChatButtonGroup({
 	onSend,
 	onAppend,
@@ -109,6 +110,7 @@ export function ChatInput() {
 	const {
 		requestCompletion,
 		addMessage,
+		clearConversation,
 		currentConversation,
 		lastStopReason,
 	} = useConversationContext();
@@ -132,27 +134,40 @@ export function ChatInput() {
 		} catch (e) {}
 		setLoading(false);
 	}, [requestCompletion, setLoading]);
+
+	const handleClearConversation = useCallback(() => {
+		clearConversation();
+	}, [clearConversation]);
 	return isLoading ? (
 		<Stack alignItems={"center"} padding={2} spacing={2}>
 			<CircularProgress />
 		</Stack>
 	) : (
 		<Stack paddingTop={2} spacing={2}>
-			{currentConversation.length > 0 &&
-				currentConversation[currentConversation.length - 1].role ===
-					ChatRole.Assistant &&
-				lastStopReason === "length" &&
-				!isLoading && (
-					<Box textAlign={"center"}>
-						<Button
-							variant="outlined"
-							startIcon={<BorderColorIcon />}
-							onClick={continueGenerate}
-						>
-							Continue Generate
-						</Button>
-					</Box>
-				)}
+			{currentConversation.length > 0 && (
+				<Box textAlign={"center"} sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+					{currentConversation[currentConversation.length - 1].role ===
+						ChatRole.Assistant &&
+						lastStopReason === "length" &&
+						!isLoading && (
+							<Button
+								variant="outlined"
+								startIcon={<BorderColorIcon />}
+								onClick={continueGenerate}
+							>
+								Continue Generate
+							</Button>
+						)}
+					<Button
+						variant="outlined"
+						color="secondary"
+						startIcon={<ClearIcon />}
+						onClick={handleClearConversation}
+					>
+						Clear Conversation
+					</Button>
+				</Box>
+			)}
 			<Divider variant="inset" />
 			<Box>
 				<FormControl>

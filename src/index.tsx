@@ -10,6 +10,7 @@ import reportWebVitals from "./reportWebVitals";
 import { UserContextProvider } from "./data/context/UserContext";
 import { ModelProvider } from "./data/context/ModelContext";
 import { ConversationProvider } from "./data/context/ConversationContext";
+import { ConversationHistoryProvider } from "./data/context/ConversationHistoryContext";
 
 const root = ReactDOM.createRoot(
 	document.getElementById("root") as HTMLElement
@@ -18,9 +19,11 @@ root.render(
 	<React.StrictMode>
 		<UserContextProvider>
 			<ModelProvider>
-				<ConversationProvider>
-					<App />
-				</ConversationProvider>
+				<ConversationHistoryProvider>
+					<ConversationProvider>
+						<App />
+					</ConversationProvider>
+				</ConversationHistoryProvider>
 			</ModelProvider>
 		</UserContextProvider>
 	</React.StrictMode>

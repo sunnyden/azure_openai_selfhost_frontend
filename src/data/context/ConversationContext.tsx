@@ -7,11 +7,13 @@ import {
 } from "../../api/interface/data/common/Chat";
 import { useApiClient } from "./useApiClient";
 import { useModelContext } from "./ModelContext";
+import { useConversationHistory } from "./ConversationHistoryContext";
 
 type ConversationData = {
 	currentConversation: ChatMessage[];
 	addMessage: (role: ChatRole, message: string) => void;
 	requestCompletion: (role?: ChatRole, message?: string) => Promise<void>;
+	clearConversation: () => void;
 	lastStopReason: string;
 	toolUsed: ToolInfo[];
 	usingTool: boolean;
@@ -21,6 +23,7 @@ const defaultData: ConversationData = {
 	currentConversation: [],
 	addMessage: (role: ChatRole, message: string) => {},
 	requestCompletion: async () => {},
+	clearConversation: () => {},
 	lastStopReason: "",
 	toolUsed: [],
 	usingTool: false,
@@ -30,38 +33,54 @@ const ConversationContext = React.createContext<ConversationData>(defaultData);
 
 export function ConversationProvider(props: { children: React.ReactNode }) {
 	const { chatClient } = useApiClient();
-	const [conversationHistory, setConversationHistory] = React.useState<
-		ChatMessage[]
-	>([]);
+	const { 
+		getCurrentConversation, 
+		updateCurrentConversation, 
+		currentConversationId 
+	} = useConversationHistory();
 	const [toolUsed, setToolUsed] = React.useState<ToolInfo[]>([]);
 	const [usingTool, setUsingTool] = React.useState<boolean>(false);
 	const [lastStopReason, setLastStopReason] = React.useState<string>("init");
 	const { currentModel } = useModelContext();
+
+	// Get current conversation messages from conversation history
+	const currentConversation = getCurrentConversation()?.messages || [];
+
 	const addMessage = (role: ChatRole, message: string) => {
-		setConversationHistory([
-			...conversationHistory,
-			{
-				role,
-				content: [{ type: ChatMessageContentType.Text, text: message }],
-			},
-		]);
+		const newMessage: ChatMessage = {
+			role,
+			content: [{ type: ChatMessageContentType.Text, text: message }],
+		};
+		const updatedMessages = [...currentConversation, newMessage];
+		updateCurrentConversation(updatedMessages);
 	};
+
+	const clearConversation = () => {
+		if (currentConversationId) {
+			updateCurrentConversation([]);
+		}
+	};
+
 	const requestCompletion = async (role?: ChatRole, message?: string) => {
 		if (!currentModel) throw new Error("No model selected");
+		
+		// Create a new conversation if none exists
+		if (!currentConversationId) {
+			throw new Error("No current conversation ID found");
+		}
+
 		setToolUsed([]);
 		setUsingTool(false);
-		let newConversationHistory = conversationHistory;
+		let newConversationHistory = currentConversation;
 		if (role && message) {
-			newConversationHistory = [
-				...conversationHistory,
-				{
-					role,
-					content: [
-						{ type: ChatMessageContentType.Text, text: message },
-					],
-				},
-			];
-			setConversationHistory(newConversationHistory);
+			const userMessage: ChatMessage = {
+				role,
+				content: [
+					{ type: ChatMessageContentType.Text, text: message },
+				],
+			};
+			newConversationHistory = [...currentConversation, userMessage];
+			updateCurrentConversation(newConversationHistory);
 		}
 		const response = chatClient.requestCompletionStream({
 			model: currentModel.identifier,
@@ -70,7 +89,7 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
 			},
 		});
 
-		const newMessage = {
+		const newMessage: ChatMessage = {
 			role: ChatRole.Assistant,
 			content: [
 				{
@@ -81,7 +100,8 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
 		};
 
 		// Add the empty message right away so the user sees a response is coming
-		setConversationHistory([...newConversationHistory, newMessage]);
+		const messagesWithResponse = [...newConversationHistory, newMessage];
+		updateCurrentConversation(messagesWithResponse);
 
 		let stopReason = "";
 		try {
@@ -98,17 +118,13 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
 				} else if (chunk.data.length > 0) {
 					setUsingTool(false);
 				}
+
 				// Update the message with the new data
 				newMessage.content[0].text += chunk.data;
 
-				// Force React to re-render with the updated message
-				setConversationHistory((current) => {
-					// Create a new array reference to trigger re-render
-					const updated = [...current];
-					// Replace the last message with our updated one
-					updated[updated.length - 1] = { ...newMessage };
-					return updated;
-				});
+				// Update the conversation in history
+				const updatedMessages = [...newConversationHistory, { ...newMessage }];
+				updateCurrentConversation(updatedMessages);
 
 				if (!!chunk.finishReason) {
 					stopReason = chunk.finishReason;
@@ -116,13 +132,9 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
 			}
 		} catch (error) {
 			// Handle any errors in streaming
-			setConversationHistory((current) => {
-				const updated = [...current];
-				// Add error info to the message if needed
-				updated[updated.length - 1].content[0].text +=
-					"\n\n[Error receiving complete response]";
-				return updated;
-			});
+			newMessage.content[0].text += "\n\n[Error receiving complete response]";
+			const updatedMessages = [...newConversationHistory, { ...newMessage }];
+			updateCurrentConversation(updatedMessages);
 		}
 
 		setLastStopReason(stopReason);
@@ -130,9 +142,10 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
 	return (
 		<ConversationContext.Provider
 			value={{
-				currentConversation: conversationHistory,
+				currentConversation,
 				addMessage,
 				requestCompletion,
+				clearConversation,
 				lastStopReason,
 				toolUsed,
 				usingTool,
