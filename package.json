@@ -29,7 +29,8 @@
     "remark-gfm": "^4.0.1",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
-  },  "scripts": {
+  },
+  "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
@@ -55,5 +56,9 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "https://chat.hq.gd"
+  "proxy": "https://chat.hq.gd",
+  "devDependencies": {
+    "@craco/craco": "^7.1.0",
+    "monaco-editor-webpack-plugin": "^7.1.0"
+  }
 }
