@@ -23,6 +23,7 @@ import {
 	Edit as EditIcon,
 	Close as CloseIcon,
 	Chat as ChatIcon,
+	Assessment as AssessmentIcon,
 } from "@mui/icons-material";
 import { useConversationHistory } from "../../data/context/ConversationHistoryContext";
 import { isElectron } from "../../utils/electronUtils";
@@ -30,11 +31,13 @@ import { isElectron } from "../../utils/electronUtils";
 interface ConversationSidePanelProps {
 	open: boolean;
 	onClose: () => void;
+	onNavigateToUsage: () => void;
 }
 
 export function ConversationSidePanel({
 	open,
 	onClose,
+	onNavigateToUsage,
 }: ConversationSidePanelProps) {
 	const {
 		conversations,
@@ -159,7 +162,6 @@ export function ConversationSidePanel({
 						<CloseIcon />
 					</IconButton>
 				</Box>
-
 				<Box sx={{ px: 2, pb: 2 }}>
 					<Button
 						variant="contained"
@@ -171,9 +173,7 @@ export function ConversationSidePanel({
 						New Conversation
 					</Button>
 				</Box>
-
-				<Divider />
-
+				<Divider />{" "}
 				<List sx={{ flex: 1, overflow: "auto" }}>
 					{conversations.length === 0 ? (
 						<Box sx={{ p: 3, textAlign: "center" }}>
@@ -297,6 +297,19 @@ export function ConversationSidePanel({
 						))
 					)}
 				</List>
+				{/* Usage Analytics Button */}
+				<Box sx={{ p: 2, pt: 0 }}>
+					<Divider sx={{ mb: 2 }} />
+					<Button
+						variant="outlined"
+						fullWidth
+						startIcon={<AssessmentIcon />}
+						onClick={onNavigateToUsage}
+						size="small"
+					>
+						View Usage Analytics
+					</Button>
+				</Box>
 			</Drawer>{" "}
 			{/* Delete Confirmation Dialog */}
 			<Dialog

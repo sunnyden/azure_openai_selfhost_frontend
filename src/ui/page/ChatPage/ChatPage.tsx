@@ -19,12 +19,14 @@ import { ChatInput } from "../../component/chat/ChatInput";
 import { ConversationSidePanel } from "../../component/ConversationSidePanel";
 import { WindowControls } from "../../component/window/WindowControls";
 import { DraggableArea } from "../../component/window/DraggableArea";
+import { UsagePage } from "../UsagePage/UsagePage";
 import { useModelContext } from "../../../data/context/ModelContext";
 import { useCallback, useState } from "react";
 
 export function ChatPage() {
 	const { currentModel, modelList, setCurrentModel } = useModelContext();
 	const [sidebarOpen, setSidebarOpen] = useState(false);
+	const [currentPage, setCurrentPage] = useState<"chat" | "usage">("chat");
 
 	const onModelChange = useCallback(
 		(e: SelectChangeEvent) => {
@@ -39,6 +41,20 @@ export function ChatPage() {
 	const handleSidebarToggle = () => {
 		setSidebarOpen(!sidebarOpen);
 	};
+
+	const handleNavigateToUsage = () => {
+		setCurrentPage("usage");
+		setSidebarOpen(false);
+	};
+
+	const handleBackToChat = () => {
+		setCurrentPage("chat");
+	};
+
+	// Show usage page if that's the current page
+	if (currentPage === "usage") {
+		return <UsagePage onBack={handleBackToChat} />;
+	}
 
 	return modelList.length > 0 ? (
 		<Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
@@ -103,7 +119,6 @@ export function ChatPage() {
 					<WindowControls />
 				</Toolbar>
 			</AppBar>
-
 			{/* Main Content */}
 			<Container
 				maxWidth={false}
@@ -119,12 +134,12 @@ export function ChatPage() {
 						<ChatInput />
 					</Box>
 				</Stack>
-			</Container>
-
+			</Container>{" "}
 			{/* Side Panel */}
 			<ConversationSidePanel
 				open={sidebarOpen}
 				onClose={() => setSidebarOpen(false)}
+				onNavigateToUsage={handleNavigateToUsage}
 			/>
 		</Box>
 	) : (
