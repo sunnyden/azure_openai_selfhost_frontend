@@ -5,8 +5,6 @@ import {
 	MenuItem,
 	Select,
 	Stack,
-	Toolbar,
-	Typography,
 	IconButton,
 	Tooltip,
 	Snackbar,
@@ -55,6 +53,7 @@ export const CodeBlockWrapper = memo(
 		);
 		const [copySuccess, setCopySuccess] = useState(false);
 		const [userOverridden, setUserOverridden] = useState(false);
+		const [isHovered, setIsHovered] = useState(false);
 
 		// Calculate auto height based on number of lines
 		const calculateHeight = useMemo(() => {
@@ -175,36 +174,65 @@ export const CodeBlockWrapper = memo(
 			setLanguage(e.target.value);
 			setUserOverridden(true);
 		}, []);
+
+		const handleMouseEnter = useCallback(() => {
+			setIsHovered(true);
+		}, []);
+
+		const handleMouseLeave = useCallback(() => {
+			setIsHovered(false);
+		}, []);
 		return (
-			<Stack className="code-block-wrapper" style={stackStyle}>
-				<Toolbar>
-					<Typography variant="h6" noWrap sx={typographySx}>
-						Code
-					</Typography>
-					<Box minWidth={100} sx={boxSx}>
-						{" "}
-						<FormControl fullWidth>
-							<InputLabel id="code-type-label">
-								Language
-							</InputLabel>{" "}
-							<Select
-								labelId="code-type-label"
-								value={language}
-								label="Language"
-								onChange={handleLanguageChange}
-							>
-								{languageOptions}
-							</Select>
-						</FormControl>
-					</Box>
-					<Tooltip title="Copy code">
-						<IconButton onClick={handleCopy} color="primary">
-							<ContentCopy />
-						</IconButton>
-					</Tooltip>
-				</Toolbar>{" "}
-				<Box sx={editorBoxSx}>
-					{" "}
+			<Stack
+				className="code-block-wrapper"
+				onMouseEnter={handleMouseEnter}
+				onMouseLeave={handleMouseLeave}
+			>
+				<Box sx={{ ...editorBoxSx, position: "relative" }}>
+					{isHovered && (
+						<Box
+							sx={{
+								position: "absolute",
+								top: 8,
+								right: 15,
+								zIndex: 10,
+								display: "flex",
+								gap: 1,
+								alignItems: "center",
+								backgroundColor: "rgba(255, 255, 255, 0.9)",
+								borderRadius: 1,
+								padding: "4px 8px",
+								backdropFilter: "blur(4px)",
+								boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+							}}
+						>
+							<Box minWidth={100}>
+								<FormControl fullWidth size="small">
+									<InputLabel id="code-type-label">
+										Language
+									</InputLabel>
+									<Select
+										labelId="code-type-label"
+										value={language}
+										label="Language"
+										onChange={handleLanguageChange}
+										sx={{ minWidth: 100 }}
+									>
+										{languageOptions}
+									</Select>
+								</FormControl>
+							</Box>
+							<Tooltip title="Copy code">
+								<IconButton
+									onClick={handleCopy}
+									color="primary"
+									size="small"
+								>
+									<ContentCopy />
+								</IconButton>
+							</Tooltip>
+						</Box>
+					)}
 					<Editor
 						height={`${calculateHeight}px`}
 						language={language}
