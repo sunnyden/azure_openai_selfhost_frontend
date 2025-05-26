@@ -2,6 +2,44 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Desktop App
+
+This project includes an Electron-based desktop application that loads https://chat.hq.gd as a native desktop app.
+
+### Quick Start for Desktop App
+
+1. **Run the desktop app:**
+   ```bash
+   # Option 1: Use the batch script (Windows)
+   start-desktop-app.bat
+   
+   # Option 2: Manual command
+   cd desktop-app
+   npm run start
+   ```
+
+2. **Build for distribution:**
+   ```bash
+   # Option 1: Use the batch script (Windows)
+   build-desktop-app.bat
+   
+   # Option 2: Manual command
+   cd desktop-app
+   npm run dist
+   ```
+
+### Desktop App Features
+
+- Native desktop application using Electron
+- TypeScript support
+- Loads https://chat.hq.gd in a secure, isolated window
+- Cross-platform support (Windows, macOS, Linux)
+- Custom menu bar with standard shortcuts
+- External links open in default browser
+- Secure content loading with context isolation
+
+For more details, see [desktop-app/README.md](desktop-app/README.md).
+
 ## Available Scripts
 
 In the project directory, you can run:
