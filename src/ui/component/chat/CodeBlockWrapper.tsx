@@ -54,6 +54,7 @@ export const CodeBlockWrapper = memo(
 			props.detectedLanguage || "plaintext"
 		);
 		const [copySuccess, setCopySuccess] = useState(false);
+		const [userOverridden, setUserOverridden] = useState(false);
 
 		// Calculate auto height based on number of lines
 		const calculateHeight = useMemo(() => {
@@ -66,14 +67,21 @@ export const CodeBlockWrapper = memo(
 			const calculatedHeight = lineCount * lineHeight + padding;
 
 			return Math.min(Math.max(calculatedHeight, minHeight), maxHeight);
-		}, [props.code]);
-
-		// Update language when detectedLanguage prop changes
+		}, [props.code]); // Update language when detectedLanguage prop changes, but only if user hasn't overridden
 		useEffect(() => {
-			if (props.detectedLanguage && props.detectedLanguage !== language) {
+			if (
+				props.detectedLanguage &&
+				props.detectedLanguage !== language &&
+				!userOverridden
+			) {
 				setLanguage(props.detectedLanguage);
 			}
-		}, [props.detectedLanguage, language]);
+		}, [props.detectedLanguage, language, userOverridden]);
+
+		// Reset user override when code changes (new code block)
+		useEffect(() => {
+			setUserOverridden(false);
+		}, [props.code]);
 
 		// Memoize all style objects to prevent re-renders
 		const stackStyle = useMemo(
@@ -163,9 +171,9 @@ export const CodeBlockWrapper = memo(
 		const handleCloseSnackbar = useCallback(() => {
 			setCopySuccess(false);
 		}, []);
-
 		const handleLanguageChange = useCallback((e: any) => {
 			setLanguage(e.target.value);
+			setUserOverridden(true);
 		}, []);
 		return (
 			<Stack className="code-block-wrapper" style={stackStyle}>

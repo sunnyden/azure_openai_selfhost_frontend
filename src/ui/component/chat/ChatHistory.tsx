@@ -131,6 +131,12 @@ const ChatItem = memo(function ChatItem({
 	const [editedMessage, setEditedMessage] = useState(message);
 	const { deleteMessage, updateMessage } = useConversationContext();
 
+	// Use a ref to store the current message without triggering re-renders
+	const messageRef = useRef(message);
+	useEffect(() => {
+		messageRef.current = message;
+	}, [message]);
+
 	const userRoleText = useMemo(() => {
 		switch (role) {
 			case ChatRole.Assistant:
@@ -142,18 +148,25 @@ const ChatItem = memo(function ChatItem({
 			default:
 				return "Unknown";
 		}
-	}, [role]); // Memoize the Markdown components to prevent unnecessary re-renders
+	}, [role]);
+
+	// Memoize the Markdown components with a stable code component
+	// Use messageRef to avoid dependency on message prop
 	const markdownComponents = useMemo(
 		() => ({
 			code: ({ node, ...props }: any) => {
-				if (isBlockCode(message, node)) {
+				const currentMessage = messageRef.current;
+
+				if (isBlockCode(currentMessage, node)) {
 					const detectedLanguage = detectLanguageFromMessage(
-						message,
+						currentMessage,
 						node
 					);
+					const code = props.children as string;
+
 					return (
 						<CodeBlockWrapper
-							code={props.children as string}
+							code={code}
 							detectedLanguage={detectedLanguage}
 						/>
 					);
@@ -161,7 +174,7 @@ const ChatItem = memo(function ChatItem({
 				return <code>{props.children}</code>;
 			},
 		}),
-		[message]
+		[] // No dependencies - keeps the component stable
 	);
 	// Memoize plugins to prevent recreation
 	const remarkPlugins = useMemo(() => [remarkGfm, remarkMath], []);
