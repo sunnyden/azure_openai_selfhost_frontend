@@ -4,26 +4,28 @@ This project was bootstrapped with [Create React App](https://github.com/faceboo
 
 ## Desktop App
 
-This project includes an Electron-based desktop application that loads https://chat.hq.gd as a native desktop app.
+This project includes an Electron-based desktop application that can run in development mode (loading from localhost:3000) or production mode (loading from https://chat.hq.gd).
 
 ### Quick Start for Desktop App
 
-1. **Run the desktop app:**
+1. **Run in development mode (with automatic React dev server):**
    ```bash
-   # Option 1: Use the batch script (Windows)
-   start-desktop-app.bat
-   
-   # Option 2: Manual command
+   npm run electron
+   # or manually:
+   cd desktop-app
+   npm run dev
+   ```
+
+2. **Run in production mode:**
+   ```bash
    cd desktop-app
    npm run start
    ```
 
-2. **Build for distribution:**
+3. **Build for distribution:**
    ```bash
-   # Option 1: Use the batch script (Windows)
-   build-desktop-app.bat
-   
-   # Option 2: Manual command
+   npm run electron:build
+   # or manually:
    cd desktop-app
    npm run dist
    ```

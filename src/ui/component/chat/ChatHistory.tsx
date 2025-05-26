@@ -40,6 +40,7 @@ import {
 	WeiboTool,
 } from "./Tools";
 import remarkMath from "./remarkMath";
+import { isElectron } from "../../../utils/electronUtils";
 function renderAvatar(role: ChatRole) {
 	switch (role) {
 		case ChatRole.Assistant:
@@ -67,10 +68,20 @@ function getBlockCode(message: string, node: any) {
 	}
 	return "";
 }
-function ChatItem({ role, message, messageIndex }: { role: ChatRole; message: string; messageIndex: number }) {
+function ChatItem({
+	role,
+	message,
+	messageIndex,
+}: {
+	role: ChatRole;
+	message: string;
+	messageIndex: number;
+}) {
 	const [isHovered, setIsHovered] = useState(false);
 	const [showCopySuccess, setShowCopySuccess] = useState(false);
-	const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(null);
+	const [longPressTimer, setLongPressTimer] = useState<NodeJS.Timeout | null>(
+		null
+	);
 	const [editDialogOpen, setEditDialogOpen] = useState(false);
 	const [editedMessage, setEditedMessage] = useState(message);
 	const { deleteMessage, updateMessage } = useConversationContext();
@@ -93,21 +104,21 @@ function ChatItem({ role, message, messageIndex }: { role: ChatRole; message: st
 			await navigator.clipboard.writeText(message);
 			setShowCopySuccess(true);
 		} catch (err) {
-			console.error('Failed to copy text: ', err);
+			console.error("Failed to copy text: ", err);
 			// Fallback for older browsers
-			const textArea = document.createElement('textarea');
+			const textArea = document.createElement("textarea");
 			textArea.value = message;
-			textArea.style.position = 'fixed';
-			textArea.style.left = '-999999px';
-			textArea.style.top = '-999999px';
+			textArea.style.position = "fixed";
+			textArea.style.left = "-999999px";
+			textArea.style.top = "-999999px";
 			document.body.appendChild(textArea);
 			textArea.focus();
 			textArea.select();
 			try {
-				document.execCommand('copy');
+				document.execCommand("copy");
 				setShowCopySuccess(true);
 			} catch (err) {
-				console.error('Fallback copy failed: ', err);
+				console.error("Fallback copy failed: ", err);
 			}
 			document.body.removeChild(textArea);
 		}
@@ -152,18 +163,18 @@ function ChatItem({ role, message, messageIndex }: { role: ChatRole; message: st
 
 	return (
 		<>
-			<ListItem 
+			<ListItem
 				alignItems="flex-start"
 				onMouseEnter={() => setIsHovered(true)}
 				onMouseLeave={() => setIsHovered(false)}
 				onTouchStart={handleTouchStart}
 				onTouchEnd={handleTouchEnd}
 				onTouchCancel={handleTouchEnd}
-				sx={{ 
-					position: 'relative',
-					'&:hover': {
-						backgroundColor: 'action.hover',
-					}
+				sx={{
+					position: "relative",
+					"&:hover": {
+						backgroundColor: "action.hover",
+					},
 				}}
 			>
 				<ListItemAvatar>
@@ -195,13 +206,13 @@ function ChatItem({ role, message, messageIndex }: { role: ChatRole; message: st
 				{isHovered && (
 					<Box
 						sx={{
-							position: 'absolute',
+							position: "absolute",
 							top: 8,
 							right: 8,
-							backgroundColor: 'background.paper',
+							backgroundColor: "background.paper",
 							borderRadius: 1,
 							boxShadow: 1,
-							display: 'flex',
+							display: "flex",
 							gap: 0.5,
 						}}
 					>
@@ -241,46 +252,68 @@ function ChatItem({ role, message, messageIndex }: { role: ChatRole; message: st
 						</Tooltip>
 					</Box>
 				)}
-			</ListItem>
+			</ListItem>{" "}
 			<Snackbar
 				open={showCopySuccess}
 				autoHideDuration={2000}
 				onClose={handleCloseCopySuccess}
-				anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+				anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+				sx={{
+					// Ensure snackbar content is not draggable in Electron
+					...(isElectron() && {
+						"& .MuiSnackbar-root": {
+							WebkitAppRegion: "no-drag",
+						},
+					}),
+				}}
 			>
-				<Alert 
-					onClose={handleCloseCopySuccess} 
-					severity="success" 
-					sx={{ width: '100%' }}
+				<Alert
+					onClose={handleCloseCopySuccess}
+					severity="success"
+					sx={{ width: "100%" }}
 				>
 					Message copied to clipboard!
 				</Alert>
 			</Snackbar>
-			
 			{/* Edit Dialog */}
-			<Dialog 
-				open={editDialogOpen} 
+			<Dialog
+				open={editDialogOpen}
 				onClose={handleCancelEdit}
 				maxWidth="lg"
 				fullWidth
+				sx={{
+					// Ensure dialog content is not draggable in Electron
+					...(isElectron() && {
+						"& .MuiDialog-paper": {
+							WebkitAppRegion: "no-drag",
+						},
+					}),
+				}}
 			>
 				<DialogTitle>Edit Message</DialogTitle>
 				<DialogContent>
-					<Box sx={{ height: 400, border: '1px solid #e0e0e0', borderRadius: 1, mt: 1 }}>
+					<Box
+						sx={{
+							height: 400,
+							border: "1px solid #e0e0e0",
+							borderRadius: 1,
+							mt: 1,
+						}}
+					>
 						<Editor
 							height="400px"
 							defaultLanguage="markdown"
 							value={editedMessage}
-							onChange={(value) => setEditedMessage(value || '')}
+							onChange={(value) => setEditedMessage(value || "")}
 							options={{
 								minimap: { enabled: false },
-								wordWrap: 'on',
-								lineNumbers: 'on',
+								wordWrap: "on",
+								lineNumbers: "on",
 								scrollBeyondLastLine: false,
 								automaticLayout: true,
 								fontSize: 14,
 								lineHeight: 20,
-								padding: { top: 10, bottom: 10 }
+								padding: { top: 10, bottom: 10 },
 							}}
 							theme="vs-light"
 						/>

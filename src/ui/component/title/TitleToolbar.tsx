@@ -12,6 +12,9 @@ import {
 } from "@mui/material";
 import { useState } from "react";
 import { useUserContext } from "../../../data/context/UserContext";
+import { WindowControls } from "../window/WindowControls";
+import { DraggableArea } from "../window/DraggableArea";
+import { isElectron } from "../../../utils/electronUtils";
 function stringToColor(string: string) {
 	let hash = 0;
 	let i;
@@ -67,78 +70,90 @@ export function TitleToolbar() {
 		<AppBar position="static">
 			<Container maxWidth="xl">
 				<Toolbar disableGutters>
-					<Typography
-						variant="h6"
-						noWrap
-						sx={{
-							mr: 2,
-							flexGrow: 1,
-							display: { xs: "none", md: "flex" },
-							fontFamily: "monospace",
-							fontWeight: 700,
-							letterSpacing: ".3rem",
-							color: "inherit",
-							textDecoration: "none",
-						}}
-					>
-						ChatGPT Selfhost
-					</Typography>
-					<Typography
-						variant="h5"
-						noWrap
-						sx={{
-							mr: 2,
-							display: { xs: "flex", md: "none" },
-							flexGrow: 1,
-							fontFamily: "monospace",
-							fontWeight: 700,
-							letterSpacing: ".3rem",
-							color: "inherit",
-							textDecoration: "none",
-						}}
-					>
-						ChatGPT Selfhost
-					</Typography>
+					<DraggableArea>
+						<Typography
+							variant="h6"
+							noWrap
+							sx={{
+								mr: 2,
+								flexGrow: 1,
+								display: { xs: "none", md: "flex" },
+								fontFamily: "monospace",
+								fontWeight: 700,
+								letterSpacing: ".3rem",
+								color: "inherit",
+								textDecoration: "none",
+							}}
+						>
+							ChatGPT Selfhost
+						</Typography>
+						<Typography
+							variant="h5"
+							noWrap
+							sx={{
+								mr: 2,
+								display: { xs: "flex", md: "none" },
+								flexGrow: 1,
+								fontFamily: "monospace",
+								fontWeight: 700,
+								letterSpacing: ".3rem",
+								color: "inherit",
+								textDecoration: "none",
+							}}
+						>
+							ChatGPT Selfhost
+						</Typography>
 
-					{authenticatedUser?.userName && (
-						<Box sx={{ flexGrow: 0 }}>
-							<Tooltip title="Open settings">
-								<IconButton
-									onClick={handleOpenUserMenu}
-									sx={{ p: 0 }}
+						{authenticatedUser?.userName && (
+							<Box sx={{ flexGrow: 0 }}>
+								<Tooltip title="Open settings">
+									<IconButton
+										onClick={handleOpenUserMenu}
+										sx={{ p: 0 }}
+									>
+										<Avatar
+											alt={authenticatedUser.userName}
+											{...stringAvatar(
+												authenticatedUser.userName
+											)}
+										/>
+									</IconButton>
+								</Tooltip>{" "}
+								<Menu
+									sx={{
+										mt: "45px",
+										// Ensure menu content is not draggable in Electron
+										...(isElectron() && {
+											"& .MuiMenu-paper": {
+												WebkitAppRegion: "no-drag",
+											},
+										}),
+									}}
+									id="menu-appbar"
+									anchorEl={anchorElUser}
+									anchorOrigin={{
+										vertical: "top",
+										horizontal: "right",
+									}}
+									keepMounted
+									transformOrigin={{
+										vertical: "top",
+										horizontal: "right",
+									}}
+									open={Boolean(anchorElUser)}
+									onClose={handleCloseUserMenu}
 								>
-									<Avatar
-										alt={authenticatedUser.userName}
-										{...stringAvatar(
-											authenticatedUser.userName
-										)}
-									/>
-								</IconButton>
-							</Tooltip>
-							<Menu
-								sx={{ mt: "45px" }}
-								id="menu-appbar"
-								anchorEl={anchorElUser}
-								anchorOrigin={{
-									vertical: "top",
-									horizontal: "right",
-								}}
-								keepMounted
-								transformOrigin={{
-									vertical: "top",
-									horizontal: "right",
-								}}
-								open={Boolean(anchorElUser)}
-								onClose={handleCloseUserMenu}
-							>
-								<MenuItem onClick={handleLogout}>
-									<Typography textAlign="center">
-										Logout
-									</Typography>
-								</MenuItem>
-							</Menu>
-						</Box>
-					)}
+									<MenuItem onClick={handleLogout}>
+										<Typography textAlign="center">
+											Logout
+										</Typography>
+									</MenuItem>
+								</Menu>
+							</Box>
+						)}
+					</DraggableArea>
+
+					<WindowControls />
 				</Toolbar>
 			</Container>
 		</AppBar>

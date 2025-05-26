@@ -17,6 +17,8 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { ChatHistory } from "../../component/chat/ChatHistory";
 import { ChatInput } from "../../component/chat/ChatInput";
 import { ConversationSidePanel } from "../../component/ConversationSidePanel";
+import { WindowControls } from "../../component/window/WindowControls";
+import { DraggableArea } from "../../component/window/DraggableArea";
 import { useModelContext } from "../../../data/context/ModelContext";
 import { useCallback, useState } from "react";
 
@@ -52,49 +54,62 @@ export function ChatPage() {
 					>
 						<MenuIcon />
 					</IconButton>
-					<Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-						Chat
-					</Typography>
-					<FormControl size="small" sx={{ minWidth: 200 }}>
-						<InputLabel id="chat-model-label" sx={{ color: 'inherit' }}>Model</InputLabel>
-						<Select
-							labelId="chat-model-label"
-							value={currentModel?.identifier || ''}
-							label="Model"
-							onChange={onModelChange}
-							sx={{ 
-								color: 'inherit',
-								'& .MuiOutlinedInput-notchedOutline': {
-									borderColor: 'rgba(255, 255, 255, 0.23)',
-								},
-								'&:hover .MuiOutlinedInput-notchedOutline': {
-									borderColor: 'rgba(255, 255, 255, 0.5)',
-								},
-								'&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-									borderColor: 'rgba(255, 255, 255, 0.8)',
-								},
-							}}
+
+					<DraggableArea>
+						<Typography
+							variant="h6"
+							component="div"
+							sx={{ flexGrow: 1 }}
 						>
-							{modelList.map((model) => (
-								<MenuItem
-									key={model.identifier}
-									value={model.identifier}
-								>
-									{model.friendlyName}
-								</MenuItem>
-							))}
-						</Select>
-					</FormControl>
+							Chat
+						</Typography>
+						<FormControl
+							size="small"
+							sx={{ minWidth: 200, marginRight: 1 }}
+						>
+							<Select
+								value={currentModel?.identifier || ""}
+								onChange={onModelChange}
+								sx={{
+									color: "inherit",
+									"& .MuiOutlinedInput-notchedOutline": {
+										borderColor:
+											"rgba(255, 255, 255, 0.23)",
+									},
+									"&:hover .MuiOutlinedInput-notchedOutline":
+										{
+											borderColor:
+												"rgba(255, 255, 255, 0.5)",
+										},
+									"&.Mui-focused .MuiOutlinedInput-notchedOutline":
+										{
+											borderColor:
+												"rgba(255, 255, 255, 0.8)",
+										},
+								}}
+							>
+								{modelList.map((model) => (
+									<MenuItem
+										key={model.identifier}
+										value={model.identifier}
+									>
+										{model.friendlyName}
+									</MenuItem>
+								))}
+							</Select>
+						</FormControl>
+					</DraggableArea>
+
+					<WindowControls />
 				</Toolbar>
 			</AppBar>
 
 			{/* Main Content */}
-			<Container maxWidth={false} sx={{ flex: 1, py: 2, overflow: "hidden" }}>
-				<Stack
-					direction="column"
-					spacing={2}
-					sx={{ height: "100%" }}
-				>
+			<Container
+				maxWidth={false}
+				sx={{ flex: 1, py: 2, overflow: "hidden" }}
+			>
+				<Stack direction="column" spacing={2} sx={{ height: "100%" }}>
 					{/* Flex-grow will make this take available space */}
 					<Box sx={{ flexGrow: 1, overflow: "hidden" }}>
 						<ChatHistory />
@@ -107,7 +122,10 @@ export function ChatPage() {
 			</Container>
 
 			{/* Side Panel */}
-			<ConversationSidePanel open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+			<ConversationSidePanel
+				open={sidebarOpen}
+				onClose={() => setSidebarOpen(false)}
+			/>
 		</Box>
 	) : (
 		<Stack alignItems={"center"} padding={2} spacing={2}>

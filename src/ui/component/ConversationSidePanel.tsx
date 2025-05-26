@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
 	Drawer,
 	List,
@@ -16,22 +16,26 @@ import {
 	DialogActions,
 	Tooltip,
 	Divider,
-} from '@mui/material';
+} from "@mui/material";
 import {
 	Add as AddIcon,
 	Delete as DeleteIcon,
 	Edit as EditIcon,
 	Close as CloseIcon,
 	Chat as ChatIcon,
-} from '@mui/icons-material';
-import { useConversationHistory } from '../../data/context/ConversationHistoryContext';
+} from "@mui/icons-material";
+import { useConversationHistory } from "../../data/context/ConversationHistoryContext";
+import { isElectron } from "../../utils/electronUtils";
 
 interface ConversationSidePanelProps {
 	open: boolean;
 	onClose: () => void;
 }
 
-export function ConversationSidePanel({ open, onClose }: ConversationSidePanelProps) {
+export function ConversationSidePanel({
+	open,
+	onClose,
+}: ConversationSidePanelProps) {
 	const {
 		conversations,
 		currentConversationId,
@@ -42,9 +46,11 @@ export function ConversationSidePanel({ open, onClose }: ConversationSidePanelPr
 	} = useConversationHistory();
 
 	const [editingId, setEditingId] = useState<string | null>(null);
-	const [editTitle, setEditTitle] = useState('');
+	const [editTitle, setEditTitle] = useState("");
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-	const [conversationToDelete, setConversationToDelete] = useState<string | null>(null);
+	const [conversationToDelete, setConversationToDelete] = useState<
+		string | null
+	>(null);
 
 	const handleNewConversation = () => {
 		createNewConversation();
@@ -66,12 +72,12 @@ export function ConversationSidePanel({ open, onClose }: ConversationSidePanelPr
 			updateConversationTitle(editingId, editTitle.trim());
 		}
 		setEditingId(null);
-		setEditTitle('');
+		setEditTitle("");
 	};
 
 	const handleCancelEdit = () => {
 		setEditingId(null);
-		setEditTitle('');
+		setEditTitle("");
 	};
 
 	const handleDeleteClick = (id: string) => {
@@ -98,32 +104,54 @@ export function ConversationSidePanel({ open, onClose }: ConversationSidePanelPr
 		const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
 		if (diffDays === 0) {
-			return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+			return date.toLocaleTimeString([], {
+				hour: "2-digit",
+				minute: "2-digit",
+			});
 		} else if (diffDays === 1) {
-			return 'Yesterday';
+			return "Yesterday";
 		} else if (diffDays < 7) {
-			return date.toLocaleDateString([], { weekday: 'short' });
+			return date.toLocaleDateString([], { weekday: "short" });
 		} else {
-			return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+			return date.toLocaleDateString([], {
+				month: "short",
+				day: "numeric",
+			});
 		}
 	};
 
 	return (
 		<>
+			{" "}
 			<Drawer
 				anchor="left"
 				open={open}
 				onClose={onClose}
 				variant="temporary"
 				sx={{
-					'& .MuiDrawer-paper': {
+					"& .MuiDrawer-paper": {
 						width: 320,
-						boxSizing: 'border-box',
+						boxSizing: "border-box",
+						// Ensure drawer content is not draggable in Electron
+						...(isElectron() && {
+							WebkitAppRegion: "no-drag",
+						}),
 					},
 				}}
 			>
-				<Box sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-					<Typography variant="h6" component="div" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+				<Box
+					sx={{
+						p: 2,
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "space-between",
+					}}
+				>
+					<Typography
+						variant="h6"
+						component="div"
+						sx={{ display: "flex", alignItems: "center", gap: 1 }}
+					>
 						<ChatIcon />
 						Chat History
 					</Typography>
@@ -131,7 +159,7 @@ export function ConversationSidePanel({ open, onClose }: ConversationSidePanelPr
 						<CloseIcon />
 					</IconButton>
 				</Box>
-				
+
 				<Box sx={{ px: 2, pb: 2 }}>
 					<Button
 						variant="contained"
@@ -146,11 +174,12 @@ export function ConversationSidePanel({ open, onClose }: ConversationSidePanelPr
 
 				<Divider />
 
-				<List sx={{ flex: 1, overflow: 'auto' }}>
+				<List sx={{ flex: 1, overflow: "auto" }}>
 					{conversations.length === 0 ? (
-						<Box sx={{ p: 3, textAlign: 'center' }}>
+						<Box sx={{ p: 3, textAlign: "center" }}>
 							<Typography variant="body2" color="text.secondary">
-								No conversations yet. Start a new conversation to begin chatting!
+								No conversations yet. Start a new conversation
+								to begin chatting!
 							</Typography>
 						</Box>
 					) : (
@@ -160,13 +189,18 @@ export function ConversationSidePanel({ open, onClose }: ConversationSidePanelPr
 								disablePadding
 								sx={{
 									backgroundColor:
-										currentConversationId === conversation.id
-											? 'action.selected'
-											: 'transparent',
+										currentConversationId ===
+										conversation.id
+											? "action.selected"
+											: "transparent",
 								}}
 							>
 								<ListItemButton
-									onClick={() => handleSelectConversation(conversation.id)}
+									onClick={() =>
+										handleSelectConversation(
+											conversation.id
+										)
+									}
 									sx={{ pr: 1 }}
 								>
 									<ListItemText
@@ -174,11 +208,17 @@ export function ConversationSidePanel({ open, onClose }: ConversationSidePanelPr
 											editingId === conversation.id ? (
 												<TextField
 													value={editTitle}
-													onChange={(e) => setEditTitle(e.target.value)}
+													onChange={(e) =>
+														setEditTitle(
+															e.target.value
+														)
+													}
 													onKeyDown={(e) => {
-														if (e.key === 'Enter') {
+														if (e.key === "Enter") {
 															handleSaveEdit();
-														} else if (e.key === 'Escape') {
+														} else if (
+															e.key === "Escape"
+														) {
 															handleCancelEdit();
 														}
 													}}
@@ -192,13 +232,15 @@ export function ConversationSidePanel({ open, onClose }: ConversationSidePanelPr
 												<Typography
 													variant="body2"
 													sx={{
-														overflow: 'hidden',
-														textOverflow: 'ellipsis',
-														whiteSpace: 'nowrap',
+														overflow: "hidden",
+														textOverflow:
+															"ellipsis",
+														whiteSpace: "nowrap",
 														fontWeight:
-															currentConversationId === conversation.id
-																? 'medium'
-																: 'normal',
+															currentConversationId ===
+															conversation.id
+																? "medium"
+																: "normal",
 													}}
 												>
 													{conversation.title}
@@ -206,19 +248,29 @@ export function ConversationSidePanel({ open, onClose }: ConversationSidePanelPr
 											)
 										}
 										secondary={
-											<Typography variant="caption" color="text.secondary">
-												{formatDate(conversation.updatedAt)} • {conversation.messages.length} messages
+											<Typography
+												variant="caption"
+												color="text.secondary"
+											>
+												{formatDate(
+													conversation.updatedAt
+												)}{" "}
+												• {conversation.messages.length}{" "}
+												messages
 											</Typography>
 										}
 									/>
 									{editingId !== conversation.id && (
-										<Box sx={{ display: 'flex', gap: 0.5 }}>
+										<Box sx={{ display: "flex", gap: 0.5 }}>
 											<Tooltip title="Rename">
 												<IconButton
 													size="small"
 													onClick={(e) => {
 														e.stopPropagation();
-														handleStartEdit(conversation.id, conversation.title);
+														handleStartEdit(
+															conversation.id,
+															conversation.title
+														);
 													}}
 												>
 													<EditIcon fontSize="small" />
@@ -229,7 +281,9 @@ export function ConversationSidePanel({ open, onClose }: ConversationSidePanelPr
 													size="small"
 													onClick={(e) => {
 														e.stopPropagation();
-														handleDeleteClick(conversation.id);
+														handleDeleteClick(
+															conversation.id
+														);
 													}}
 													color="error"
 												>
@@ -243,19 +297,34 @@ export function ConversationSidePanel({ open, onClose }: ConversationSidePanelPr
 						))
 					)}
 				</List>
-			</Drawer>
-
+			</Drawer>{" "}
 			{/* Delete Confirmation Dialog */}
-			<Dialog open={deleteDialogOpen} onClose={handleCancelDelete}>
+			<Dialog
+				open={deleteDialogOpen}
+				onClose={handleCancelDelete}
+				sx={{
+					// Ensure dialog content is not draggable in Electron
+					...(isElectron() && {
+						"& .MuiDialog-paper": {
+							WebkitAppRegion: "no-drag",
+						},
+					}),
+				}}
+			>
 				<DialogTitle>Delete Conversation</DialogTitle>
 				<DialogContent>
 					<Typography>
-						Are you sure you want to delete this conversation? This action cannot be undone.
+						Are you sure you want to delete this conversation? This
+						action cannot be undone.
 					</Typography>
 				</DialogContent>
 				<DialogActions>
 					<Button onClick={handleCancelDelete}>Cancel</Button>
-					<Button onClick={handleConfirmDelete} color="error" variant="contained">
+					<Button
+						onClick={handleConfirmDelete}
+						color="error"
+						variant="contained"
+					>
 						Delete
 					</Button>
 				</DialogActions>

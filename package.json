@@ -29,12 +29,13 @@
     "remark-gfm": "^4.0.1",
     "typescript": "^4.9.5",
     "web-vitals": "^2.1.4"
-  },
-  "scripts": {
+  },  "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "electron": "cd desktop-app && npm run dev",
+    "electron:build": "npm run build && cd desktop-app && npm run build && npm run start"
   },
   "eslintConfig": {
     "extends": [
