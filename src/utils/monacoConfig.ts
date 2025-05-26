@@ -1,26 +1,52 @@
-import { loader } from "@monaco-editor/react";
-import * as monaco from "monaco-editor";
+// Monaco Editor configuration for proper worker loading
+// This prevents the "Could not create web worker(s). Falling back to loading web worker code in main thread" error
 
-// Configure Monaco Editor worker paths
-self.MonacoEnvironment = {
-  getWorkerUrl: function (moduleId, label) {
-    if (label === 'json') {
-      return './static/js/json.worker.bundle.js';
-    }
-    if (label === 'css' || label === 'scss' || label === 'less') {
-      return './static/js/css.worker.bundle.js';
-    }
-    if (label === 'html' || label === 'handlebars' || label === 'razor') {
-      return './static/js/html.worker.bundle.js';
-    }
-    if (label === 'typescript' || label === 'javascript') {
-      return './static/js/ts.worker.bundle.js';
-    }
-    return './static/js/editor.worker.bundle.js';
-  }
+// For development, disable workers to avoid module loading issues
+// For production, use the proper worker files
+(window as any).MonacoEnvironment = {
+	getWorker: function (workerId: string, label: string) {
+		const isDevelopment = process.env.NODE_ENV === "development";
+
+		if (isDevelopment) {
+			// In development, return null to force main thread execution
+			// This avoids all worker loading issues during development
+			return null;
+		}
+
+		// In production, use the copied worker files
+		const baseUrl = process.env.PUBLIC_URL || "";
+
+		const getWorkerUrl = (label: string) => {
+			switch (label) {
+				case "json":
+					return `${baseUrl}/static/js/vs/language/json/json.worker.js`;
+				case "css":
+				case "scss":
+				case "less":
+					return `${baseUrl}/static/js/vs/language/css/css.worker.js`;
+				case "html":
+				case "handlebars":
+				case "razor":
+					return `${baseUrl}/static/js/vs/language/html/html.worker.js`;
+				case "typescript":
+				case "javascript":
+					return `${baseUrl}/static/js/vs/language/typescript/ts.worker.js`;
+				default:
+					return `${baseUrl}/static/js/vs/editor/editor.worker.js`;
+			}
+		};
+
+		try {
+			return new Worker(getWorkerUrl(label));
+		} catch (error) {
+			console.warn(
+				"Failed to create worker, falling back to main thread:",
+				error
+			);
+			return null;
+		}
+	},
 };
 
-// Configure the loader to use the local monaco-editor package
-loader.config({ monaco });
-
-export { monaco };
+// Export an empty object to make this a proper module
+export {};

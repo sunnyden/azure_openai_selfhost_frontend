@@ -26,7 +26,14 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
 import { useConversationContext } from "../../../data/context/ConversationContext";
 import { ChatRole, ToolInfo } from "../../../api/interface/data/common/Chat";
-import React, { useMemo, useRef, useEffect, useState } from "react";
+import React, {
+	useMemo,
+	useRef,
+	useEffect,
+	useState,
+	useCallback,
+	memo,
+} from "react";
 import Markdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeKatex from "rehype-katex";
@@ -60,6 +67,44 @@ function isBlockCode(message: string, node: any) {
 	}
 	return false;
 }
+
+function detectLanguageFromMessage(message: string, node: any) {
+	const startPos: number = node?.position?.start?.offset;
+	if (!startPos) return "plaintext";
+
+	// Find the first line of the code block (```language)
+	const codeBlockStart = message.substring(startPos);
+	const firstLineEnd = codeBlockStart.indexOf("\n");
+	if (firstLineEnd === -1) return "plaintext";
+
+	const firstLine = codeBlockStart.substring(0, firstLineEnd);
+	const languageMatch = firstLine.match(/^```(\w+)/);
+
+	if (languageMatch && languageMatch[1]) {
+		const language = languageMatch[1].toLowerCase();
+		// Map common language aliases to supported languages
+		const languageMap: { [key: string]: string } = {
+			js: "javascript",
+			jsx: "javascript",
+			ts: "typescript",
+			tsx: "typescript",
+			py: "python",
+			rb: "ruby",
+			cs: "csharp",
+			cpp: "cpp",
+			"c++": "cpp",
+			sh: "shell",
+			bash: "shell",
+			ps1: "powershell",
+			yml: "yaml",
+			md: "markdown",
+		};
+
+		return languageMap[language] || language;
+	}
+
+	return "plaintext";
+}
 function getBlockCode(message: string, node: any) {
 	const startPos: number = node?.position?.start?.offset;
 	const endPos: number = node?.position?.end?.offset;
@@ -68,7 +113,7 @@ function getBlockCode(message: string, node: any) {
 	}
 	return "";
 }
-function ChatItem({
+const ChatItem = memo(function ChatItem({
 	role,
 	message,
 	messageIndex,
@@ -97,7 +142,103 @@ function ChatItem({
 			default:
 				return "Unknown";
 		}
-	}, [role]);
+	}, [role]); // Memoize the Markdown components to prevent unnecessary re-renders
+	const markdownComponents = useMemo(
+		() => ({
+			code: ({ node, ...props }: any) => {
+				if (isBlockCode(message, node)) {
+					const detectedLanguage = detectLanguageFromMessage(
+						message,
+						node
+					);
+					return (
+						<CodeBlockWrapper
+							code={props.children as string}
+							detectedLanguage={detectedLanguage}
+						/>
+					);
+				}
+				return <code>{props.children}</code>;
+			},
+		}),
+		[message]
+	);
+	// Memoize plugins to prevent recreation
+	const remarkPlugins = useMemo(() => [remarkGfm, remarkMath], []);
+	const rehypePlugins = useMemo(() => [rehypeKatex], []);
+
+	// Memoize style objects
+	const listItemSx = useMemo(
+		() => ({
+			position: "relative",
+			"&:hover": {
+				backgroundColor: "action.hover",
+			},
+		}),
+		[]
+	);
+
+	const actionBoxSx = useMemo(
+		() => ({
+			position: "absolute",
+			top: 8,
+			right: 8,
+			backgroundColor: "background.paper",
+			borderRadius: 1,
+			boxShadow: 1,
+			display: "flex",
+			gap: 0.5,
+		}),
+		[]
+	);
+
+	const iconButtonSx = useMemo(() => ({ padding: 0.5 }), []);
+
+	// Memoize Snackbar props
+	const snackbarAnchorOrigin = useMemo(
+		() => ({ vertical: "bottom" as const, horizontal: "center" as const }),
+		[]
+	);
+
+	const snackbarSx = useMemo(
+		() => ({
+			// Ensure snackbar content is not draggable in Electron
+			...(isElectron() && {
+				"& .MuiSnackbar-root": {
+					WebkitAppRegion: "no-drag",
+				},
+			}),
+		}),
+		[]
+	);
+
+	const alertSx = useMemo(() => ({ width: "100%" }), []);
+	// Memoize event handlers
+	const handleMouseEnter = useCallback(() => setIsHovered(true), []);
+	const handleMouseLeave = useCallback(() => setIsHovered(false), []);
+
+	// Memoize Dialog styles
+	const dialogSx = useMemo(
+		() => ({
+			// Ensure dialog content is not draggable in Electron
+			...(isElectron() && {
+				"& .MuiDialog-paper": {
+					WebkitAppRegion: "no-drag",
+				},
+			}),
+		}),
+		[]
+	);
+
+	const editorBoxSx = useMemo(
+		() => ({
+			height: 400,
+			border: "1px solid #e0e0e0",
+			borderRadius: 1,
+			mt: 1,
+		}),
+		[]
+	);
 
 	const handleCopyToClipboard = async () => {
 		try {
@@ -163,19 +304,15 @@ function ChatItem({
 
 	return (
 		<>
+			{" "}
 			<ListItem
 				alignItems="flex-start"
-				onMouseEnter={() => setIsHovered(true)}
-				onMouseLeave={() => setIsHovered(false)}
+				onMouseEnter={handleMouseEnter}
+				onMouseLeave={handleMouseLeave}
 				onTouchStart={handleTouchStart}
 				onTouchEnd={handleTouchEnd}
 				onTouchCancel={handleTouchEnd}
-				sx={{
-					position: "relative",
-					"&:hover": {
-						backgroundColor: "action.hover",
-					},
-				}}
+				sx={listItemSx}
 			>
 				<ListItemAvatar>
 					<Avatar alt={role}>{renderAvatar(role)}</Avatar>
@@ -184,45 +321,21 @@ function ChatItem({
 					primary={userRoleText}
 					secondary={
 						<Markdown
-							remarkPlugins={[remarkGfm, remarkMath]}
-							rehypePlugins={[rehypeKatex]}
-							components={{
-								code: ({ node, ...props }) => {
-									if (isBlockCode(message, node)) {
-										return (
-											<CodeBlockWrapper
-												code={props.children as string}
-											/>
-										);
-									}
-									return <code>{props.children}</code>;
-								},
-							}}
+							remarkPlugins={remarkPlugins}
+							rehypePlugins={rehypePlugins}
+							components={markdownComponents}
 						>
 							{message}
 						</Markdown>
 					}
-				/>
+				/>{" "}
 				{isHovered && (
-					<Box
-						sx={{
-							position: "absolute",
-							top: 8,
-							right: 8,
-							backgroundColor: "background.paper",
-							borderRadius: 1,
-							boxShadow: 1,
-							display: "flex",
-							gap: 0.5,
-						}}
-					>
+					<Box sx={actionBoxSx}>
 						<Tooltip title="Copy message">
 							<IconButton
 								size="small"
 								onClick={handleCopyToClipboard}
-								sx={{
-									padding: 0.5,
-								}}
+								sx={iconButtonSx}
 							>
 								<ContentCopyIcon fontSize="small" />
 							</IconButton>
@@ -231,20 +344,16 @@ function ChatItem({
 							<IconButton
 								size="small"
 								onClick={handleEditMessage}
-								sx={{
-									padding: 0.5,
-								}}
+								sx={iconButtonSx}
 							>
 								<EditIcon fontSize="small" />
 							</IconButton>
-						</Tooltip>
+						</Tooltip>{" "}
 						<Tooltip title="Delete message">
 							<IconButton
 								size="small"
 								onClick={handleDeleteMessage}
-								sx={{
-									padding: 0.5,
-								}}
+								sx={iconButtonSx}
 								color="error"
 							>
 								<DeleteIcon fontSize="small" />
@@ -257,49 +366,28 @@ function ChatItem({
 				open={showCopySuccess}
 				autoHideDuration={2000}
 				onClose={handleCloseCopySuccess}
-				anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-				sx={{
-					// Ensure snackbar content is not draggable in Electron
-					...(isElectron() && {
-						"& .MuiSnackbar-root": {
-							WebkitAppRegion: "no-drag",
-						},
-					}),
-				}}
+				anchorOrigin={snackbarAnchorOrigin}
+				sx={snackbarSx}
 			>
 				<Alert
 					onClose={handleCloseCopySuccess}
 					severity="success"
-					sx={{ width: "100%" }}
+					sx={alertSx}
 				>
 					Message copied to clipboard!
 				</Alert>
 			</Snackbar>
-			{/* Edit Dialog */}
+			{/* Edit Dialog */}{" "}
 			<Dialog
 				open={editDialogOpen}
 				onClose={handleCancelEdit}
 				maxWidth="lg"
 				fullWidth
-				sx={{
-					// Ensure dialog content is not draggable in Electron
-					...(isElectron() && {
-						"& .MuiDialog-paper": {
-							WebkitAppRegion: "no-drag",
-						},
-					}),
-				}}
+				sx={dialogSx}
 			>
 				<DialogTitle>Edit Message</DialogTitle>
 				<DialogContent>
-					<Box
-						sx={{
-							height: 400,
-							border: "1px solid #e0e0e0",
-							borderRadius: 1,
-							mt: 1,
-						}}
-					>
+					<Box sx={editorBoxSx}>
 						<Editor
 							height="400px"
 							defaultLanguage="markdown"
@@ -325,12 +413,18 @@ function ChatItem({
 						Save
 					</Button>
 				</DialogActions>
-			</Dialog>
+			</Dialog>{" "}
 		</>
 	);
-}
+});
 
-function ToolItem({ tool, working }: { tool: ToolInfo; working: boolean }) {
+const ToolItem = memo(function ToolItem({
+	tool,
+	working,
+}: {
+	tool: ToolInfo;
+	working: boolean;
+}) {
 	switch (tool.name) {
 		case "Search":
 			return <SearchTool parameter={tool.parameters} working={working} />;
@@ -355,15 +449,21 @@ function ToolItem({ tool, working }: { tool: ToolInfo; working: boolean }) {
 		default:
 			return <></>;
 	}
-}
+});
 
-function ToolListItem({ tool, working }: { tool: ToolInfo; working: boolean }) {
+const ToolListItem = memo(function ToolListItem({
+	tool,
+	working,
+}: {
+	tool: ToolInfo;
+	working: boolean;
+}) {
 	return (
 		<ListItem alignItems="flex-start">
 			<ToolItem tool={tool} working={working} />
 		</ListItem>
 	);
-}
+});
 
 export function ChatHistory() {
 	const { currentConversation, toolUsed, usingTool } =
