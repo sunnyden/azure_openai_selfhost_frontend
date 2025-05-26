@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import {
 	Box,
 	Container,
@@ -13,12 +13,19 @@ import {
 	AppBar,
 	Toolbar,
 	IconButton,
+	FormControl,
+	InputLabel,
+	Select,
+	MenuItem,
+	SelectChangeEvent,
+	Chip,
 } from "@mui/material";
 import {
 	ArrowBack,
 	AccountBalanceWallet,
 	TrendingUp,
 	Assessment,
+	FilterList,
 } from "@mui/icons-material";
 import { Transaction } from "../../../api/interface/data/common/Transaction";
 import { User } from "../../../api/interface/data/common/User";
@@ -36,9 +43,9 @@ export function UsagePage({ onBack }: UsagePageProps) {
 	const [transactions, setTransactions] = useState<Transaction[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const [selectedModel, setSelectedModel] = useState<string>("all");
 	const { authenticatedUser } = useUserContext();
 	const apiClient = useApiClient();
-
 	useEffect(() => {
 		const fetchTransactions = async () => {
 			try {
@@ -56,16 +63,39 @@ export function UsagePage({ onBack }: UsagePageProps) {
 		fetchTransactions();
 	}, [apiClient]);
 
-	const totalCost = transactions.reduce(
+	// Get unique models from transactions
+	const availableModels = useMemo(() => {
+		const models = Array.from(
+			new Set(transactions.map((t) => t.requestedService))
+		).sort();
+		return models;
+	}, [transactions]);
+
+	// Filter transactions based on selected model
+	const filteredTransactions = useMemo(() => {
+		if (selectedModel === "all") {
+			return transactions;
+		}
+		return transactions.filter((t) => t.requestedService === selectedModel);
+	}, [transactions, selectedModel]);
+
+	// Calculate statistics based on filtered transactions
+	const totalCost = filteredTransactions.reduce(
 		(sum, transaction) => sum + transaction.cost,
 		0
 	);
-	const totalTokens = transactions.reduce(
+	const totalTokens = filteredTransactions.reduce(
 		(sum, transaction) => sum + transaction.totalTokens,
 		0
 	);
 	const averageCostPerTransaction =
-		transactions.length > 0 ? totalCost / transactions.length : 0;
+		filteredTransactions.length > 0
+			? totalCost / filteredTransactions.length
+			: 0;
+
+	const handleModelChange = (event: SelectChangeEvent) => {
+		setSelectedModel(event.target.value);
+	};
 
 	if (loading) {
 		return (
@@ -183,8 +213,7 @@ export function UsagePage({ onBack }: UsagePageProps) {
 					</DraggableArea>
 					<WindowControls />
 				</Toolbar>
-			</AppBar>
-
+			</AppBar>{" "}
 			<Container
 				maxWidth={false}
 				sx={{ flex: 1, py: 2, overflow: "auto" }}
@@ -272,9 +301,54 @@ export function UsagePage({ onBack }: UsagePageProps) {
 							</Grid>
 						</Paper>
 					)}
-
+					{/* Model Filter */}
+					<Paper elevation={2} sx={{ p: 3 }}>
+						<Typography
+							variant="h5"
+							gutterBottom
+							sx={{
+								display: "flex",
+								alignItems: "center",
+								gap: 1,
+								mb: 2,
+							}}
+						>
+							<FilterList color="primary" />
+							Filter by Model
+						</Typography>
+						<FormControl sx={{ minWidth: 200 }}>
+							<InputLabel id="model-filter-label">
+								Model
+							</InputLabel>
+							<Select
+								labelId="model-filter-label"
+								id="model-filter"
+								value={selectedModel}
+								label="Model"
+								onChange={handleModelChange}
+							>
+								<MenuItem value="all">All Models</MenuItem>
+								{availableModels.map((model) => (
+									<MenuItem key={model} value={model}>
+										{model}
+									</MenuItem>
+								))}
+							</Select>
+						</FormControl>
+						{selectedModel !== "all" && (
+							<Typography
+								variant="body2"
+								color="text.secondary"
+								sx={{ mt: 1 }}
+							>
+								Showing data for:{" "}
+								<strong>{selectedModel}</strong>
+							</Typography>
+						)}
+					</Paper>
 					{/* Usage Statistics */}
 					<Paper elevation={2} sx={{ p: 3 }}>
+						{" "}
 						<Typography
 							variant="h5"
 							gutterBottom
@@ -286,6 +360,14 @@ export function UsagePage({ onBack }: UsagePageProps) {
 						>
 							<Assessment color="primary" />
 							Usage Statistics
+							{selectedModel !== "all" && (
+								<Chip
+									label={selectedModel}
+									size="small"
+									color="primary"
+									sx={{ ml: 1 }}
+								/>
+							)}
 						</Typography>
 						<Grid container spacing={3}>
 							<Grid item xs={12} md={3}>
@@ -296,12 +378,12 @@ export function UsagePage({ onBack }: UsagePageProps) {
 											gutterBottom
 										>
 											Total Transactions
-										</Typography>
+										</Typography>{" "}
 										<Typography
 											variant="h4"
 											component="div"
 										>
-											{transactions.length}
+											{filteredTransactions.length}
 										</Typography>
 									</CardContent>
 								</Card>
@@ -364,8 +446,7 @@ export function UsagePage({ onBack }: UsagePageProps) {
 								</Card>
 							</Grid>
 						</Grid>
-					</Paper>
-
+					</Paper>{" "}
 					{/* Usage Data Table */}
 					<Paper elevation={2} sx={{ p: 3 }}>
 						<Typography
@@ -379,8 +460,16 @@ export function UsagePage({ onBack }: UsagePageProps) {
 						>
 							<TrendingUp color="primary" />
 							Transaction History
+							{selectedModel !== "all" && (
+								<Chip
+									label={selectedModel}
+									size="small"
+									color="primary"
+									sx={{ ml: 1 }}
+								/>
+							)}
 						</Typography>
-						<UsageDataTable transactions={transactions} />
+						<UsageDataTable transactions={filteredTransactions} />
 					</Paper>
 				</Stack>
 			</Container>

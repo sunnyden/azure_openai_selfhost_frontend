@@ -16,6 +16,8 @@ import {
 	DialogActions,
 	Tooltip,
 	Divider,
+	Menu,
+	MenuItem,
 } from "@mui/material";
 import {
 	Add as AddIcon,
@@ -24,6 +26,10 @@ import {
 	Close as CloseIcon,
 	Chat as ChatIcon,
 	Assessment as AssessmentIcon,
+	GetApp as ExportIcon,
+	Publish as ImportIcon,
+	FileDownload as FileDownloadIcon,
+	MoreVert as MoreVertIcon,
 } from "@mui/icons-material";
 import { useConversationHistory } from "../../data/context/ConversationHistoryContext";
 import { isElectron } from "../../utils/electronUtils";
@@ -46,12 +52,20 @@ export function ConversationSidePanel({
 		deleteConversation,
 		updateConversationTitle,
 		selectConversation,
+		exportConversation,
+		exportAllConversations,
+		loadConversationsFromFile,
 	} = useConversationHistory();
 
 	const [editingId, setEditingId] = useState<string | null>(null);
 	const [editTitle, setEditTitle] = useState("");
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [conversationToDelete, setConversationToDelete] = useState<
+		string | null
+	>(null);
+	const [exportMenuAnchor, setExportMenuAnchor] =
+		useState<null | HTMLElement>(null);
+	const [exportConversationId, setExportConversationId] = useState<
 		string | null
 	>(null);
 
@@ -101,6 +115,35 @@ export function ConversationSidePanel({
 		setConversationToDelete(null);
 	};
 
+	const handleExportMenuOpen = (
+		event: React.MouseEvent<HTMLElement>,
+		conversationId?: string
+	) => {
+		setExportMenuAnchor(event.currentTarget);
+		setExportConversationId(conversationId || null);
+	};
+
+	const handleExportMenuClose = () => {
+		setExportMenuAnchor(null);
+		setExportConversationId(null);
+	};
+
+	const handleExportSingleConversation = (exportConversationId: string) => {
+		if (exportConversationId) {
+			exportConversation(exportConversationId);
+		}
+	};
+
+	const handleExportAllConversations = () => {
+		exportAllConversations();
+		handleExportMenuClose();
+	};
+
+	const handleImportConversations = () => {
+		loadConversationsFromFile();
+		handleExportMenuClose();
+	};
+
 	const formatDate = (date: Date) => {
 		const now = new Date();
 		const diffTime = now.getTime() - date.getTime();
@@ -142,6 +185,7 @@ export function ConversationSidePanel({
 					},
 				}}
 			>
+				{" "}
 				<Box
 					sx={{
 						p: 2,
@@ -158,9 +202,19 @@ export function ConversationSidePanel({
 						<ChatIcon />
 						Chat History
 					</Typography>
-					<IconButton onClick={onClose} size="small">
-						<CloseIcon />
-					</IconButton>
+					<Box sx={{ display: "flex", gap: 0.5 }}>
+						<Tooltip title="Export/Import">
+							<IconButton
+								onClick={(e) => handleExportMenuOpen(e)}
+								size="small"
+							>
+								<MoreVertIcon />
+							</IconButton>
+						</Tooltip>
+						<IconButton onClick={onClose} size="small">
+							<CloseIcon />
+						</IconButton>
+					</Box>
 				</Box>
 				<Box sx={{ px: 2, pb: 2 }}>
 					<Button
@@ -259,9 +313,22 @@ export function ConversationSidePanel({
 												messages
 											</Typography>
 										}
-									/>
+									/>{" "}
 									{editingId !== conversation.id && (
 										<Box sx={{ display: "flex", gap: 0.5 }}>
+											<Tooltip title="Export">
+												<IconButton
+													size="small"
+													onClick={(e) => {
+														e.stopPropagation();
+														handleExportSingleConversation(
+															conversation.id
+														);
+													}}
+												>
+													<FileDownloadIcon fontSize="small" />
+												</IconButton>
+											</Tooltip>
 											<Tooltip title="Rename">
 												<IconButton
 													size="small"
@@ -310,7 +377,41 @@ export function ConversationSidePanel({
 						View Usage Analytics
 					</Button>
 				</Box>
-			</Drawer>{" "}
+			</Drawer>
+			{/* Export/Import Menu */}
+			<Menu
+				anchorEl={exportMenuAnchor}
+				open={Boolean(exportMenuAnchor)}
+				onClose={handleExportMenuClose}
+				sx={{
+					// Ensure menu content is not draggable in Electron
+					...(isElectron() && {
+						"& .MuiMenu-paper": {
+							WebkitAppRegion: "no-drag",
+						},
+					}),
+				}}
+			>
+				{
+					// Global export/import menu
+					[
+						<MenuItem
+							key="export-all"
+							onClick={handleExportAllConversations}
+						>
+							<ExportIcon sx={{ mr: 1 }} fontSize="small" />
+							Export All Conversations
+						</MenuItem>,
+						<MenuItem
+							key="import"
+							onClick={handleImportConversations}
+						>
+							<ImportIcon sx={{ mr: 1 }} fontSize="small" />
+							Import Conversations
+						</MenuItem>,
+					]
+				}
+			</Menu>
 			{/* Delete Confirmation Dialog */}
 			<Dialog
 				open={deleteDialogOpen}

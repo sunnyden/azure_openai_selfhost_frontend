@@ -144,33 +144,39 @@ export function ChatInput() {
 		</Stack>
 	) : (
 		<Stack paddingTop={2} spacing={2}>
-			{currentConversation.length > 0 && (
-				<Box textAlign={"center"} sx={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-					{currentConversation[currentConversation.length - 1].role ===
-						ChatRole.Assistant &&
-						lastStopReason === "length" &&
-						!isLoading && (
-							<Button
-								variant="outlined"
-								startIcon={<BorderColorIcon />}
-								onClick={continueGenerate}
-							>
-								Continue Generate
-							</Button>
-						)}
-					<Button
-						variant="outlined"
-						color="secondary"
-						startIcon={<ClearIcon />}
-						onClick={handleClearConversation}
+			{currentConversation.length > 0 &&
+				currentConversation[currentConversation.length - 1].role ===
+					ChatRole.Assistant &&
+				lastStopReason === "length" &&
+				!isLoading && (
+					<Box
+						textAlign={"center"}
+						sx={{
+							display: "flex",
+							gap: 1,
+							justifyContent: "center",
+						}}
 					>
-						Clear Conversation
-					</Button>
-				</Box>
-			)}
+						<Button
+							variant="outlined"
+							startIcon={<BorderColorIcon />}
+							onClick={continueGenerate}
+						>
+							Continue Generate
+						</Button>
+					</Box>
+				)}
 			<Divider variant="inset" />
-			<Box>
-				<FormControl>
+			<Box></Box>
+			<TextField
+				label="Message"
+				multiline
+				rows={4}
+				value={prompt}
+				onChange={(e) => setPrompt(e.target.value)}
+			/>
+			<Stack direction={"row"} justifyContent="flex-end" spacing={2}>
+				<FormControl size="small">
 					<InputLabel id="chat-role-label">Role</InputLabel>
 					<Select
 						labelId="chat-role-label"
@@ -187,15 +193,8 @@ export function ChatInput() {
 						</MenuItem>
 					</Select>
 				</FormControl>
-			</Box>
-			<TextField
-				label="Message"
-				multiline
-				rows={4}
-				value={prompt}
-				onChange={(e) => setPrompt(e.target.value)}
-			/>
-			<ChatButtonGroup onSend={onSend} onAppend={onAppend} />
+				<ChatButtonGroup onSend={onSend} onAppend={onAppend} />
+			</Stack>
 		</Stack>
 	);
 }
