@@ -15,7 +15,6 @@ import {
 	DialogContent,
 	DialogActions,
 	Button,
-	TextField,
 } from "@mui/material";
 import Editor from "@monaco-editor/react";
 import SmartToyIcon from "@mui/icons-material/SmartToy";
@@ -105,14 +104,7 @@ function detectLanguageFromMessage(message: string, node: any) {
 
 	return "plaintext";
 }
-function getBlockCode(message: string, node: any) {
-	const startPos: number = node?.position?.start?.offset;
-	const endPos: number = node?.position?.end?.offset;
-	if (!!startPos && !!endPos) {
-		return message.substring(startPos + 3, endPos - 3);
-	}
-	return "";
-}
+
 const ChatItem = memo(function ChatItem({
 	role,
 	message,
@@ -149,7 +141,6 @@ const ChatItem = memo(function ChatItem({
 				return "Unknown";
 		}
 	}, [role]);
-
 	// Memoize the Markdown components with a stable code component
 	// Use messageRef to avoid dependency on message prop
 	const markdownComponents = useMemo(
@@ -173,6 +164,61 @@ const ChatItem = memo(function ChatItem({
 				}
 				return <code>{props.children}</code>;
 			},
+			table: ({ node, ...props }: any) => (
+				<Box sx={{ overflowX: "auto", my: 2 }}>
+					<table
+						style={{
+							borderCollapse: "collapse",
+							border: "1px solid #e0e0e0",
+							borderRadius: "4px",
+							width: "100%",
+							fontSize: "0.875rem",
+							backgroundColor: "#fafafa",
+						}}
+						{...props}
+					/>
+				</Box>
+			),
+			thead: ({ node, ...props }: any) => (
+				<thead
+					style={{
+						backgroundColor: "#f5f5f5",
+						borderBottom: "2px solid #e0e0e0",
+					}}
+					{...props}
+				/>
+			),
+			tbody: ({ node, ...props }: any) => <tbody {...props} />,
+			tr: ({ node, ...props }: any) => (
+				<tr
+					style={{
+						borderBottom: "1px solid #e0e0e0",
+					}}
+					{...props}
+				/>
+			),
+			th: ({ node, ...props }: any) => (
+				<th
+					style={{
+						padding: "12px 16px",
+						textAlign: "left",
+						fontWeight: 600,
+						color: "#333",
+						borderRight: "1px solid #e0e0e0",
+					}}
+					{...props}
+				/>
+			),
+			td: ({ node, ...props }: any) => (
+				<td
+					style={{
+						padding: "12px 16px",
+						borderRight: "1px solid #e0e0e0",
+						verticalAlign: "top",
+					}}
+					{...props}
+				/>
+			),
 		}),
 		[] // No dependencies - keeps the component stable
 	);

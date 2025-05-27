@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import {
-	Drawer,
+	SwipeableDrawer,
 	List,
 	ListItem,
 	ListItemButton,
@@ -37,12 +37,14 @@ import { isElectron } from "../../utils/electronUtils";
 interface ConversationSidePanelProps {
 	open: boolean;
 	onClose: () => void;
+	onOpen: () => void;
 	onNavigateToUsage: () => void;
 }
 
 export function ConversationSidePanel({
 	open,
 	onClose,
+	onOpen,
 	onNavigateToUsage,
 }: ConversationSidePanelProps) {
 	const {
@@ -165,15 +167,16 @@ export function ConversationSidePanel({
 			});
 		}
 	};
-
 	return (
 		<>
 			{" "}
-			<Drawer
+			<SwipeableDrawer
 				anchor="left"
 				open={open}
 				onClose={onClose}
-				variant="temporary"
+				onOpen={onOpen}
+				disableBackdropTransition={false}
+				disableDiscovery={true}
 				sx={{
 					"& .MuiDrawer-paper": {
 						width: 320,
@@ -374,10 +377,10 @@ export function ConversationSidePanel({
 						onClick={onNavigateToUsage}
 						size="small"
 					>
-						View Usage Analytics
+						View Usage Analytics{" "}
 					</Button>
 				</Box>
-			</Drawer>
+			</SwipeableDrawer>
 			{/* Export/Import Menu */}
 			<Menu
 				anchorEl={exportMenuAnchor}

@@ -46,7 +46,6 @@ export function ChatPage() {
 		setCurrentPage("usage");
 		setSidebarOpen(false);
 	};
-
 	const handleBackToChat = () => {
 		setCurrentPage("chat");
 	};
@@ -57,7 +56,9 @@ export function ChatPage() {
 	}
 
 	return modelList.length > 0 ? (
-		<Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+		<Box
+			sx={{ height: "100dvh", display: "flex", flexDirection: "column" }}
+		>
 			{/* Top App Bar */}
 			<AppBar position="static" elevation={1}>
 				<Toolbar sx={{ minHeight: 56 }}>
@@ -132,13 +133,14 @@ export function ChatPage() {
 					{/* Chat input at the bottom */}
 					<Box>
 						<ChatInput />
-					</Box>
+					</Box>{" "}
 				</Stack>
-			</Container>{" "}
+			</Container>
 			{/* Side Panel */}
 			<ConversationSidePanel
 				open={sidebarOpen}
 				onClose={() => setSidebarOpen(false)}
+				onOpen={() => setSidebarOpen(true)}
 				onNavigateToUsage={handleNavigateToUsage}
 			/>
 		</Box>
