@@ -147,6 +147,7 @@ export const CodeBlockWrapper = memo(
 				automaticLayout: true,
 				contextmenu: true,
 				selectOnLineNumbers: true,
+				fixedOverflowWidgets: true,
 				scrollbar: {
 					vertical: (calculateHeight >= 600 ? "auto" : "hidden") as
 						| "auto"

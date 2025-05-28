@@ -17,6 +17,7 @@ const ModuleScopePlugin = require("react-dev-utils/ModuleScopePlugin");
 const getCSSModuleLocalIdent = require("react-dev-utils/getCSSModuleLocalIdent");
 const ESLintPlugin = require("eslint-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
+const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
 const paths = require("./paths");
 const modules = require("./modules");
 const getClientEnvironment = require("./env");
@@ -775,46 +776,8 @@ module.exports = function (webpackEnv) {
 						},
 					},
 				}),
-			// Copy Monaco Editor worker files
-			new CopyWebpackPlugin({
-				patterns: [
-					{
-						from: path.resolve(
-							__dirname,
-							"../node_modules/monaco-editor/min/vs/language/typescript/tsWorker.js"
-						),
-						to: "static/js/vs/language/typescript/ts.worker.js",
-					},
-					{
-						from: path.resolve(
-							__dirname,
-							"../node_modules/monaco-editor/min/vs/language/json/jsonWorker.js"
-						),
-						to: "static/js/vs/language/json/json.worker.js",
-					},
-					{
-						from: path.resolve(
-							__dirname,
-							"../node_modules/monaco-editor/min/vs/language/css/cssWorker.js"
-						),
-						to: "static/js/vs/language/css/css.worker.js",
-					},
-					{
-						from: path.resolve(
-							__dirname,
-							"../node_modules/monaco-editor/min/vs/language/html/htmlWorker.js"
-						),
-						to: "static/js/vs/language/html/html.worker.js",
-					},
-					{
-						from: path.resolve(
-							__dirname,
-							"../node_modules/monaco-editor/min/vs/base/worker/workerMain.js"
-						),
-						to: "static/js/vs/editor/editor.worker.js",
-					},
-				],
-			}),
+			// Monaco Editor webpack plugin for proper worker compilation
+			new MonacoWebpackPlugin(),
 		].filter(Boolean),
 		// Turn off performance processing because we utilize
 		// our own hints via the FileSizeReporter
