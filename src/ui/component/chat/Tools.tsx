@@ -1,5 +1,7 @@
 import {
 	AccessTimeOutlined,
+	AutoAwesome,
+	AutoAwesomeOutlined,
 	AutoFixHighOutlined,
 	CheckOutlined,
 	Google,
@@ -11,6 +13,7 @@ import exp from "constants";
 import { WeiboIcon } from "./WeiboIcon";
 
 interface ToolProps {
+	name?: string;
 	parameter: string;
 	working: boolean;
 }
@@ -93,6 +96,56 @@ export function WeiboTool(props: ToolProps) {
 			/>
 		</Stack>
 	);
+}
+
+export function DefaultTool(props: ToolProps){
+	return (
+		<Stack direction={"row"} spacing={1} alignItems="center">
+			<Tooltip title={`Parameter: ${tryParseParameter(props.parameter)}`} placement="top">
+				<Chip
+					size="small"
+					label={`Calling tool: ${props.name}`}
+					icon={<AutoAwesome />}
+					deleteIcon={
+						props.working ? (
+							<CircularProgress size={15} />
+						) : (
+							<CheckOutlined />
+						)
+					}
+				/>
+			</Tooltip>
+		</Stack>
+	);
+}
+
+function tryParseParameter(parameterJson: string): string{
+	let parameter = "";
+	try {
+		const param = JSON.parse(parameterJson);
+		let isFirst = true;
+		// for each key
+		for (const key in param) {
+			if (param.hasOwnProperty(key)) {
+				const value = param[key];
+				if (!isFirst) {
+					parameter += ", ";
+				}
+				if (typeof value === "string") {
+					parameter += `${key}= ${value}`;
+				} else if (typeof value === "object") {
+					parameter += `${key}= ${JSON.stringify(value)}`;
+				} else {
+					parameter += `${key}= ${value}`;
+				}
+				isFirst = false;
+			}
+		}
+	}catch (e) {
+		console.error("Error parsing parameter JSON:", e);
+		parameter = parameterJson; // fallback to raw string
+	}
+	return parameter;
 }
 
 export function SearchTool(props: ToolProps) {

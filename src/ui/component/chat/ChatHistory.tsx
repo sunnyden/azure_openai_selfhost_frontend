@@ -40,6 +40,7 @@ import "katex/dist/katex.min.css";
 import { CodeBlockWrapper } from "./CodeBlockWrapper";
 import {
 	BrowseWebPageTool,
+	DefaultTool,
 	ImageGenerateTool,
 	SearchTool,
 	TimeTool,
@@ -506,7 +507,7 @@ const ToolItem = memo(function ToolItem({
 		case "FetchAndParseHotKeywords":
 			return <WeiboTool parameter={tool.parameters} working={working} />;
 		default:
-			return <></>;
+			return <DefaultTool parameter={tool.parameters} working={working} name={tool.name} />;
 	}
 });
 
