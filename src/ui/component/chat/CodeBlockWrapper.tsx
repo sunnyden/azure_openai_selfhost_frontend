@@ -14,6 +14,9 @@ import { ContentCopy } from "@mui/icons-material";
 import { useState, useMemo, memo, useCallback, useEffect } from "react";
 import { Editor } from "@monaco-editor/react";
 import "./CodeBlockWrapper.css";
+import { loader } from '@monaco-editor/react';
+import * as monaco from 'monaco-editor';
+loader.config({ monaco });
 
 // Simple languages array
 const languages = [

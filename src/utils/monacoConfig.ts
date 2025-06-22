@@ -1,44 +1,28 @@
-// Monaco Editor configuration for proper worker loading with monaco-editor-webpack-plugin
+// Monaco Editor configuration for Vite
 
-(window as any).MonacoEnvironment = {
-	getWorker: function (workerId: string, label: string) {
-		// The monaco-editor-webpack-plugin handles worker creation automatically
-		// We just need to return the worker based on the label
-		// The plugin will generate the proper worker files and handle AMD/CommonJS issues
+import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
+import jsonWorker from 'monaco-editor/esm/vs/language/json/json.worker?worker'
+import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker'
+import htmlWorker from 'monaco-editor/esm/vs/language/html/html.worker?worker'
+import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
 
-		const getWorkerUrl = (label: string) => {
-			const baseUrl = process.env.PUBLIC_URL || "";
-
-			switch (label) {
-				case "json":
-					return `${baseUrl}/json.worker.js`;
-				case "css":
-				case "scss":
-				case "less":
-					return `${baseUrl}/css.worker.js`;
-				case "html":
-				case "handlebars":
-				case "razor":
-					return `${baseUrl}/html.worker.js`;
-				case "typescript":
-				case "javascript":
-					return `${baseUrl}/ts.worker.js`;
-				default:
-					return `${baseUrl}/editor.worker.js`;
-			}
-		};
-
-		try {
-			return new Worker(getWorkerUrl(label));
-		} catch (error) {
-			console.warn(
-				"Failed to create worker, falling back to main thread:",
-				error
-			);
-			return null;
-		}
-	},
-};
+self.MonacoEnvironment = {
+  getWorker(_, label) {
+    if (label === 'json') {
+      return new jsonWorker()
+    }
+    if (label === 'css' || label === 'scss' || label === 'less') {
+      return new cssWorker()
+    }
+    if (label === 'html' || label === 'handlebars' || label === 'razor') {
+      return new htmlWorker()
+    }
+    if (label === 'typescript' || label === 'javascript') {
+      return new tsWorker()
+    }
+    return new editorWorker()
+  }
+}
 
 // Export an empty object to make this a proper module
-export {};
+export {}

@@ -48,6 +48,9 @@ import {
 } from "./Tools";
 import remarkMath from "./remarkMath";
 import { isElectron } from "../../../utils/electronUtils";
+import { loader } from '@monaco-editor/react';
+import * as monaco from 'monaco-editor';
+loader.config({ monaco });
 function renderAvatar(role: ChatRole) {
 	switch (role) {
 		case ChatRole.Assistant:
