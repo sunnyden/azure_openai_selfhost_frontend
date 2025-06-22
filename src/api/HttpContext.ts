@@ -128,6 +128,16 @@ export class HttpContext implements IHttpContext {
     }
   }
 
+  // create websocket connection
+  public async createSocket<T>(url: string): Promise<WebSocket> {
+    // with auth header
+    const socket = new WebSocket(this.baseUrl + url);
+    socket.onopen = () => {
+      socket.send(JSON.stringify({ type: "auth", token: this.authHeader }));
+    };
+    return socket;
+  }
+
   public setAuth(auth: string): void {
     this.authHeader = `Bearer ${auth}`;
   }

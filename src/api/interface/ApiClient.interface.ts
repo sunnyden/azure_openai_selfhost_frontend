@@ -44,3 +44,9 @@ export interface IChatClient {
 	requestCompletion(request: ChatCompletionRequest): Promise<ChatResponse>;
 	requestCompletionStream(request: ChatCompletionRequest): AsyncGenerator<PartialChatResponse>;
 }
+
+export interface IMCPRemoteTransportClient {
+	startMcpServer(): Promise<void>;
+	getMcpTransportCorrelationId(): string;
+	stopMcpServer(): Promise<void>;
+}

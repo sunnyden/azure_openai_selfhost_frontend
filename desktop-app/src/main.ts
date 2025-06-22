@@ -2,10 +2,12 @@ import { app, BrowserWindow, Menu, shell, ipcMain } from "electron";
 import * as path from "path";
 import { spawn, ChildProcess } from "child_process";
 import { createServer } from "net";
+import { MCPConnectionManager } from "./mcp/MCPConnectionManager";
 
 class MainApp {
 	private mainWindow: BrowserWindow | null = null;
 	private devServerProcess: ChildProcess | null = null;
+	private mcpConnectionManager?: MCPConnectionManager; 
 	private isDevelopment: boolean =
 		process.env.NODE_ENV === "development" ||
 		process.env.ELECTRON_DEV === "true";
@@ -39,8 +41,8 @@ class MainApp {
 				app.quit();
 			}
 		}); // Handle security - prevent new window creation
-		app.on("web-contents-created", (event, contents) => {
-			contents.setWindowOpenHandler(({ url }) => {
+		app.on("web-contents-created", (event: any, contents: any) => {
+			contents.setWindowOpenHandler(({ url }: { url: string }) => {
 				shell.openExternal(url);
 				return { action: "deny" };
 			});
@@ -64,6 +66,7 @@ class MainApp {
 			show: false, // Don't show until ready
 			icon: this.getIconPath(),
 		});
+		this.mainWindow.setWindowButtonVisibility(false);
 		// Load the appropriate URL
 		const url = this.isDevelopment
 			? "http://localhost:3000"
@@ -88,6 +91,9 @@ class MainApp {
 			shell.openExternal(url);
 			return { action: "deny" };
 		});
+		this.mcpConnectionManager = new MCPConnectionManager(
+			this.mainWindow
+		);
 	}
 
 	private getIconPath(): string | undefined {
@@ -190,6 +196,8 @@ class MainApp {
 	}
 
 	private setupIpcHandlers(): void {
+		// MCP Connection Manager
+		this.mcpConnectionManager?.start();
 		// Window control handlers
 		ipcMain.handle("window-minimize", () => {
 			this.mainWindow?.minimize();
