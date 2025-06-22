@@ -157,11 +157,11 @@ const ChatItem = memo(function ChatItem({
 						currentMessage,
 						node
 					);
-					const code = props.children as string;
+					const code = props.children as string | null;
 
 					return (
 						<CodeBlockWrapper
-							code={code}
+							code={code ?? ""}
 							detectedLanguage={detectedLanguage}
 						/>
 					);
