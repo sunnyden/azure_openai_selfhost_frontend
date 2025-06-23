@@ -9,9 +9,10 @@ export default defineConfig({
     port: 3000,
     proxy: {
       '/api': {
-        target: 'https://chat.hq.gd',
+        target: 'http://127.0.0.1:5131',
         changeOrigin: true,
         secure: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
       }
     }
   },

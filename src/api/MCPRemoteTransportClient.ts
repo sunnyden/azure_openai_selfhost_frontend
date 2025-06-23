@@ -5,48 +5,65 @@ export class MCPRemoteTransportClient implements IMCPRemoteTransportClient {
     private socket?: WebSocket;
     private correlationId?: string;
     constructor(private readonly httpContext: IHttpContext) {}
-    public startMcpServer(): Promise<void> {
+    public async startMcpServer(command: string, args: string[]): Promise<void> {
+        await window.electronAPI?.mcpStart({
+            type: "stdio",
+            config: {
+                command: command,
+                args: args,
+            }
+        });
+        
         this.socket = new WebSocket(`wss://chat.hq.gd/api/mcp/connect`);
         return new Promise((resolve, reject) => {
-            this.socket!.onopen = () => {
-                console.log("WebSocket connection established");
-                this.socket?.send(JSON.stringify({
-                    type: "mcp-transport",
-                    payload: {
-                        correlationId: this.getMcpTransportCorrelationId(),
-                        transportType: "websocket",
-                    }
-                }));
-                resolve();
-            };
             this.socket!.onerror = (error) => {
-                console.error("WebSocket error:", error);
                 reject(error);
-            };
-            this.socket!.onclose = () => {
-                console.log("WebSocket connection closed");
             };
             this.socket!.onmessage = (event) => {
                 if (event.data instanceof ArrayBuffer) {
-                    this.onData(event.data);
-                } else {
-                    console.warn("Received non-ArrayBuffer data:", event.data);
+                    this.onMcpClientData(event.data);
+                } else if (typeof event.data === "string") {
+                    this.onControlMessage(event.data);
+                }
+                if (!!this.correlationId){
+                    resolve();
                 }
             };
         });
     }
     public getMcpTransportCorrelationId(): string {
-        throw new Error("Method not implemented.");
+        return this.correlationId || "";
     }
     public stopMcpServer(): Promise<void> {
-        throw new Error("Method not implemented.");
+        this.socket?.close();
+        return window.electronAPI?.mcpStop() || Promise.resolve();
     }
 
-    private onData(data: ArrayBuffer): void {
+    private onControlMessage(data: string): void {
+        const parsedData = JSON.parse(data);
+        this.correlationId = parsedData.correlationId;
+        if (!this.correlationId) {
+            console.error("No correlation ID found in control message.");
+            return;
+        }
+        window.electronAPI?.registerMCPMessageHandler(this.correlationId, this.onMcpServiceData.bind(this));
+    }
+
+    private onMcpServiceData(data: ArrayBuffer): void {
+        if (!this.correlationId) {
+            console.error("No correlation ID set for MCP response.");
+            return;
+        }
+        console.log("MCP Service Data Received:", new TextDecoder().decode(data));
+        this.socket?.send(data);
+    }
+
+    private onMcpClientData(data: ArrayBuffer): void {
         if (!this.correlationId){
             this.correlationId = JSON.parse(new TextDecoder().decode(data)).correlationId;
             return;
         }
+        console.log("MCP Client Data Received:", new TextDecoder().decode(data));
         window.electronAPI?.mcpMessage(data);
     }
 }

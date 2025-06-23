@@ -46,7 +46,7 @@ export interface IChatClient {
 }
 
 export interface IMCPRemoteTransportClient {
-	startMcpServer(): Promise<void>;
+	startMcpServer(command: string, args: string[]): Promise<void>;
 	getMcpTransportCorrelationId(): string;
 	stopMcpServer(): Promise<void>;
 }
