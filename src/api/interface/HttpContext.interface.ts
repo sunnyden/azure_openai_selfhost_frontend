@@ -5,4 +5,5 @@ export interface IHttpContext {
   get<T>(url: string): Promise<ApiResponse<T>>;
   post<P, T>(url: string, payload: P): Promise<ApiResponse<T>>;
   postStream<P, T>(url: string, payload: P): AsyncGenerator<T>;
+  authToken: string;
 }

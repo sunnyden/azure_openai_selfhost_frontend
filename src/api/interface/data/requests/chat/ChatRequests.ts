@@ -6,5 +6,6 @@ export type ChatCompletionRequest = {
 }
 
 type ChatCompletionRequestBody = {
-    messages: ChatMessage[]
+    messages: ChatMessage[],
+    MCPCorrelationId?: string,
 }

@@ -9,6 +9,11 @@ export class HttpContext implements IHttpContext {
     }
     this.authHeader = "";
   }
+  
+  public get authToken(): string {
+    return this.authHeader.replace("Bearer ", "");
+  }
+
   public async get<T>(url: string): Promise<ApiResponse<T>> {
     const response = await fetch(this.baseUrl + url, {
       method: "GET",
