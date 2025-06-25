@@ -346,4 +346,3 @@ export class MCPHubServer implements IHubService {
         return sanitized;
     }
 }
-

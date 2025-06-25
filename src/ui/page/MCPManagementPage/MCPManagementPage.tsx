@@ -33,6 +33,7 @@ import {
     Computer as ServerIcon,
     Build as ToolIcon,
     Refresh as RefreshIcon,
+    ElectricBolt,
 } from "@mui/icons-material";
 import { useMCPContext } from "../../../data/context/MCPContext";
 import { isElectron } from "../../../utils/electronUtils";
@@ -52,13 +53,25 @@ export function MCPManagementPage({ onBack }: MCPManagementPageProps) {
                     flexDirection: "column",
                 }}
             >
-                <AppBar position="static" elevation={1}>
+                <AppBar
+                    position="static"
+                    elevation={1}
+                    sx={{
+                        WebkitAppRegion: "drag",
+                        "& .MuiToolbar-root": {
+                            WebkitAppRegion: "drag",
+                        },
+                    }}
+                >
                     <Toolbar>
                         <IconButton
                             edge="start"
                             color="inherit"
                             onClick={onBack}
-                            sx={{ mr: 2 }}
+                            sx={{
+                                mr: 2,
+                                WebkitAppRegion: "no-drag",
+                            }}
                         >
                             <ArrowBackIcon />
                         </IconButton>
@@ -330,13 +343,25 @@ export function MCPManagementPage({ onBack }: MCPManagementPageProps) {
             sx={{ height: "100dvh", display: "flex", flexDirection: "column" }}
         >
             {/* App Bar */}
-            <AppBar position="static" elevation={1}>
+            <AppBar
+                position="static"
+                elevation={1}
+                sx={{
+                    WebkitAppRegion: "drag",
+                    "& .MuiToolbar-root": {
+                        WebkitAppRegion: "drag",
+                    },
+                }}
+            >
                 <Toolbar>
                     <IconButton
                         edge="start"
                         color="inherit"
                         onClick={onBack}
-                        sx={{ mr: 2 }}
+                        sx={{
+                            mr: 2,
+                            WebkitAppRegion: "no-drag",
+                        }}
                     >
                         <ArrowBackIcon />
                     </IconButton>
@@ -353,6 +378,9 @@ export function MCPManagementPage({ onBack }: MCPManagementPageProps) {
                                 color="inherit"
                                 onClick={handleRefreshTools}
                                 disabled={loading}
+                                sx={{
+                                    WebkitAppRegion: "no-drag",
+                                }}
                             >
                                 <RefreshIcon />
                             </IconButton>
@@ -494,7 +522,7 @@ export function MCPManagementPage({ onBack }: MCPManagementPageProps) {
                                                                 size={20}
                                                             />
                                                         ) : (
-                                                            <PlayIcon />
+                                                            <ElectricBolt />
                                                         )}
                                                     </IconButton>
                                                     <IconButton

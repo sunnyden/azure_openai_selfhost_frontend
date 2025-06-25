@@ -63,4 +63,3 @@ contextBridge.exposeInMainWorld("electronAPI", {
         ipcRenderer.removeAllListeners(`mcp-error-${sessionId}`);
     },
 });
-

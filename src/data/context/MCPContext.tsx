@@ -82,8 +82,8 @@ export function MCPProvider({ children }: { children: React.ReactNode }) {
         async (name: string) => {
             try {
                 // Remove from hub if it's running
-                await apiClient.mcpHubService.removeClient(name);
                 if (isHubRunning) {
+                    await apiClient.mcpHubService.removeClient(name);
                     await refreshTools();
                 }
 
@@ -147,28 +147,6 @@ export function MCPProvider({ children }: { children: React.ReactNode }) {
     const validateServer = useCallback(
         async (name: string, command: string, args: string[]) => {
             try {
-                // Basic validation
-                if (!name.trim()) {
-                    throw new Error("Server name cannot be empty");
-                }
-
-                // Validate server name format
-                const nameRegex = /^[a-zA-Z0-9_\.-]+$/;
-                if (!nameRegex.test(name.trim())) {
-                    throw new Error(
-                        "Server name can only contain letters, numbers, underscores, dots, and hyphens"
-                    );
-                }
-
-                if (!command.trim()) {
-                    throw new Error("Command cannot be empty");
-                }
-
-                // Check if server name already exists
-                if (servers.some(s => s.name === name.trim())) {
-                    throw new Error("Server name already exists");
-                }
-
                 // Test actual server connection
                 const testConfig: MCPConnectionRequest = {
                     type: "stdio",
@@ -507,4 +485,3 @@ export function useMCPContext() {
 
     return context;
 }
-

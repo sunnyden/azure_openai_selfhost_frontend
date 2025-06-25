@@ -54,4 +54,3 @@ export abstract class MCPConnector {
 
     protected abstract sendToServer(data: ArrayBuffer): void;
 }
-
