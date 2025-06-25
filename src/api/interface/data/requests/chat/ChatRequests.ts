@@ -1,10 +1,11 @@
-import {ChatMessage} from "../../common/Chat";
+import { ChatMessage } from "../../common/Chat";
 
 export type ChatCompletionRequest = {
-    model: string,
-    request: ChatCompletionRequestBody
-}
+    model: string;
+    request: ChatCompletionRequestBody;
+};
 
 type ChatCompletionRequestBody = {
-    messages: ChatMessage[]
-}
+    messages: ChatMessage[];
+    MCPCorrelationId?: string;
+};

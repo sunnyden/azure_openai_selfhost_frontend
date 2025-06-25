@@ -1,13 +1,13 @@
 export type LoginRequest = {
-    userName: string,
-    password: string
-}
+    userName: string;
+    password: string;
+};
 
 export type ChangePasswordRequest = {
-    oldPassword: string,
-    newPassword: string
-}
+    oldPassword: string;
+    newPassword: string;
+};
 
 export type RemoveUserRequest = {
-    userId: number
-}
+    userId: number;
+};

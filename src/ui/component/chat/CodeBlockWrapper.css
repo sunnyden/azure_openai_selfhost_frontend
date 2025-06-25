@@ -1,4 +1,4 @@
-.code-block-wrapper code > span{
+.code-block-wrapper code > span {
     padding: 0 !important;
 }
 
@@ -6,13 +6,13 @@
     border: none;
 }
 
-.code-block-wrapper code > *{
+.code-block-wrapper code > * {
     -webkit-user-select: text !important; /* Safari */
     -ms-user-select: text !important; /* IE 10 and IE 11 */
-    user-select: text !important /* Standard syntax */
+    user-select: text !important; /* Standard syntax */
 }
 
-p > code{
+p > code {
     border: 1px #a7a7a7 solid;
     padding: 2px 3px;
     border-radius: 4px;

@@ -1,20 +1,17 @@
 {
-	"version": "2.0.0",
-	"tasks": [
-		{
-			"label": "Run Desktop App",
-			"type": "shell",
-			"command": "npm",
-			"args": [
-				"run",
-				"start"
-			],
-			"group": "build",
-			"isBackground": true,
-			"options": {
-				"cwd": "${workspaceFolder}/desktop-app"
-			},
-			"problemMatcher": []
-		}
-	]
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run Desktop App",
+            "type": "shell",
+            "command": "npm",
+            "args": ["run", "start"],
+            "group": "build",
+            "isBackground": true,
+            "options": {
+                "cwd": "${workspaceFolder}/desktop-app"
+            },
+            "problemMatcher": []
+        }
+    ]
 }

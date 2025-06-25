@@ -13,22 +13,25 @@ import { UserContextProvider } from "./data/context/UserContext";
 import { ModelProvider } from "./data/context/ModelContext";
 import { ConversationProvider } from "./data/context/ConversationContext";
 import { ConversationHistoryProvider } from "./data/context/ConversationHistoryContext";
+import { MCPProvider } from "./data/context/MCPContext";
 
 const root = ReactDOM.createRoot(
-	document.getElementById("root") as HTMLElement
+    document.getElementById("root") as HTMLElement
 );
 root.render(
-	<React.StrictMode>
-		<UserContextProvider>
-			<ModelProvider>
-				<ConversationHistoryProvider>
-					<ConversationProvider>
-						<App />
-					</ConversationProvider>
-				</ConversationHistoryProvider>
-			</ModelProvider>
-		</UserContextProvider>
-	</React.StrictMode>
+    <React.StrictMode>
+        <UserContextProvider>
+            <ModelProvider>
+                <MCPProvider>
+                    <ConversationHistoryProvider>
+                        <ConversationProvider>
+                            <App />
+                        </ConversationProvider>
+                    </ConversationHistoryProvider>
+                </MCPProvider>
+            </ModelProvider>
+        </UserContextProvider>
+    </React.StrictMode>
 );
 
 // If you want to start measuring performance in your app, pass a function
