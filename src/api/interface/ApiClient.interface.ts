@@ -5,6 +5,7 @@ import { ModelAssignRequest } from "./data/requests/model/ModelRequests";
 import { Transaction } from "./data/common/Transaction";
 import { ChatCompletionRequest } from "./data/requests/chat/ChatRequests";
 import { ChatResponse, PartialChatResponse } from "./data/common/Chat";
+import { Tool } from "@modelcontextprotocol/sdk/types";
 
 export interface IApiClient {
   get userClient(): IUserClient;
@@ -66,8 +67,14 @@ export interface IHubService {
   stop(): Promise<void>;
   addClient(config: MCPConnectionRequest, name: string): Promise<void>;
   removeClient(name: string): Promise<void>;
-  listAllTools(): Promise<Map<string, any[]>>;
+  listAllTools(): Promise<Map<string, Tool[]>>;
   getSessionId(): string | undefined;
+  // Additional utility methods
+  getRegisteredToolNames(): string[];
+  hasClient(name: string): boolean;
+  getClientNames(): string[];
+  isRunning(): boolean;
+  restart(): Promise<void>;
 }
 
 // Types for MCP connection configuration

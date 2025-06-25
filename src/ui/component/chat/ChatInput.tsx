@@ -15,26 +15,21 @@ import {
   Select,
   Stack,
   TextField,
-  IconButton,
-  Tooltip,
-  Chip,
-  Typography,
 } from "@mui/material";
 import React, { useCallback, useState } from "react";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import BorderColorIcon from "@mui/icons-material/BorderColor";
-import ClearIcon from "@mui/icons-material/Clear";
-import SettingsIcon from "@mui/icons-material/Settings";
 import { ChatRole } from "../../../api/interface/data/common/Chat";
 import { useConversationContext } from "../../../data/context/ConversationContext";
-import { useMCPContext } from "../../../data/context/MCPContext";
-import { MCPConfigDialog } from "./MCPConfigDialog";
+import { MCPStatusIndicator } from "./MCPStatusIndicator";
 function ChatButtonGroup({
   onSend,
   onAppend,
+  onOpenMCPManagement,
 }: {
   onSend: () => void;
   onAppend: () => void;
+  onOpenMCPManagement: () => void;
 }) {
   const [moreOptionEnabled, setMoreOptionEnabled] = React.useState(false);
   const anchorRef = React.useRef<HTMLDivElement>(null);
@@ -56,7 +51,8 @@ function ChatButtonGroup({
     onAppend();
   };
   return (
-    <Box textAlign={"end"}>
+    <Stack direction="row" spacing={1} alignItems="center">
+      {/* Send Button Group */}
       <ButtonGroup
         variant="contained"
         ref={anchorRef}
@@ -102,10 +98,14 @@ function ChatButtonGroup({
           </Grow>
         )}
       </Popper>
-    </Box>
+    </Stack>
   );
 }
-export function ChatInput() {
+export function ChatInput({
+  onOpenMCPManagement,
+}: {
+  onOpenMCPManagement?: () => void;
+}) {
   const [role, setRole] = useState<ChatRole>(ChatRole.User);
   const [prompt, setPrompt] = useState<string>("");
   const {
@@ -115,39 +115,13 @@ export function ChatInput() {
     currentConversation,
     lastStopReason,
   } = useConversationContext();
-  const {
-    isHubRunning,
-    servers,
-    availableTools,
-    addServer,
-    removeServer,
-    startHub,
-    stopHub,
-    refreshTools,
-    isConfigDialogOpen,
-    openConfigDialog,
-    closeConfigDialog,
-  } = useMCPContext();
   const [isLoading, setLoading] = useState(false);
 
-  // Helper function to add a server
-  const handleAddServer = useCallback(
-    async (name: string, command: string, args: string[]) => {
-      const config = {
-        type: "stdio" as const,
-        config: {
-          command,
-          args,
-        },
-      };
-      await addServer(name, config);
-    },
-    [addServer]
-  );
   const onAppend = useCallback(() => {
     setPrompt("");
     addMessage(role, prompt);
   }, [addMessage, role, prompt]);
+
   const onSend = useCallback(async () => {
     setPrompt("");
     setLoading(true);
@@ -156,6 +130,7 @@ export function ChatInput() {
     } catch (e) {}
     setLoading(false);
   }, [role, prompt, requestCompletion]);
+
   const continueGenerate = useCallback(async () => {
     setLoading(true);
     try {
@@ -167,6 +142,10 @@ export function ChatInput() {
   const handleClearConversation = useCallback(() => {
     clearConversation();
   }, [clearConversation]);
+
+  const handleOpenMCPManagement = useCallback(() => {
+    onOpenMCPManagement?.();
+  }, [onOpenMCPManagement]);
   return isLoading ? (
     <Stack alignItems={"center"} padding={2} spacing={2}>
       <CircularProgress />
@@ -197,41 +176,6 @@ export function ChatInput() {
         )}
       <Divider variant="inset" />
 
-      {/* MCP Configuration Section */}
-      <Box>
-        <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 2 }}>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <Tooltip title="Model Context Protocol Configuration">
-              <IconButton onClick={openConfigDialog} size="small">
-                <SettingsIcon />
-              </IconButton>
-            </Tooltip>
-            <Typography variant="body2" color="text.secondary">
-              MCP Hub:
-            </Typography>
-            <Chip
-              size="small"
-              label={isHubRunning ? "Running" : "Stopped"}
-              color={isHubRunning ? "success" : "default"}
-              variant={isHubRunning ? "filled" : "outlined"}
-            />
-          </Stack>
-          {isHubRunning && (
-            <Stack direction="column" alignItems="flex-end">
-              <Typography variant="caption" color="text.secondary">
-                {servers.length} servers,{" "}
-                {Array.from(availableTools.values()).reduce(
-                  (total, tools) => total + tools.length,
-                  0
-                )}{" "}
-                tools
-              </Typography>
-            </Stack>
-          )}
-        </Stack>
-      </Box>
-
-      <Box></Box>
       <TextField
         label="Message"
         multiline
@@ -239,36 +183,34 @@ export function ChatInput() {
         value={prompt}
         onChange={e => setPrompt(e.target.value)}
       />
-      <Stack direction={"row"} justifyContent="flex-end" spacing={2}>
-        <FormControl size="small">
-          <InputLabel id="chat-role-label">Role</InputLabel>
-          <Select
-            labelId="chat-role-label"
-            value={role}
-            label="Role"
-            onChange={e => setRole(e.target.value as ChatRole)}
-          >
-            <MenuItem value={ChatRole.User}>User</MenuItem>
-            <MenuItem value={ChatRole.System}>System Prompt</MenuItem>
-            <MenuItem value={ChatRole.Assistant}>Assistant Response</MenuItem>
-          </Select>
-        </FormControl>
-        <ChatButtonGroup onSend={onSend} onAppend={onAppend} />
+      <Stack
+        direction={"row"}
+        justifyContent="space-between"
+        alignItems="center"
+        spacing={2}
+      >
+        <MCPStatusIndicator onOpenManagement={handleOpenMCPManagement} />
+        <Stack direction={"row"} spacing={2} alignItems="center">
+          <FormControl size="small">
+            <InputLabel id="chat-role-label">Role</InputLabel>
+            <Select
+              labelId="chat-role-label"
+              value={role}
+              label="Role"
+              onChange={e => setRole(e.target.value as ChatRole)}
+            >
+              <MenuItem value={ChatRole.User}>User</MenuItem>
+              <MenuItem value={ChatRole.System}>System Prompt</MenuItem>
+              <MenuItem value={ChatRole.Assistant}>Assistant Response</MenuItem>
+            </Select>
+          </FormControl>
+          <ChatButtonGroup
+            onSend={onSend}
+            onAppend={onAppend}
+            onOpenMCPManagement={handleOpenMCPManagement}
+          />
+        </Stack>
       </Stack>
-
-      {/* MCP Configuration Dialog */}
-      <MCPConfigDialog
-        open={isConfigDialogOpen}
-        onClose={closeConfigDialog}
-        isHubRunning={isHubRunning}
-        servers={servers}
-        availableTools={availableTools}
-        onAddServer={handleAddServer}
-        onRemoveServer={removeServer}
-        onStartHub={startHub}
-        onStopHub={stopHub}
-        onRefreshTools={refreshTools}
-      />
     </Stack>
   );
 }
