@@ -85,7 +85,6 @@ export class MCPHubServer implements IHubService {
       const client = this.clients.get(key);
       if (client) {
         const tools = await client.listTools();
-        tools.tools[0].inputSchema.type;
         this.toolsMap.set(key, tools.tools);
       } else {
         console.warn(`Client with name ${key} does not exist.`);
