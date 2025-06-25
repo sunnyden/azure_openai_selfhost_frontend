@@ -1,6 +1,4 @@
-export interface MCPConfiguration{
-
-}
+export interface MCPConfiguration {}
 export interface StdioMCPConfiguration extends MCPConfiguration {
     command: string;
     args?: string[];

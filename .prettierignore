@@ -1,6 +1,7 @@
 # Dependencies
 node_modules/
 desktop-app/node_modules/
+mcp-sdk/
 
 # Build outputs
 build/

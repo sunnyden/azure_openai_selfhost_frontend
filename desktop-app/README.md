@@ -23,11 +23,13 @@ This is an Electron-based desktop application that loads the OpenAI Self-Host fr
 ### Setup
 
 1. Install dependencies:
+
 ```bash
 npm install
 ```
 
 2. Build the TypeScript code:
+
 ```bash
 npm run build
 ```
@@ -35,12 +37,15 @@ npm run build
 ### Running the Application
 
 #### Development Mode
+
 To run in development mode (automatically starts React dev server and loads from localhost:3000):
+
 ```bash
 npm run dev
 ```
 
 This will:
+
 - Build the TypeScript files
 - Start Electron in development mode
 - Automatically start the React development server (if not already running)
@@ -48,7 +53,9 @@ This will:
 - Open DevTools automatically
 
 #### Production Mode
+
 To run in production mode (loads from remote URL):
+
 ```bash
 npm run start
 ```
@@ -84,19 +91,20 @@ desktop-app/
 The application automatically detects the environment:
 
 - **Development**: `NODE_ENV=development` or `ELECTRON_DEV=true`
-  - Loads from `http://localhost:3000`
-  - Automatically starts React dev server if needed
-  - Opens DevTools
-  - Includes hot reloading
+    - Loads from `http://localhost:3000`
+    - Automatically starts React dev server if needed
+    - Opens DevTools
+    - Includes hot reloading
 
 - **Production**: Default mode
-  - Loads from `https://chat.hq.gd`
-  - No DevTools
-  - Optimized for distribution
+    - Loads from `https://chat.hq.gd`
+    - No DevTools
+    - Optimized for distribution
 
 ## Security
 
 The application follows Electron security best practices:
+
 - Context isolation enabled
 - Node integration disabled in renderer
 - Remote module disabled
@@ -106,6 +114,7 @@ The application follows Electron security best practices:
 ## Icons
 
 Place application icons in the `assets/` directory:
+
 - `icon.ico` for Windows
 - `icon.icns` for macOS
 - `icon.png` for Linux (512x512 recommended)

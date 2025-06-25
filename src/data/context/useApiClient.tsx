@@ -4,5 +4,5 @@ import { ApiClient } from "../../api/ApiClient";
 const client = new ApiClient("/api");
 
 export function useApiClient() {
-	return React.useMemo(() => client, []);
+    return React.useMemo(() => client, []);
 }
