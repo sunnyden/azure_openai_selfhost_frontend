@@ -19,15 +19,33 @@ export class MCPConnectionManager {
         console.log("MCPConnectionManager started");
         ipcMain.on(
             "mcp-start",
-            (_, config: MCPConnectionRequest, sessionId: string) => {
+            (event, config: MCPConnectionRequest, sessionId: string) => {
                 console.log(
                     "MCPConnectionManager received mcp-start request",
                     config
                 );
 
-                const connector = this.createConnector(config, sessionId);
-                this.activeConnectors.set(sessionId, connector);
-                connector.start();
+                try {
+                    const connector = this.createConnector(config, sessionId);
+                    this.activeConnectors.set(sessionId, connector);
+                    connector.start();
+
+                    // Send success confirmation
+                    event.sender.send(`mcp-start-success-${sessionId}`);
+                } catch (error) {
+                    console.error("Failed to start MCP connector:", error);
+
+                    // Send error back to renderer process
+                    const errorMessage =
+                        error instanceof Error
+                            ? error.message
+                            : "Unknown error occurred while starting MCP server";
+
+                    event.sender.send(`mcp-start-error-${sessionId}`, {
+                        message: errorMessage,
+                        config: config,
+                    });
+                }
             }
         );
         ipcMain.on("mcp-stop", (_, sessionId: string) => {
@@ -64,3 +82,4 @@ export class MCPConnectionManager {
         }
     }
 }
+

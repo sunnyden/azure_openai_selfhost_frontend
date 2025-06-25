@@ -119,8 +119,6 @@ export function MCPProvider({ children }: { children: React.ReactNode }) {
             // Start the hub service
             await apiClient.mcpHubService.start();
             setIsHubRunning(true);
-
-            await refreshTools();
         } catch (error) {
             console.error("Failed to start MCP hub:", error);
             throw error;
@@ -353,6 +351,12 @@ export function MCPProvider({ children }: { children: React.ReactNode }) {
         }
     }, [servers, isInitialized]);
 
+    useEffect(() => {
+        if (isHubRunning) {
+            refreshTools();
+        }
+    }, [isHubRunning]);
+
     // Utility functions for configuration management
     const exportConfigurations = useCallback(() => {
         return JSON.stringify(servers, null, 2);
@@ -503,3 +507,4 @@ export function useMCPContext() {
 
     return context;
 }
+

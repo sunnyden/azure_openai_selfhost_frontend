@@ -29,7 +29,38 @@ contextBridge.exposeInMainWorld("electronAPI", {
             handler(message);
         });
     },
+    registerMCPStartSuccessHandler: (
+        sessionId: string,
+        handler: () => void
+    ) => {
+        ipcRenderer.on(`mcp-start-success-${sessionId}`, event => {
+            handler();
+        });
+    },
+    registerMCPStartErrorHandler: (
+        sessionId: string,
+        handler: (error: {
+            message: string;
+            config: MCPConnectionRequest;
+        }) => void
+    ) => {
+        ipcRenderer.on(`mcp-start-error-${sessionId}`, (event, error) => {
+            handler(error);
+        });
+    },
+    registerMCPErrorHandler: (
+        sessionId: string,
+        handler: (error: { message: string; stack?: string }) => void
+    ) => {
+        ipcRenderer.on(`mcp-error-${sessionId}`, (event, error) => {
+            handler(error);
+        });
+    },
     mcpMessageRemoveListener: (sessionId: string) => {
         ipcRenderer.removeAllListeners(`mcp-message-reply-${sessionId}`);
+        ipcRenderer.removeAllListeners(`mcp-start-success-${sessionId}`);
+        ipcRenderer.removeAllListeners(`mcp-start-error-${sessionId}`);
+        ipcRenderer.removeAllListeners(`mcp-error-${sessionId}`);
     },
 });
+
