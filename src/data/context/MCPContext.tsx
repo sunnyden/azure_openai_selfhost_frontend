@@ -118,7 +118,6 @@ export function MCPProvider({ children }: { children: React.ReactNode }) {
 
             // Start the hub service
             await apiClient.mcpHubService.start();
-            await refreshTools();
             setIsHubRunning(true);
 
             await refreshTools();
