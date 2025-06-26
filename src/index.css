@@ -6,6 +6,66 @@ body {
         sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    color-scheme: light dark;
+    /* Ensure background matches the HTML to prevent flashing */
+    background-color: #ffffff;
+    transition: background-color 0.15s ease;
+}
+
+/* Dark mode background for body */
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #1a1a1a;
+    }
+}
+
+/* Scrollbar theming for WebKit browsers */
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--colorNeutralBackground2, #f3f2f1);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--colorNeutralStroke2, #c8c6c4);
+    border-radius: 6px;
+    border: 2px solid var(--colorNeutralBackground2, #f3f2f1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--colorNeutralStroke1, #b3b0ad);
+}
+
+/* Dark theme scrollbar */
+@media (prefers-color-scheme: dark) {
+    ::-webkit-scrollbar-track {
+        background: var(--colorNeutralBackground2, #292827);
+    }
+
+    ::-webkit-scrollbar-thumb {
+        background: var(--colorNeutralStroke2, #484644);
+        border: 2px solid var(--colorNeutralBackground2, #292827);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+        background: var(--colorNeutralStroke1, #5d5a58);
+    }
+}
+
+/* Firefox scrollbar theming */
+html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--colorNeutralStroke2, #c8c6c4)
+        var(--colorNeutralBackground2, #f3f2f1);
+}
+
+@media (prefers-color-scheme: dark) {
+    html {
+        scrollbar-color: var(--colorNeutralStroke2, #484644)
+            var(--colorNeutralBackground2, #292827);
+    }
 }
 
 code {

@@ -5,6 +5,33 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#000000" />
         <title>ChatGPT</title>
+        <style>
+            /* Prevent white flash during loading/resizing by setting appropriate background colors */
+            html,
+            body,
+            #root {
+                margin: 0;
+                padding: 0;
+                height: 100%;
+                background-color: #ffffff; /* Light theme background */
+                color-scheme: light dark;
+                transition: background-color 0.15s ease;
+            }
+
+            /* Dark theme background when system prefers dark mode */
+            @media (prefers-color-scheme: dark) {
+                html,
+                body,
+                #root {
+                    background-color: #1a1a1a; /* Dark theme background matching Fluent UI dark theme */
+                }
+            }
+
+            /* Ensure smooth transitions during theme changes */
+            * {
+                color-scheme: inherit;
+            }
+        </style>
     </head>
     <body>
         <noscript>You need to enable JavaScript to run this app.</noscript>

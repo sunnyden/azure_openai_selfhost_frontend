@@ -4,6 +4,10 @@ import { v4 as uuidv4 } from "uuid";
 import { JSONRPCMessage } from "@modelcontextprotocol/sdk/types";
 
 export class ElectronIPCTransport implements Transport {
+    private startPromise?: Promise<void>;
+    private startResolve?: () => void;
+    private startReject?: (error: Error) => void;
+
     constructor(private readonly mcpConnectionRequest: MCPConnectionRequest) {
         if (!window.electronAPI) {
             throw new Error(
@@ -14,14 +18,57 @@ export class ElectronIPCTransport implements Transport {
     }
 
     public async start(): Promise<void> {
-        await window.electronAPI?.mcpStart(
-            this.mcpConnectionRequest,
-            this.sessionId!
-        );
+        if (this.startPromise) {
+            return this.startPromise;
+        }
+
+        this.startPromise = new Promise<void>((resolve, reject) => {
+            this.startResolve = resolve;
+            this.startReject = reject;
+        });
+
+        // Register handlers before starting
         window.electronAPI?.registerMCPMessageHandler(
             this.sessionId!,
             this.handleIncomingMessage.bind(this)
         );
+
+        window.electronAPI?.registerMCPStartSuccessHandler(
+            this.sessionId!,
+            () => {
+                console.log("MCP connection started successfully");
+                this.startResolve?.();
+            }
+        );
+
+        window.electronAPI?.registerMCPStartErrorHandler(
+            this.sessionId!,
+            error => {
+                console.error("MCP connection failed to start:", error);
+                this.startReject?.(
+                    new Error(
+                        `Failed to start MCP server: ${error.message}. Please check your configuration and try again.`
+                    )
+                );
+            }
+        );
+
+        window.electronAPI?.registerMCPErrorHandler(this.sessionId!, error => {
+            console.error("MCP runtime error:", error);
+            this.onerror?.(
+                new Error(
+                    `MCP server error: ${error.message}. The server may have crashed or become unresponsive.`
+                )
+            );
+        });
+
+        // Start the MCP connection
+        await window.electronAPI?.mcpStart(
+            this.mcpConnectionRequest,
+            this.sessionId!
+        );
+
+        return this.startPromise;
     }
 
     public async send(message: JSONRPCMessage): Promise<void> {
@@ -34,9 +81,19 @@ export class ElectronIPCTransport implements Transport {
     }
 
     public async close(): Promise<void> {
-        await window.electronAPI?.mcpStop(this.sessionId!);
-        window.electronAPI?.mcpMessageRemoveListener(this.sessionId!);
-        this.onclose?.();
+        try {
+            await window.electronAPI?.mcpStop(this.sessionId!);
+        } catch (error) {
+            console.error("Error stopping MCP server:", error);
+        } finally {
+            window.electronAPI?.mcpMessageRemoveListener(this.sessionId!);
+            this.onclose?.();
+
+            // Reset start promise state
+            this.startPromise = undefined;
+            this.startResolve = undefined;
+            this.startReject = undefined;
+        }
     }
 
     onclose?: (() => void) | undefined;

@@ -1,17 +1,10 @@
 import React, { useCallback } from "react";
+import { Button, Tooltip, Badge, Text } from "@fluentui/react-components";
 import {
-    Box,
-    IconButton,
-    Tooltip,
-    Chip,
-    Typography,
-    Stack,
-} from "@mui/material";
-import {
-    Settings as SettingsIcon,
-    Computer as ServerIcon,
-    Build as ToolIcon,
-} from "@mui/icons-material";
+    Settings24Regular,
+    Desktop24Regular,
+    Wrench24Regular,
+} from "@fluentui/react-icons";
 import { useMCPContext } from "../../../data/context/MCPContext";
 import { isElectron } from "../../../utils/electronUtils";
 
@@ -26,7 +19,7 @@ export function MCPStatusIndicator({
 
     // Only show MCP features in desktop environment
     if (!isElectron()) {
-        return null;
+        return <div style={{ display: "flex", alignItems: "center" }}></div>;
     }
 
     const totalTools = Array.from(availableTools.values()).reduce(
@@ -38,60 +31,57 @@ export function MCPStatusIndicator({
         onOpenManagement();
     }, [onOpenManagement]);
 
+    const tooltipText = isHubRunning
+        ? `MCP Hub Running - ${servers.length} servers, ${totalTools} tools`
+        : "MCP Hub Stopped - Click to manage";
+
     return (
-        <Stack direction="row" alignItems="center" spacing={1}>
-            <Tooltip
-                title={
-                    isHubRunning
-                        ? `MCP Hub Running - ${servers.length} servers, ${totalTools} tools`
-                        : "MCP Hub Stopped - Click to manage"
-                }
-            >
-                <Box
-                    sx={{
+        <div style={{ display: "flex", alignItems: "center" }}>
+            <Tooltip content={tooltipText} relationship="label">
+                <Button
+                    appearance="subtle"
+                    onClick={handleClick}
+                    style={{
                         display: "flex",
                         alignItems: "center",
-                        gap: 1,
-                        px: 1.5,
-                        py: 0.5,
-                        borderRadius: 1,
+                        gap: "8px",
+                        padding: "6px 12px",
+                        borderRadius: "6px",
                         backgroundColor: isHubRunning
-                            ? "success.main"
-                            : "grey.300",
+                            ? "var(--colorPaletteGreenBackground2)"
+                            : "var(--colorNeutralBackground3)",
                         color: isHubRunning
-                            ? "success.contrastText"
-                            : "grey.700",
-                        cursor: "pointer",
-                        transition: "all 0.2s ease-in-out",
-                        "&:hover": {
-                            backgroundColor: isHubRunning
-                                ? "success.dark"
-                                : "grey.400",
-                        },
+                            ? "var(--colorPaletteGreenForeground2)"
+                            : "var(--colorNeutralForeground2)",
+                        border: `1px solid ${
+                            isHubRunning
+                                ? "var(--colorPaletteGreenBorder1)"
+                                : "var(--colorNeutralStroke1)"
+                        }`,
                     }}
-                    onClick={handleClick}
                 >
-                    <ServerIcon fontSize="small" />
-                    <Typography variant="caption" sx={{ fontWeight: 500 }}>
+                    <Desktop24Regular style={{ fontSize: "16px" }} />
+                    <Text size={200} weight="medium">
                         MCP
-                    </Typography>
+                    </Text>
                     {isHubRunning && totalTools > 0 && (
-                        <Chip
+                        <Badge
                             size="small"
-                            label={totalTools}
-                            sx={{
-                                height: 16,
-                                fontSize: "0.7rem",
-                                backgroundColor: "rgba(255, 255, 255, 0.2)",
-                                color: "inherit",
-                                "& .MuiChip-label": {
-                                    px: 0.5,
-                                },
+                            appearance="filled"
+                            color="brand"
+                            style={{
+                                backgroundColor: "rgba(255, 255, 255, 0.8)",
+                                color: "var(--colorBrandForeground1)",
+                                fontSize: "10px",
+                                minWidth: "16px",
+                                height: "16px",
                             }}
-                        />
+                        >
+                            {totalTools}
+                        </Badge>
                     )}
-                </Box>
+                </Button>
             </Tooltip>
-        </Stack>
+        </div>
     );
 }

@@ -14,7 +14,18 @@ export abstract class MCPConnector {
                 this.sendToServer(message);
             }
         );
-        this.connect();
+
+        try {
+            this.connect();
+        } catch (error) {
+            // If connection fails, send error to renderer process
+            this.onError(
+                error instanceof Error
+                    ? error
+                    : new Error("Unknown connection error")
+            );
+            throw error; // Re-throw to be caught by MCPConnectionManager
+        }
     }
 
     public stop() {
@@ -27,6 +38,14 @@ export abstract class MCPConnector {
             `mcp-message-reply-${this.sessionId}`,
             message
         );
+    }
+
+    protected onError(error: Error): void {
+        console.error("MCPConnector error:", error);
+        this.window.webContents.send(`mcp-error-${this.sessionId}`, {
+            message: error.message,
+            stack: error.stack,
+        });
     }
 
     protected abstract connect(): void;

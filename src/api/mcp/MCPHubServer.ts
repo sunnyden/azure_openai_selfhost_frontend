@@ -88,7 +88,15 @@ export class MCPHubServer implements IHubService {
         });
 
         try {
-            await client.connect(new ElectronIPCTransport(config));
+            await new Promise((resolve, reject) => {
+                client.onerror = (error: Error) => {
+                    reject(error);
+                };
+                client.connect(new ElectronIPCTransport(config)).then(() => {
+                    client.ping().then(resolve);
+                });
+            });
+
             this.clients.set(name, client);
 
             // If server is running, register tools from the new client

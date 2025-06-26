@@ -1,56 +1,44 @@
 import React, { ReactNode } from "react";
-import { Box } from "@mui/material";
 import { isElectron } from "../../../utils/electronUtils";
 
 interface DraggableAreaProps {
     children: ReactNode;
+    style?: React.CSSProperties;
+    className?: string;
 }
 
-export function DraggableArea({ children }: DraggableAreaProps) {
+export function DraggableArea({
+    children,
+    style,
+    className,
+}: DraggableAreaProps) {
+    const baseStyles: React.CSSProperties = {
+        display: "flex",
+        alignItems: "center",
+        flexGrow: 1,
+        minHeight: "inherit", // Inherit height from parent
+        ...style, // Allow custom styles to override
+    };
+
+    const electronStyles: any = isElectron()
+        ? {
+              WebkitAppRegion: "drag",
+              userSelect: "none", // Prevent text selection in drag area
+          }
+        : {};
+
+    const combinedStyles = { ...baseStyles, ...electronStyles };
+
+    const combinedClassName = [
+        isElectron() ? "draggable-area electron-drag" : "draggable-area",
+        className,
+    ]
+        .filter(Boolean)
+        .join(" ");
+
     return (
-        <Box
-            sx={{
-                display: "flex",
-                alignItems: "center",
-                flexGrow: 1,
-                // Make the area draggable in Electron
-                ...(isElectron() && {
-                    WebkitAppRegion: "drag",
-                    // Make all interactive elements non-draggable
-                    "& .MuiIconButton-root": {
-                        WebkitAppRegion: "no-drag",
-                    },
-                    "& .MuiFormControl-root": {
-                        WebkitAppRegion: "no-drag",
-                    },
-                    "& .MuiSelect-root": {
-                        WebkitAppRegion: "no-drag",
-                    },
-                    "& .MuiMenuItem-root": {
-                        WebkitAppRegion: "no-drag",
-                    },
-                    "& .MuiMenu-root": {
-                        WebkitAppRegion: "no-drag",
-                    },
-                    "& .MuiButton-root": {
-                        WebkitAppRegion: "no-drag",
-                    },
-                    "& .MuiTextField-root": {
-                        WebkitAppRegion: "no-drag",
-                    },
-                    "& input": {
-                        WebkitAppRegion: "no-drag",
-                    },
-                    "& button": {
-                        WebkitAppRegion: "no-drag",
-                    },
-                    "& select": {
-                        WebkitAppRegion: "no-drag",
-                    },
-                }),
-            }}
-        >
+        <div style={combinedStyles} className={combinedClassName}>
             {children}
-        </Box>
+        </div>
     );
 }

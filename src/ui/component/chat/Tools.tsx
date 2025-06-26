@@ -1,15 +1,18 @@
 import {
-    AccessTimeOutlined,
-    AutoAwesome,
-    AutoAwesomeOutlined,
-    AutoFixHighOutlined,
-    CheckOutlined,
-    Google,
-    PublicOutlined,
-    SearchOutlined,
-} from "@mui/icons-material";
-import { Chip, CircularProgress, Link, Stack, Tooltip } from "@mui/material";
-import exp from "constants";
+    Badge,
+    Spinner,
+    Tooltip,
+    Text,
+    Link,
+} from "@fluentui/react-components";
+import {
+    ClockRegular,
+    SparkleRegular,
+    WandRegular,
+    CheckmarkRegular,
+    SearchRegular,
+    GlobeRegular,
+} from "@fluentui/react-icons";
 import { WeiboIcon } from "./WeiboIcon";
 
 interface ToolProps {
@@ -33,92 +36,122 @@ export function ImageGenerateTool(props: ToolProps) {
     const { parameter } = props;
     const param = JSON.parse(parameter) as ImageGenerationParameter;
     return (
-        <Stack direction={"row"} spacing={1} alignItems="center">
-            <Tooltip title={param.prompt} placement="top">
-                <Chip
-                    size="small"
-                    color="secondary"
-                    label={`Generate image: ${param.prompt.substring(
-                        0,
-                        100
-                    )}...`}
-                    icon={<AutoFixHighOutlined />}
-                    deleteIcon={
-                        props.working ? (
-                            <CircularProgress size={15} />
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Tooltip content={param.prompt} relationship="label">
+                <Badge
+                    size="medium"
+                    color="informative"
+                    appearance="filled"
+                    icon={<WandRegular />}
+                >
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                        }}
+                    >
+                        <Text size={200}>
+                            Generate image: {param.prompt.substring(0, 100)}...
+                        </Text>
+                        {props.working ? (
+                            <Spinner size="extra-tiny" appearance="inverted" />
                         ) : (
-                            <CheckOutlined />
-                        )
-                    }
-                    onDelete={() => {}}
-                />
+                            <CheckmarkRegular style={{ fontSize: "12px" }} />
+                        )}
+                    </div>
+                </Badge>
             </Tooltip>
-        </Stack>
+        </div>
     );
 }
 
 export function TimeTool(props: ToolProps) {
     return (
-        <Stack direction={"row"} spacing={1} alignItems="center">
-            <Chip
-                size="small"
-                color="info"
-                label="Check current time"
-                icon={<AccessTimeOutlined />}
-                deleteIcon={
-                    props.working ? (
-                        <CircularProgress size={15} />
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Badge
+                size="medium"
+                color="brand"
+                appearance="filled"
+                icon={<ClockRegular />}
+            >
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                    }}
+                >
+                    <Text size={200}>Check current time</Text>
+                    {props.working ? (
+                        <Spinner size="extra-tiny" appearance="inverted" />
                     ) : (
-                        <CheckOutlined />
-                    )
-                }
-                onDelete={() => {}}
-            />
-        </Stack>
+                        <CheckmarkRegular style={{ fontSize: "12px" }} />
+                    )}
+                </div>
+            </Badge>
+        </div>
     );
 }
 
 export function WeiboTool(props: ToolProps) {
     return (
-        <Stack direction={"row"} spacing={1} alignItems="center">
-            <Chip
-                size="small"
-                label="Check hot topics on Weibo"
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Badge
+                size="medium"
+                color="warning"
+                appearance="filled"
                 icon={<WeiboIcon />}
-                deleteIcon={
-                    props.working ? (
-                        <CircularProgress size={15} />
+            >
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                    }}
+                >
+                    <Text size={200}>Check hot topics on Weibo</Text>
+                    {props.working ? (
+                        <Spinner size="extra-tiny" appearance="inverted" />
                     ) : (
-                        <CheckOutlined />
-                    )
-                }
-                onDelete={() => {}}
-            />
-        </Stack>
+                        <CheckmarkRegular style={{ fontSize: "12px" }} />
+                    )}
+                </div>
+            </Badge>
+        </div>
     );
 }
 
 export function DefaultTool(props: ToolProps) {
     return (
-        <Stack direction={"row"} spacing={1} alignItems="center">
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Tooltip
-                title={`Parameter: ${tryParseParameter(props.parameter)}`}
-                placement="top"
+                content={`Parameter: ${tryParseParameter(props.parameter)}`}
+                relationship="label"
             >
-                <Chip
-                    size="small"
-                    label={`Calling tool: ${props.name}`}
-                    icon={<AutoAwesome />}
-                    deleteIcon={
-                        props.working ? (
-                            <CircularProgress size={15} />
+                <Badge
+                    size="medium"
+                    color="subtle"
+                    appearance="filled"
+                    icon={<SparkleRegular />}
+                >
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "4px",
+                        }}
+                    >
+                        <Text size={200}>Calling tool: {props.name}</Text>
+                        {props.working ? (
+                            <Spinner size="extra-tiny" appearance="inverted" />
                         ) : (
-                            <CheckOutlined />
-                        )
-                    }
-                />
+                            <CheckmarkRegular style={{ fontSize: "12px" }} />
+                        )}
+                    </div>
+                </Badge>
             </Tooltip>
-        </Stack>
+        </div>
     );
 }
 
@@ -155,22 +188,29 @@ export function SearchTool(props: ToolProps) {
     const { parameter } = props;
     const param = JSON.parse(parameter) as SearchParameter;
     return (
-        <Stack direction={"row"} spacing={1} alignItems="center">
-            <Chip
-                size="small"
-                color="primary"
-                label={`Search: ${param.keywords}`}
-                icon={<Google />}
-                deleteIcon={
-                    props.working ? (
-                        <CircularProgress size={15} />
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Badge
+                size="medium"
+                color="success"
+                appearance="filled"
+                icon={<SearchRegular />}
+            >
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                    }}
+                >
+                    <Text size={200}>Search: {param.keywords}</Text>
+                    {props.working ? (
+                        <Spinner size="extra-tiny" appearance="inverted" />
                     ) : (
-                        <CheckOutlined />
-                    )
-                }
-                onDelete={() => {}}
-            />
-        </Stack>
+                        <CheckmarkRegular style={{ fontSize: "12px" }} />
+                    )}
+                </div>
+            </Badge>
+        </div>
     );
 }
 
@@ -178,32 +218,37 @@ export function BrowseWebPageTool(props: ToolProps) {
     const { parameter } = props;
     const param = JSON.parse(parameter) as BrowseWebPageParameter;
     return (
-        <Stack direction={"row"} spacing={1} alignItems="center">
-            <Chip
-                size="small"
-                color="success"
-                label={
-                    <>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Badge
+                size="medium"
+                color="danger"
+                appearance="filled"
+                icon={<GlobeRegular />}
+            >
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px",
+                    }}
+                >
+                    <Text size={200}>
                         Visit:
                         <Link
                             href={param.url}
-                            color={"inherit"}
                             target="_blank"
+                            style={{ color: "inherit", marginLeft: "4px" }}
                         >
                             {param.url.substring(0, 60)}...
                         </Link>
-                    </>
-                }
-                icon={<PublicOutlined />}
-                deleteIcon={
-                    props.working ? (
-                        <CircularProgress size={15} />
+                    </Text>
+                    {props.working ? (
+                        <Spinner size="extra-tiny" appearance="inverted" />
                     ) : (
-                        <CheckOutlined />
-                    )
-                }
-                onDelete={() => {}}
-            />
-        </Stack>
+                        <CheckmarkRegular style={{ fontSize: "12px" }} />
+                    )}
+                </div>
+            </Badge>
+        </div>
     );
 }

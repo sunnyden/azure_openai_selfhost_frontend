@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Box, IconButton } from "@mui/material";
+import { Button } from "@fluentui/react-components";
 import {
-    Minimize as MinimizeIcon,
-    CropSquare as MaximizeIcon,
-    FilterNone as RestoreIcon,
-    Close as CloseIcon,
-} from "@mui/icons-material";
+    Subtract24Regular,
+    Square24Regular,
+    SquareMultiple24Regular,
+    Dismiss24Regular,
+} from "@fluentui/react-icons";
 import {
     electronWindowControls,
     isElectron,
@@ -13,6 +13,12 @@ import {
 
 export function WindowControls() {
     const [isMaximized, setIsMaximized] = useState(false);
+    const [hoveredButton, setHoveredButton] = useState<
+        "minimize" | "maximize" | "close" | null
+    >(null);
+    const [pressedButton, setPressedButton] = useState<
+        "minimize" | "maximize" | "close" | null
+    >(null);
 
     // Check if window is maximized on mount
     useEffect(() => {
@@ -44,59 +50,98 @@ export function WindowControls() {
         return null;
     }
 
+    const getButtonStyle = (buttonType: "minimize" | "maximize" | "close") => {
+        const baseStyle = {
+            minWidth: "52px",
+            height: "100%",
+            padding: "0",
+            color: "inherit",
+            borderRadius: "0",
+            border: "none",
+            transition: "background-color 0.1s ease",
+            fontSize: "16px",
+        };
+
+        let backgroundColor = "transparent";
+
+        if (pressedButton === buttonType) {
+            if (buttonType === "close") {
+                backgroundColor = "#c42b1c"; // Darker red when pressed
+            } else {
+                backgroundColor = "rgba(255, 255, 255, 0.2)"; // Light overlay when pressed
+            }
+        } else if (hoveredButton === buttonType) {
+            if (buttonType === "close") {
+                backgroundColor = "#e81123"; // Red on hover for close
+            } else {
+                backgroundColor = "rgba(255, 255, 255, 0.1)"; // Light overlay on hover
+            }
+        }
+
+        return {
+            ...baseStyle,
+            backgroundColor,
+        };
+    };
+
     return (
-        <Box
-            sx={{
+        <div
+            className="window-controls"
+            style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 0.5,
+                gap: "0px", // No gap between buttons like Windows
+                userSelect: "none",
+                height: "54px",
             }}
         >
-            <IconButton
+            <Button
+                className="window-control-button minimize"
+                appearance="transparent"
                 size="small"
                 onClick={handleMinimize}
-                sx={{
-                    color: "inherit",
-                    "&:hover": {
-                        backgroundColor: "rgba(255, 255, 255, 0.1)",
-                    },
-                }}
+                onMouseEnter={() => setHoveredButton("minimize")}
+                onMouseLeave={() => setHoveredButton(null)}
+                onMouseDown={() => setPressedButton("minimize")}
+                onMouseUp={() => setPressedButton(null)}
+                style={getButtonStyle("minimize")}
                 aria-label="minimize window"
-            >
-                <MinimizeIcon fontSize="small" />
-            </IconButton>
+                icon={<Subtract24Regular />}
+            />
 
-            <IconButton
+            <Button
+                className="window-control-button maximize"
+                appearance="transparent"
                 size="small"
                 onClick={handleMaximize}
-                sx={{
-                    color: "inherit",
-                    "&:hover": {
-                        backgroundColor: "rgba(255, 255, 255, 0.1)",
-                    },
-                }}
+                onMouseEnter={() => setHoveredButton("maximize")}
+                onMouseLeave={() => setHoveredButton(null)}
+                onMouseDown={() => setPressedButton("maximize")}
+                onMouseUp={() => setPressedButton(null)}
+                style={getButtonStyle("maximize")}
                 aria-label={isMaximized ? "restore window" : "maximize window"}
-            >
-                {isMaximized ? (
-                    <RestoreIcon fontSize="small" />
-                ) : (
-                    <MaximizeIcon fontSize="small" />
-                )}
-            </IconButton>
+                icon={
+                    isMaximized ? (
+                        <SquareMultiple24Regular />
+                    ) : (
+                        <Square24Regular />
+                    )
+                }
+            />
 
-            <IconButton
+            <Button
+                className="window-control-button close"
+                appearance="transparent"
                 size="small"
                 onClick={handleClose}
-                sx={{
-                    color: "inherit",
-                    "&:hover": {
-                        backgroundColor: "rgba(255, 0, 0, 0.3)",
-                    },
-                }}
+                onMouseEnter={() => setHoveredButton("close")}
+                onMouseLeave={() => setHoveredButton(null)}
+                onMouseDown={() => setPressedButton("close")}
+                onMouseUp={() => setPressedButton(null)}
+                style={getButtonStyle("close")}
                 aria-label="close window"
-            >
-                <CloseIcon fontSize="small" />
-            </IconButton>
-        </Box>
+                icon={<Dismiss24Regular />}
+            />
+        </div>
     );
 }

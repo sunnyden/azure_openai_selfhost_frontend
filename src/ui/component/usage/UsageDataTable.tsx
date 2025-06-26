@@ -1,18 +1,77 @@
 import React, { useState, useMemo } from "react";
 import {
     Table,
+    TableHeader,
+    TableHeaderCell,
     TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
     TableRow,
-    TablePagination,
-    Chip,
-    Typography,
-    Box,
-    TableSortLabel,
-} from "@mui/material";
+    TableCell,
+    TableCellLayout,
+    Text,
+    Badge,
+    Button,
+    Dropdown,
+    Option,
+    makeStyles,
+} from "@fluentui/react-components";
+import {
+    ChevronUp16Regular,
+    ChevronDown16Regular,
+    ChevronLeft16Regular,
+    ChevronRight16Regular,
+} from "@fluentui/react-icons";
 import { Transaction } from "../../../api/interface/data/common/Transaction";
+
+const useStyles = makeStyles({
+    container: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "16px",
+    },
+    emptyState: {
+        textAlign: "center",
+        padding: "32px",
+        color: "var(--colorNeutralForeground2)",
+    },
+    sortButton: {
+        padding: "0",
+        minWidth: "auto",
+        "& .fui-Button__icon": {
+            fontSize: "16px",
+        },
+    },
+    pagination: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "12px 0",
+        borderTop: "1px solid var(--colorNeutralStroke2)",
+        marginTop: "16px",
+    },
+    paginationInfo: {
+        color: "var(--colorNeutralForeground2)",
+        fontSize: "14px",
+    },
+    paginationControls: {
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+    },
+    transactionId: {
+        fontFamily: "monospace",
+        fontSize: "12px",
+        maxWidth: "120px",
+        overflow: "hidden",
+        textOverflow: "ellipsis",
+        whiteSpace: "nowrap",
+        textWrap: "wrap",
+    },
+    tableContainer: {
+        border: "1px solid var(--colorNeutralStroke2)",
+        borderRadius: "6px",
+        overflow: "hidden",
+    },
+});
 
 interface UsageDataTableProps {
     transactions: Transaction[];
@@ -22,19 +81,18 @@ type Order = "asc" | "desc";
 type OrderBy = keyof Transaction;
 
 export function UsageDataTable({ transactions }: UsageDataTableProps) {
+    const styles = useStyles();
     const [page, setPage] = useState(0);
     const [rowsPerPage, setRowsPerPage] = useState(10);
     const [order, setOrder] = useState<Order>("desc");
     const [orderBy, setOrderBy] = useState<OrderBy>("time");
 
-    const handleChangePage = (event: unknown, newPage: number) => {
+    const handleChangePage = (newPage: number) => {
         setPage(newPage);
     };
 
-    const handleChangeRowsPerPage = (
-        event: React.ChangeEvent<HTMLInputElement>
-    ) => {
-        setRowsPerPage(parseInt(event.target.value, 10));
+    const handleChangeRowsPerPage = (value: string) => {
+        setRowsPerPage(parseInt(value, 10));
         setPage(0);
     };
 
@@ -49,18 +107,28 @@ export function UsageDataTable({ transactions }: UsageDataTableProps) {
         return date.toLocaleString();
     };
 
-    const getServiceColor = (service: string) => {
+    const getServiceColor = (
+        service: string
+    ):
+        | "success"
+        | "warning"
+        | "brand"
+        | "danger"
+        | "important"
+        | "informative"
+        | "severe"
+        | "subtle" => {
         switch (service.toLowerCase()) {
             case "chat":
             case "completion":
-                return "primary";
+                return "brand";
             case "embedding":
-                return "secondary";
+                return "informative";
             case "image":
             case "image_generation":
                 return "success";
             default:
-                return "default";
+                return "subtle";
         }
     };
 
@@ -96,195 +164,197 @@ export function UsageDataTable({ transactions }: UsageDataTableProps) {
 
     if (transactions.length === 0) {
         return (
-            <Box sx={{ textAlign: "center", py: 4 }}>
-                <Typography variant="body1" color="text.secondary">
-                    No transaction data available
-                </Typography>
-            </Box>
+            <div className={styles.emptyState}>
+                <Text size={300}>No transaction data available</Text>
+            </div>
         );
     }
 
+    const totalPages = Math.ceil(sortedTransactions.length / rowsPerPage);
+    const startItem = page * rowsPerPage + 1;
+    const endItem = Math.min(
+        (page + 1) * rowsPerPage,
+        sortedTransactions.length
+    );
+
+    const SortButton = ({
+        column,
+        children,
+    }: {
+        column: OrderBy;
+        children: React.ReactNode;
+    }) => (
+        <Button
+            appearance="transparent"
+            onClick={() => handleRequestSort(column)}
+            className={styles.sortButton}
+            icon={
+                orderBy === column ? (
+                    order === "asc" ? (
+                        <ChevronUp16Regular />
+                    ) : (
+                        <ChevronDown16Regular />
+                    )
+                ) : undefined
+            }
+            iconPosition="after"
+        >
+            {children}
+        </Button>
+    );
+
     return (
-        <Box>
-            <TableContainer>
+        <div className={styles.container}>
+            <div className={styles.tableContainer}>
                 <Table>
-                    <TableHead>
+                    <TableHeader>
                         <TableRow>
-                            <TableCell>
-                                <TableSortLabel
-                                    active={orderBy === "time"}
-                                    direction={
-                                        orderBy === "time" ? order : "asc"
-                                    }
-                                    onClick={() => handleRequestSort("time")}
-                                >
+                            <TableHeaderCell>
+                                <SortButton column="time">
                                     Date & Time
-                                </TableSortLabel>
-                            </TableCell>
-                            <TableCell>
-                                <TableSortLabel
-                                    active={orderBy === "transactionId"}
-                                    direction={
-                                        orderBy === "transactionId"
-                                            ? order
-                                            : "asc"
-                                    }
-                                    onClick={() =>
-                                        handleRequestSort("transactionId")
-                                    }
-                                >
+                                </SortButton>
+                            </TableHeaderCell>
+                            <TableHeaderCell>
+                                <SortButton column="transactionId">
                                     Transaction ID
-                                </TableSortLabel>
-                            </TableCell>
-                            <TableCell>
-                                <TableSortLabel
-                                    active={orderBy === "requestedService"}
-                                    direction={
-                                        orderBy === "requestedService"
-                                            ? order
-                                            : "asc"
-                                    }
-                                    onClick={() =>
-                                        handleRequestSort("requestedService")
-                                    }
-                                >
+                                </SortButton>
+                            </TableHeaderCell>
+                            <TableHeaderCell>
+                                <SortButton column="requestedService">
                                     Service
-                                </TableSortLabel>
-                            </TableCell>
-                            <TableCell align="right">
-                                <TableSortLabel
-                                    active={orderBy === "promptTokens"}
-                                    direction={
-                                        orderBy === "promptTokens"
-                                            ? order
-                                            : "asc"
-                                    }
-                                    onClick={() =>
-                                        handleRequestSort("promptTokens")
-                                    }
-                                >
+                                </SortButton>
+                            </TableHeaderCell>
+                            <TableHeaderCell>
+                                <SortButton column="promptTokens">
                                     Prompt Tokens
-                                </TableSortLabel>
-                            </TableCell>
-                            <TableCell align="right">
-                                <TableSortLabel
-                                    active={orderBy === "responseTokens"}
-                                    direction={
-                                        orderBy === "responseTokens"
-                                            ? order
-                                            : "asc"
-                                    }
-                                    onClick={() =>
-                                        handleRequestSort("responseTokens")
-                                    }
-                                >
+                                </SortButton>
+                            </TableHeaderCell>
+                            <TableHeaderCell>
+                                <SortButton column="responseTokens">
                                     Response Tokens
-                                </TableSortLabel>
-                            </TableCell>
-                            <TableCell align="right">
-                                <TableSortLabel
-                                    active={orderBy === "totalTokens"}
-                                    direction={
-                                        orderBy === "totalTokens"
-                                            ? order
-                                            : "asc"
-                                    }
-                                    onClick={() =>
-                                        handleRequestSort("totalTokens")
-                                    }
-                                >
+                                </SortButton>
+                            </TableHeaderCell>
+                            <TableHeaderCell>
+                                <SortButton column="totalTokens">
                                     Total Tokens
-                                </TableSortLabel>
-                            </TableCell>
-                            <TableCell align="right">
-                                <TableSortLabel
-                                    active={orderBy === "cost"}
-                                    direction={
-                                        orderBy === "cost" ? order : "asc"
-                                    }
-                                    onClick={() => handleRequestSort("cost")}
-                                >
-                                    Cost
-                                </TableSortLabel>
-                            </TableCell>
+                                </SortButton>
+                            </TableHeaderCell>
+                            <TableHeaderCell>
+                                <SortButton column="cost">Cost</SortButton>
+                            </TableHeaderCell>
                         </TableRow>
-                    </TableHead>
+                    </TableHeader>
                     <TableBody>
                         {paginatedTransactions.map(transaction => (
-                            <TableRow key={transaction.id} hover>
+                            <TableRow key={transaction.id}>
                                 <TableCell>
-                                    <Typography variant="body2">
-                                        {formatDateTime(transaction.time)}
-                                    </Typography>
-                                </TableCell>
-                                <TableCell>
-                                    <Typography
-                                        variant="body2"
-                                        sx={{
-                                            fontFamily: "monospace",
-                                            fontSize: "0.8rem",
-                                            maxWidth: "120px",
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                        }}
-                                        title={transaction.transactionId}
-                                    >
-                                        {transaction.transactionId}
-                                    </Typography>
+                                    <TableCellLayout>
+                                        <Text size={200}>
+                                            {formatDateTime(transaction.time)}
+                                        </Text>
+                                    </TableCellLayout>
                                 </TableCell>
                                 <TableCell>
-                                    <Chip
-                                        label={transaction.requestedService}
-                                        size="small"
-                                        color={
-                                            getServiceColor(
-                                                transaction.requestedService
-                                            ) as any
-                                        }
-                                        variant="outlined"
-                                    />
+                                    <TableCellLayout>
+                                        <Text
+                                            size={200}
+                                            className={styles.transactionId}
+                                            title={transaction.transactionId}
+                                        >
+                                            {transaction.transactionId}
+                                        </Text>
+                                    </TableCellLayout>
                                 </TableCell>
-                                <TableCell align="right">
-                                    <Typography variant="body2">
-                                        {transaction.promptTokens.toLocaleString()}
-                                    </Typography>
+                                <TableCell>
+                                    <TableCellLayout>
+                                        <Badge
+                                            size="small"
+                                            color={"brand"}
+                                            appearance="outline"
+                                        >
+                                            {transaction.requestedService}
+                                        </Badge>
+                                    </TableCellLayout>
                                 </TableCell>
-                                <TableCell align="right">
-                                    <Typography variant="body2">
-                                        {transaction.responseTokens.toLocaleString()}
-                                    </Typography>
+                                <TableCell>
+                                    <TableCellLayout>
+                                        <Text size={200}>
+                                            {transaction.promptTokens.toLocaleString()}
+                                        </Text>
+                                    </TableCellLayout>
                                 </TableCell>
-                                <TableCell align="right">
-                                    <Typography
-                                        variant="body2"
-                                        fontWeight="medium"
-                                    >
-                                        {transaction.totalTokens.toLocaleString()}
-                                    </Typography>
+                                <TableCell>
+                                    <TableCellLayout>
+                                        <Text size={200}>
+                                            {transaction.responseTokens.toLocaleString()}
+                                        </Text>
+                                    </TableCellLayout>
                                 </TableCell>
-                                <TableCell align="right">
-                                    <Typography
-                                        variant="body2"
-                                        fontWeight="medium"
-                                        color="secondary.main"
-                                    >
-                                        {transaction.cost.toFixed(4)}
-                                    </Typography>
+                                <TableCell>
+                                    <TableCellLayout>
+                                        <Text size={200} weight="semibold">
+                                            {transaction.totalTokens.toLocaleString()}
+                                        </Text>
+                                    </TableCellLayout>
+                                </TableCell>
+                                <TableCell>
+                                    <TableCellLayout>
+                                        <Text
+                                            size={200}
+                                            weight="semibold"
+                                            style={{ color: "#d13438" }}
+                                        >
+                                            {transaction.cost.toFixed(4)}
+                                        </Text>
+                                    </TableCellLayout>
                                 </TableCell>
                             </TableRow>
                         ))}
                     </TableBody>
                 </Table>
-            </TableContainer>
-            <TablePagination
-                rowsPerPageOptions={[5, 10, 25, 50]}
-                component="div"
-                count={transactions.length}
-                rowsPerPage={rowsPerPage}
-                page={page}
-                onPageChange={handleChangePage}
-                onRowsPerPageChange={handleChangeRowsPerPage}
-            />
-        </Box>
+            </div>
+
+            {/* Custom Pagination */}
+            <div className={styles.pagination}>
+                <div className={styles.paginationInfo}>
+                    <Text size={200} className={styles.paginationInfo}>
+                        Showing {startItem}-{endItem} of{" "}
+                        {sortedTransactions.length} transactions
+                    </Text>
+                </div>
+                <div className={styles.paginationControls}>
+                    <Text size={200}>Rows per page:</Text>
+                    <Dropdown
+                        value={rowsPerPage.toString()}
+                        selectedOptions={[rowsPerPage.toString()]}
+                        onOptionSelect={(e, data) =>
+                            handleChangeRowsPerPage(data.optionValue!)
+                        }
+                    >
+                        <Option value="5">5</Option>
+                        <Option value="10">10</Option>
+                        <Option value="25">25</Option>
+                        <Option value="50">50</Option>
+                    </Dropdown>
+                    <Button
+                        appearance="subtle"
+                        icon={<ChevronLeft16Regular />}
+                        onClick={() => handleChangePage(page - 1)}
+                        disabled={page === 0}
+                        size="small"
+                    />
+                    <Text size={200}>
+                        {page + 1} of {totalPages}
+                    </Text>
+                    <Button
+                        appearance="subtle"
+                        icon={<ChevronRight16Regular />}
+                        onClick={() => handleChangePage(page + 1)}
+                        disabled={page >= totalPages - 1}
+                        size="small"
+                    />
+                </div>
+            </div>
+        </div>
     );
 }

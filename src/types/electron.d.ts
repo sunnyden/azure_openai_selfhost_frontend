@@ -33,6 +33,21 @@ declare global {
                 sessionId: string,
                 handler: (message: ArrayBuffer) => void
             ) => void;
+            registerMCPStartSuccessHandler: (
+                sessionId: string,
+                handler: () => void
+            ) => void;
+            registerMCPStartErrorHandler: (
+                sessionId: string,
+                handler: (error: {
+                    message: string;
+                    config: MCPConnectionRequest;
+                }) => void
+            ) => void;
+            registerMCPErrorHandler: (
+                sessionId: string,
+                handler: (error: { message: string; stack?: string }) => void
+            ) => void;
             mcpMessageRemoveListener: (sessionId: string) => void;
         };
     }

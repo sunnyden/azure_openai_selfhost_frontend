@@ -1,22 +1,9 @@
-import {
-    Box,
-    FormControl,
-    InputLabel,
-    MenuItem,
-    Select,
-    Stack,
-    IconButton,
-    Tooltip,
-    Snackbar,
-    Alert,
-} from "@mui/material";
-import { ContentCopy } from "@mui/icons-material";
+import { Button, Dropdown, Option, Tooltip } from "@fluentui/react-components";
+import { Copy24Regular } from "@fluentui/react-icons";
 import { useState, useMemo, memo, useCallback, useEffect } from "react";
-import { Editor } from "@monaco-editor/react";
+import { useTheme } from "../../../data/context/ThemeContext";
 import "./CodeBlockWrapper.css";
-import { loader } from "@monaco-editor/react";
-import * as monaco from "monaco-editor";
-loader.config({ monaco });
+import { loadMonacoEditor } from "../../../utils/monacoLoader";
 
 // Simple languages array
 const languages = [
@@ -57,6 +44,35 @@ export const CodeBlockWrapper = memo(
         const [copySuccess, setCopySuccess] = useState(false);
         const [userOverridden, setUserOverridden] = useState(false);
         const [isHovered, setIsHovered] = useState(false);
+        const [Editor, setEditor] = useState<any>(null);
+        const [isLoadingEditor, setIsLoadingEditor] = useState(true);
+        const { resolvedTheme } = useTheme();
+
+        // Load Monaco Editor dynamically
+        useEffect(() => {
+            let mounted = true;
+
+            const loadEditor = async () => {
+                try {
+                    const { Editor } = await loadMonacoEditor();
+                    if (mounted) {
+                        setEditor(() => Editor);
+                        setIsLoadingEditor(false);
+                    }
+                } catch (error) {
+                    console.error("Failed to load Monaco Editor:", error);
+                    if (mounted) {
+                        setIsLoadingEditor(false);
+                    }
+                }
+            };
+
+            loadEditor();
+
+            return () => {
+                mounted = false;
+            };
+        }, []);
 
         // Calculate auto height based on number of lines
         const calculateHeight = useMemo(() => {
@@ -126,17 +142,20 @@ export const CodeBlockWrapper = memo(
             []
         );
 
-        const alertSx = useMemo(() => ({ width: "100%" }), []);
-        // Memoize language options to avoid recreating MenuItem components
-        const languageOptions = useMemo(
-            () =>
-                languages.map(lang => (
-                    <MenuItem key={lang} value={lang}>
-                        {lang}
-                    </MenuItem>
-                )),
-            []
-        );
+        // Memoize language options for dropdown
+        const languageOptions = useMemo(() => {
+            // Create a list that includes the current language if it's not in the predefined list
+            const allLanguages: string[] = [...languages];
+            if (!languages.includes(language as any)) {
+                allLanguages.unshift(language); // Add current language at the beginning
+            }
+
+            return allLanguages.map(lang => (
+                <Option key={lang} value={lang}>
+                    {lang}
+                </Option>
+            ));
+        }, [language]);
 
         // Memoize editor options to avoid object recreation
         const editorOptions = useMemo(
@@ -174,8 +193,9 @@ export const CodeBlockWrapper = memo(
         const handleCloseSnackbar = useCallback(() => {
             setCopySuccess(false);
         }, []);
-        const handleLanguageChange = useCallback((e: any) => {
-            setLanguage(e.target.value);
+
+        const handleLanguageChange = useCallback((event: any, data: any) => {
+            setLanguage(data.optionValue || "plaintext");
             setUserOverridden(true);
         }, []);
 
@@ -186,79 +206,133 @@ export const CodeBlockWrapper = memo(
         const handleMouseLeave = useCallback(() => {
             setIsHovered(false);
         }, []);
+
         return (
-            <Stack
+            <div
                 className="code-block-wrapper"
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
+                style={{ position: "relative" }}
             >
-                <Box sx={{ ...editorBoxSx, position: "relative" }}>
+                <div style={{ position: "relative" }}>
                     {isHovered && (
-                        <Box
-                            sx={{
+                        <div
+                            style={{
                                 position: "absolute",
                                 top: 8,
                                 right: 15,
                                 zIndex: 10,
                                 display: "flex",
-                                gap: 1,
+                                gap: "8px",
                                 alignItems: "center",
-                                backgroundColor: "rgba(255, 255, 255, 0.9)",
-                                borderRadius: 1,
+                                backgroundColor:
+                                    resolvedTheme === "dark"
+                                        ? "rgba(32, 32, 32, 0.9)"
+                                        : "rgba(255, 255, 255, 0.9)",
+                                borderRadius: "4px",
                                 padding: "4px 8px",
                                 backdropFilter: "blur(4px)",
-                                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                                boxShadow:
+                                    resolvedTheme === "dark"
+                                        ? "0 2px 8px rgba(0,0,0,0.3)"
+                                        : "0 2px 8px rgba(0,0,0,0.1)",
                             }}
                         >
-                            <Box minWidth={100}>
-                                <FormControl fullWidth size="small">
-                                    <InputLabel id="code-type-label">
-                                        Language
-                                    </InputLabel>
-                                    <Select
-                                        labelId="code-type-label"
-                                        value={language}
-                                        label="Language"
-                                        onChange={handleLanguageChange}
-                                        sx={{ minWidth: 100 }}
-                                    >
-                                        {languageOptions}
-                                    </Select>
-                                </FormControl>
-                            </Box>
-                            <Tooltip title="Copy code">
-                                <IconButton
-                                    onClick={handleCopy}
-                                    color="primary"
+                            <Tooltip
+                                content="Select language"
+                                relationship="label"
+                            >
+                                <Dropdown
+                                    value={language}
+                                    selectedOptions={[language]}
+                                    onOptionSelect={handleLanguageChange}
+                                    style={{ minWidth: "100px" }}
                                     size="small"
                                 >
-                                    <ContentCopy />
-                                </IconButton>
+                                    {languageOptions}
+                                </Dropdown>
                             </Tooltip>
-                        </Box>
+                            <Tooltip content="Copy code" relationship="label">
+                                <Button
+                                    icon={<Copy24Regular />}
+                                    appearance="subtle"
+                                    size="small"
+                                    onClick={handleCopy}
+                                />
+                            </Tooltip>
+                        </div>
                     )}
-                    <Editor
-                        height={`${calculateHeight}px`}
-                        language={language}
-                        value={props.code}
-                        options={editorOptions}
-                    />
-                </Box>{" "}
-                <Snackbar
-                    open={copySuccess}
-                    autoHideDuration={3000}
-                    onClose={handleCloseSnackbar}
-                    anchorOrigin={snackbarAnchorOrigin}
-                >
-                    <Alert
-                        onClose={handleCloseSnackbar}
-                        severity="success"
-                        sx={alertSx}
+                    {isLoadingEditor ? (
+                        <div
+                            style={{
+                                height: `${calculateHeight}px`,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor:
+                                    resolvedTheme === "dark"
+                                        ? "#1e1e1e"
+                                        : "#f8f8f8",
+                                border: "1px solid #ddd",
+                                borderRadius: "8px",
+                            }}
+                        >
+                            <span>Loading editor...</span>
+                        </div>
+                    ) : Editor ? (
+                        <Editor
+                            height={`${calculateHeight}px`}
+                            language={language}
+                            value={props.code}
+                            options={editorOptions}
+                            theme={
+                                resolvedTheme === "dark"
+                                    ? "vs-dark"
+                                    : "vs-light"
+                            }
+                        />
+                    ) : (
+                        <pre
+                            style={{
+                                height: `${calculateHeight}px`,
+                                overflow: "auto",
+                                padding: "10px",
+                                margin: 0,
+                                backgroundColor:
+                                    resolvedTheme === "dark"
+                                        ? "#1e1e1e"
+                                        : "#f8f8f8",
+                                border: "1px solid #ddd",
+                                borderRadius: "8px",
+                                fontFamily: "monospace",
+                                fontSize: "14px",
+                                lineHeight: "18px",
+                            }}
+                        >
+                            {props.code}
+                        </pre>
+                    )}
+                </div>
+
+                {/* Copy Success Notification */}
+                {copySuccess && (
+                    <div
+                        style={{
+                            position: "fixed",
+                            top: "20px",
+                            right: "20px",
+                            zIndex: 1000,
+                            backgroundColor: "var(--colorBrandBackground)",
+                            color: "white",
+                            padding: "12px 16px",
+                            borderRadius: "4px",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                        }}
                     >
                         Code copied to clipboard!
-                    </Alert>
-                </Snackbar>{" "}
-            </Stack>
+                    </div>
+                )}
+            </div>
         );
     },
     (prevProps, nextProps) => {
