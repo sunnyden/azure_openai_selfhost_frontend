@@ -331,9 +331,6 @@ const ChatItem = memo(function ChatItem({
                     alignItems: "flex-start",
                     padding: "16px",
                     position: "relative",
-                    ...(isElectron() && {
-                        WebkitAppRegion: "no-drag",
-                    }),
                 }}
             >
                 <Avatar
