@@ -1,12 +1,9 @@
 import { Button, Dropdown, Option, Tooltip } from "@fluentui/react-components";
 import { Copy24Regular } from "@fluentui/react-icons";
 import { useState, useMemo, memo, useCallback, useEffect } from "react";
-import { Editor } from "@monaco-editor/react";
 import { useTheme } from "../../../data/context/ThemeContext";
 import "./CodeBlockWrapper.css";
-import { loader } from "@monaco-editor/react";
-import * as monaco from "monaco-editor";
-loader.config({ monaco });
+import { loadMonacoEditor } from "../../../utils/monacoLoader";
 
 // Simple languages array
 const languages = [
@@ -47,7 +44,35 @@ export const CodeBlockWrapper = memo(
         const [copySuccess, setCopySuccess] = useState(false);
         const [userOverridden, setUserOverridden] = useState(false);
         const [isHovered, setIsHovered] = useState(false);
+        const [Editor, setEditor] = useState<any>(null);
+        const [isLoadingEditor, setIsLoadingEditor] = useState(true);
         const { resolvedTheme } = useTheme();
+
+        // Load Monaco Editor dynamically
+        useEffect(() => {
+            let mounted = true;
+
+            const loadEditor = async () => {
+                try {
+                    const { Editor } = await loadMonacoEditor();
+                    if (mounted) {
+                        setEditor(() => Editor);
+                        setIsLoadingEditor(false);
+                    }
+                } catch (error) {
+                    console.error("Failed to load Monaco Editor:", error);
+                    if (mounted) {
+                        setIsLoadingEditor(false);
+                    }
+                }
+            };
+
+            loadEditor();
+
+            return () => {
+                mounted = false;
+            };
+        }, []);
 
         // Calculate auto height based on number of lines
         const calculateHeight = useMemo(() => {
@@ -237,15 +262,56 @@ export const CodeBlockWrapper = memo(
                             </Tooltip>
                         </div>
                     )}
-                    <Editor
-                        height={`${calculateHeight}px`}
-                        language={language}
-                        value={props.code}
-                        options={editorOptions}
-                        theme={
-                            resolvedTheme === "dark" ? "vs-dark" : "vs-light"
-                        }
-                    />
+                    {isLoadingEditor ? (
+                        <div
+                            style={{
+                                height: `${calculateHeight}px`,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                backgroundColor:
+                                    resolvedTheme === "dark"
+                                        ? "#1e1e1e"
+                                        : "#f8f8f8",
+                                border: "1px solid #ddd",
+                                borderRadius: "8px",
+                            }}
+                        >
+                            <span>Loading editor...</span>
+                        </div>
+                    ) : Editor ? (
+                        <Editor
+                            height={`${calculateHeight}px`}
+                            language={language}
+                            value={props.code}
+                            options={editorOptions}
+                            theme={
+                                resolvedTheme === "dark"
+                                    ? "vs-dark"
+                                    : "vs-light"
+                            }
+                        />
+                    ) : (
+                        <pre
+                            style={{
+                                height: `${calculateHeight}px`,
+                                overflow: "auto",
+                                padding: "10px",
+                                margin: 0,
+                                backgroundColor:
+                                    resolvedTheme === "dark"
+                                        ? "#1e1e1e"
+                                        : "#f8f8f8",
+                                border: "1px solid #ddd",
+                                borderRadius: "8px",
+                                fontFamily: "monospace",
+                                fontSize: "14px",
+                                lineHeight: "18px",
+                            }}
+                        >
+                            {props.code}
+                        </pre>
+                    )}
                 </div>
 
                 {/* Copy Success Notification */}

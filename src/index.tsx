@@ -3,8 +3,6 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import reportWebVitals from "./reportWebVitals";
-// Configure Monaco Editor to load locally instead of from CDN
-import "./utils/monacoConfig";
 import { UserContextProvider } from "./data/context/UserContext";
 import { ModelProvider } from "./data/context/ModelContext";
 import { ConversationProvider } from "./data/context/ConversationContext";

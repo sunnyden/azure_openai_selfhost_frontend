@@ -47,9 +47,6 @@ import {
 } from "./Tools";
 import remarkMath from "./remarkMath";
 import { isElectron } from "../../../utils/electronUtils";
-import { loader } from "@monaco-editor/react";
-import * as monaco from "monaco-editor";
-loader.config({ monaco });
 function renderAvatar(role: ChatRole) {
     switch (role) {
         case ChatRole.Assistant:
@@ -594,7 +591,16 @@ export function ChatHistory() {
                             messageIndex={index}
                         />
                         {index !== array.length - 1 && (
-                            <Divider style={{ padding: "0 0 0 60px" }} />
+                            <div
+                                style={{
+                                    height: "1px",
+                                    backgroundColor:
+                                        "var(--colorNeutralStroke1)",
+                                    padding: "0 0 0 60px",
+                                    margin: 0,
+                                    flexShrink: 0,
+                                }}
+                            />
                         )}
                     </React.Fragment>
                 ))}

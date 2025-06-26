@@ -1,11 +1,11 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, Suspense } from "react";
 import { Spinner } from "@fluentui/react-components";
 import { ChatHistory } from "../../component/chat/ChatHistory";
 import { ChatInput } from "../../component/chat/ChatInput";
 import { ConversationSidePanel } from "../../component/ConversationSidePanel";
 import { ChatPageHeader } from "../../component/chat/ChatPageHeader";
-import { UsagePage } from "../UsagePage/UsagePage";
-import { MCPManagementPage } from "../MCPManagementPage";
+import { UsagePage, MCPManagementPage } from "../../component/DynamicPages";
+import { Loading } from "../../component/Loading";
 import { useModelContext } from "../../../data/context/ModelContext";
 
 export function ChatPage() {
@@ -45,12 +45,22 @@ export function ChatPage() {
 
     // Show usage page if that's the current page
     if (currentPage === "usage") {
-        return <UsagePage onBack={handleBackToChat} />;
+        return (
+            <Suspense fallback={<Loading message="Loading usage page..." />}>
+                <UsagePage onBack={handleBackToChat} />
+            </Suspense>
+        );
     }
 
     // Show MCP management page if that's the current page
     if (currentPage === "mcp") {
-        return <MCPManagementPage onBack={handleBackToChat} />;
+        return (
+            <Suspense
+                fallback={<Loading message="Loading MCP management..." />}
+            >
+                <MCPManagementPage onBack={handleBackToChat} />
+            </Suspense>
+        );
     }
 
     return modelList.length > 0 ? (

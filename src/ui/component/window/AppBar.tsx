@@ -43,6 +43,7 @@ const useStyles = makeStyles({
         alignItems: "center",
         gap: "8px",
         WebkitAppRegion: "no-drag",
+        marginRight: isElectron() ? "0" : "16px", // Adjust margin for Electron
     },
     title: {
         fontSize: "18px",

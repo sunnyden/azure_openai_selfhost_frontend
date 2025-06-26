@@ -21,6 +21,20 @@ export default defineConfig({
         rollupOptions: {
             maxParallelFileOps: 50,
             output: {
+                // Chunk splitting strategy
+                manualChunks: {
+                    // React and core libraries
+                    "react-core": ["react", "react-dom"],
+
+                    // Fluent UI components
+                    "fluent-ui": [
+                        "@fluentui/react-components",
+                        "@fluentui/react-icons",
+                    ],
+
+                    // Monaco Editor and workers (will be dynamically loaded)
+                    "monaco-editor": ["monaco-editor", "@monaco-editor/react"],
+                },
                 assetFileNames: assetInfo => {
                     const info = assetInfo.name.split(".");
                     const ext = info[info.length - 1];
@@ -52,8 +66,13 @@ export default defineConfig({
         },
     },
     optimizeDeps: {
-        include: ["react", "react-dom"],
-        exclude: ["monaco-editor"],
+        include: [
+            "react",
+            "react-dom",
+            "@fluentui/react-components",
+            "@fluentui/react-icons",
+        ],
+        exclude: ["monaco-editor", "@monaco-editor/react"],
     },
     worker: {
         format: "es",

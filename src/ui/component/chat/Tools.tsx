@@ -55,7 +55,7 @@ export function ImageGenerateTool(props: ToolProps) {
                             Generate image: {param.prompt.substring(0, 100)}...
                         </Text>
                         {props.working ? (
-                            <Spinner size="extra-small" />
+                            <Spinner size="extra-tiny" appearance="inverted" />
                         ) : (
                             <CheckmarkRegular style={{ fontSize: "12px" }} />
                         )}
@@ -84,7 +84,7 @@ export function TimeTool(props: ToolProps) {
                 >
                     <Text size={200}>Check current time</Text>
                     {props.working ? (
-                        <Spinner size="extra-small" />
+                        <Spinner size="extra-tiny" appearance="inverted" />
                     ) : (
                         <CheckmarkRegular style={{ fontSize: "12px" }} />
                     )}
@@ -112,7 +112,7 @@ export function WeiboTool(props: ToolProps) {
                 >
                     <Text size={200}>Check hot topics on Weibo</Text>
                     {props.working ? (
-                        <Spinner size="extra-small" />
+                        <Spinner size="extra-tiny" appearance="inverted" />
                     ) : (
                         <CheckmarkRegular style={{ fontSize: "12px" }} />
                     )}
@@ -144,7 +144,7 @@ export function DefaultTool(props: ToolProps) {
                     >
                         <Text size={200}>Calling tool: {props.name}</Text>
                         {props.working ? (
-                            <Spinner size="extra-small" />
+                            <Spinner size="extra-tiny" appearance="inverted" />
                         ) : (
                             <CheckmarkRegular style={{ fontSize: "12px" }} />
                         )}
@@ -204,7 +204,7 @@ export function SearchTool(props: ToolProps) {
                 >
                     <Text size={200}>Search: {param.keywords}</Text>
                     {props.working ? (
-                        <Spinner size="extra-small" />
+                        <Spinner size="extra-tiny" appearance="inverted" />
                     ) : (
                         <CheckmarkRegular style={{ fontSize: "12px" }} />
                     )}
@@ -243,7 +243,7 @@ export function BrowseWebPageTool(props: ToolProps) {
                         </Link>
                     </Text>
                     {props.working ? (
-                        <Spinner size="extra-small" />
+                        <Spinner size="extra-tiny" appearance="inverted" />
                     ) : (
                         <CheckmarkRegular style={{ fontSize: "12px" }} />
                     )}
