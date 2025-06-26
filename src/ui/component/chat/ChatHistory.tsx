@@ -22,6 +22,7 @@ import {
 } from "@fluentui/react-icons";
 import Editor from "@monaco-editor/react";
 import { useConversationContext } from "../../../data/context/ConversationContext";
+import { useTheme } from "../../../data/context/ThemeContext";
 import { ChatRole, ToolInfo } from "../../../api/interface/data/common/Chat";
 import React, {
     useMemo,
@@ -124,6 +125,7 @@ const ChatItem = memo(function ChatItem({
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [editedMessage, setEditedMessage] = useState(message);
     const { deleteMessage, updateMessage } = useConversationContext();
+    const { resolvedTheme } = useTheme();
 
     // Use a ref to store the current message without triggering re-renders
     const messageRef = useRef(message);
@@ -171,11 +173,11 @@ const ChatItem = memo(function ChatItem({
                     <table
                         style={{
                             borderCollapse: "collapse",
-                            border: "1px solid #e0e0e0",
+                            border: "1px solid var(--colorNeutralStroke2)",
                             borderRadius: "4px",
                             width: "100%",
                             fontSize: "0.875rem",
-                            backgroundColor: "#fafafa",
+                            backgroundColor: "var(--colorNeutralBackground2)",
                         }}
                         {...props}
                     />
@@ -184,8 +186,8 @@ const ChatItem = memo(function ChatItem({
             thead: ({ node, ...props }: any) => (
                 <thead
                     style={{
-                        backgroundColor: "#f5f5f5",
-                        borderBottom: "2px solid #e0e0e0",
+                        backgroundColor: "var(--colorNeutralBackground3)",
+                        borderBottom: "2px solid var(--colorNeutralStroke2)",
                     }}
                     {...props}
                 />
@@ -194,7 +196,7 @@ const ChatItem = memo(function ChatItem({
             tr: ({ node, ...props }: any) => (
                 <tr
                     style={{
-                        borderBottom: "1px solid #e0e0e0",
+                        borderBottom: "1px solid var(--colorNeutralStroke2)",
                     }}
                     {...props}
                 />
@@ -205,8 +207,8 @@ const ChatItem = memo(function ChatItem({
                         padding: "12px 16px",
                         textAlign: "left",
                         fontWeight: 600,
-                        color: "#333",
-                        borderRight: "1px solid #e0e0e0",
+                        color: "var(--colorNeutralForeground1)",
+                        borderRight: "1px solid var(--colorNeutralStroke2)",
                     }}
                     {...props}
                 />
@@ -215,7 +217,7 @@ const ChatItem = memo(function ChatItem({
                 <td
                     style={{
                         padding: "12px 16px",
-                        borderRight: "1px solid #e0e0e0",
+                        borderRight: "1px solid var(--colorNeutralStroke2)",
                         verticalAlign: "top",
                     }}
                     {...props}
@@ -451,7 +453,11 @@ const ChatItem = memo(function ChatItem({
                                         lineHeight: 20,
                                         padding: { top: 10, bottom: 10 },
                                     }}
-                                    theme="vs-light"
+                                    theme={
+                                        resolvedTheme === "dark"
+                                            ? "vs-dark"
+                                            : "vs-light"
+                                    }
                                 />
                             </div>
                         </DialogContent>

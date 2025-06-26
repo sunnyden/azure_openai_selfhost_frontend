@@ -12,6 +12,7 @@ import {
 import { useState } from "react";
 import { useUserContext } from "../../../data/context/UserContext";
 import { AppBar } from "../window/AppBar";
+import { ThemeToggle } from "../theme/ThemeToggle";
 import { isElectron } from "../../../utils/electronUtils";
 
 function stringToColor(string: string) {
@@ -52,39 +53,46 @@ export function TitleToolbar() {
     };
 
     const rightActions = authenticatedUser?.userName ? (
-        <Menu
-            open={menuOpen}
-            onOpenChange={(e, data) => setMenuOpen(data.open)}
-        >
-            <MenuTrigger disableButtonEnhancement>
-                <Tooltip content="Open settings" relationship="label">
-                    <Button
-                        appearance="transparent"
-                        style={{
-                            padding: 0,
-                            minWidth: "auto",
-                        }}
-                    >
-                        <Avatar
-                            name={authenticatedUser.userName}
-                            color="colorful"
-                            initials={getInitials(authenticatedUser.userName)}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <ThemeToggle />
+            <Menu
+                open={menuOpen}
+                onOpenChange={(e, data) => setMenuOpen(data.open)}
+            >
+                <MenuTrigger disableButtonEnhancement>
+                    <Tooltip content="Open settings" relationship="label">
+                        <Button
+                            appearance="transparent"
                             style={{
-                                backgroundColor: stringToColor(
-                                    authenticatedUser.userName
-                                ),
+                                padding: 0,
+                                minWidth: "auto",
                             }}
-                        />
-                    </Button>
-                </Tooltip>
-            </MenuTrigger>
-            <MenuPopover>
-                <MenuList>
-                    <MenuItem onClick={handleLogout}>Logout</MenuItem>
-                </MenuList>
-            </MenuPopover>
-        </Menu>
-    ) : undefined;
+                        >
+                            <Avatar
+                                name={authenticatedUser.userName}
+                                color="colorful"
+                                initials={getInitials(
+                                    authenticatedUser.userName
+                                )}
+                                style={{
+                                    backgroundColor: stringToColor(
+                                        authenticatedUser.userName
+                                    ),
+                                }}
+                            />
+                        </Button>
+                    </Tooltip>
+                </MenuTrigger>
+                <MenuPopover>
+                    <MenuList>
+                        <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                    </MenuList>
+                </MenuPopover>
+            </Menu>
+        </div>
+    ) : (
+        <ThemeToggle />
+    );
 
     return (
         <AppBar

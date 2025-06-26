@@ -31,7 +31,7 @@ const useStyles = makeStyles({
     emptyState: {
         textAlign: "center",
         padding: "32px",
-        color: "#737373",
+        color: "var(--colorNeutralForeground2)",
     },
     sortButton: {
         padding: "0",
@@ -45,11 +45,11 @@ const useStyles = makeStyles({
         alignItems: "center",
         justifyContent: "space-between",
         padding: "12px 0",
-        borderTop: "1px solid #e1e1e1",
+        borderTop: "1px solid var(--colorNeutralStroke2)",
         marginTop: "16px",
     },
     paginationInfo: {
-        color: "#737373",
+        color: "var(--colorNeutralForeground2)",
         fontSize: "14px",
     },
     paginationControls: {
@@ -67,7 +67,7 @@ const useStyles = makeStyles({
         textWrap: "wrap",
     },
     tableContainer: {
-        border: "1px solid #e1e1e1",
+        border: "1px solid var(--colorNeutralStroke2)",
         borderRadius: "6px",
         overflow: "hidden",
     },

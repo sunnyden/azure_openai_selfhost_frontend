@@ -29,6 +29,7 @@ import {
     Dismiss20Regular,
 } from "@fluentui/react-icons";
 import { useMCPContext } from "../../../data/context/MCPContext";
+import { useTheme } from "../../../data/context/ThemeContext";
 import { isElectron } from "../../../utils/electronUtils";
 import { AppBar } from "../../component/window/AppBar";
 
@@ -47,8 +48,8 @@ const useStyles = makeStyles({
         display: "flex",
         alignItems: "center",
         padding: "12px 16px",
-        borderBottom: "1px solid #e1e1e1",
-        background: "#f8f9fa",
+        borderBottom: "1px solid var(--colorNeutralStroke2)",
+        background: "var(--colorNeutralBackground2)",
         WebkitAppRegion: "drag",
         gap: "12px",
     },
@@ -77,16 +78,16 @@ const useStyles = makeStyles({
         justifyContent: "center",
         padding: "32px",
         textAlign: "center",
-        background: "#f8f9fa",
+        background: "var(--colorNeutralBackground2)",
         borderRadius: "8px",
         maxWidth: "500px",
         margin: "32px auto",
     },
     statusCard: {
         padding: "16px",
-        border: "1px solid #e1e1e1",
+        border: "1px solid var(--colorNeutralStroke2)",
         borderRadius: "8px",
-        backgroundColor: "#ffffff",
+        backgroundColor: "var(--colorNeutralBackground1)",
         marginBottom: "16px",
     },
     statusHeader: {
@@ -108,10 +109,10 @@ const useStyles = makeStyles({
         alignItems: "center",
         justifyContent: "space-between",
         padding: "12px",
-        border: "1px solid #e1e1e1",
+        border: "1px solid var(--colorNeutralStroke2)",
         borderRadius: "6px",
         marginBottom: "8px",
-        backgroundColor: "#ffffff",
+        backgroundColor: "var(--colorNeutralBackground1)",
     },
     serverActions: {
         display: "flex",
@@ -152,6 +153,7 @@ interface MCPManagementPageProps {
 
 export function MCPManagementPage({ onBack }: MCPManagementPageProps) {
     const styles = useStyles();
+    const { resolvedTheme } = useTheme();
 
     // Only show MCP management in desktop environment
     if (!isElectron()) {
@@ -498,8 +500,10 @@ export function MCPManagementPage({ onBack }: MCPManagementPageProps) {
                                 <Server20Regular
                                     style={{
                                         color: isHubRunning
-                                            ? "#107c10"
-                                            : "#737373",
+                                            ? resolvedTheme === "dark"
+                                                ? "var(--colorPaletteGreenForeground1)"
+                                                : "#107c10"
+                                            : "var(--colorNeutralForeground2)",
                                         fontSize: "20px",
                                     }}
                                 />
@@ -524,8 +528,14 @@ export function MCPManagementPage({ onBack }: MCPManagementPageProps) {
                                     appearance="outline"
                                     icon={<Stop20Regular />}
                                     style={{
-                                        color: "#d13438",
-                                        borderColor: "#d13438",
+                                        color:
+                                            resolvedTheme === "dark"
+                                                ? "var(--colorPaletteRedForeground1)"
+                                                : "#d13438",
+                                        borderColor:
+                                            resolvedTheme === "dark"
+                                                ? "var(--colorPaletteRedBorder1)"
+                                                : "#d13438",
                                     }}
                                 >
                                     Stop Hub
@@ -557,7 +567,9 @@ export function MCPManagementPage({ onBack }: MCPManagementPageProps) {
                                 {servers.length === 0 ? (
                                     <Text
                                         size={300}
-                                        style={{ color: "#737373" }}
+                                        style={{
+                                            color: "var(--colorNeutralForeground2)",
+                                        }}
                                     >
                                         No MCP servers configured. Add a server
                                         below to get started.
@@ -588,7 +600,7 @@ export function MCPManagementPage({ onBack }: MCPManagementPageProps) {
                                                         <Text
                                                             size={200}
                                                             style={{
-                                                                color: "#737373",
+                                                                color: "var(--colorNeutralForeground2)",
                                                             }}
                                                         >
                                                             Command:{" "}
@@ -658,7 +670,11 @@ export function MCPManagementPage({ onBack }: MCPManagementPageProps) {
                                                                     loading
                                                                 }
                                                                 style={{
-                                                                    color: "#d13438",
+                                                                    color:
+                                                                        resolvedTheme ===
+                                                                        "dark"
+                                                                            ? "var(--colorPaletteRedForeground1)"
+                                                                            : "#d13438",
                                                                 }}
                                                             />
                                                         </Tooltip>
@@ -698,9 +714,10 @@ export function MCPManagementPage({ onBack }: MCPManagementPageProps) {
                                                 key={serverName}
                                                 style={{
                                                     padding: "12px",
-                                                    border: "1px solid #e1e1e1",
+                                                    border: "1px solid var(--colorNeutralStroke2)",
                                                     borderRadius: "6px",
-                                                    backgroundColor: "#ffffff",
+                                                    backgroundColor:
+                                                        "var(--colorNeutralBackground1)",
                                                 }}
                                             >
                                                 <Text
@@ -751,7 +768,7 @@ export function MCPManagementPage({ onBack }: MCPManagementPageProps) {
                     <div
                         style={{
                             height: "1px",
-                            backgroundColor: "#e1e1e1",
+                            backgroundColor: "var(--colorNeutralStroke2)",
                             margin: "8px 0",
                         }}
                     />

@@ -1,20 +1,21 @@
 import React from "react";
-import {
-    FluentProvider as FluentUIProvider,
-    webLightTheme,
-    webDarkTheme,
-    Theme,
-} from "@fluentui/react-components";
+import { FluentProvider as FluentUIProvider } from "@fluentui/react-components";
+import { ThemeProvider, useTheme } from "../../data/context/ThemeContext";
 
 interface FluentProviderProps {
     children: React.ReactNode;
-    theme?: Theme;
 }
 
-export function FluentProvider({
-    children,
-    theme = webLightTheme,
-}: FluentProviderProps) {
+function FluentProviderInner({ children }: FluentProviderProps) {
+    const { theme } = useTheme();
     return <FluentUIProvider theme={theme}>{children}</FluentUIProvider>;
+}
+
+export function FluentProvider({ children }: FluentProviderProps) {
+    return (
+        <ThemeProvider>
+            <FluentProviderInner>{children}</FluentProviderInner>
+        </ThemeProvider>
+    );
 }
 

@@ -2,6 +2,7 @@ import { Button, Dropdown, Option, Tooltip } from "@fluentui/react-components";
 import { Copy24Regular } from "@fluentui/react-icons";
 import { useState, useMemo, memo, useCallback, useEffect } from "react";
 import { Editor } from "@monaco-editor/react";
+import { useTheme } from "../../../data/context/ThemeContext";
 import "./CodeBlockWrapper.css";
 import { loader } from "@monaco-editor/react";
 import * as monaco from "monaco-editor";
@@ -46,6 +47,7 @@ export const CodeBlockWrapper = memo(
         const [copySuccess, setCopySuccess] = useState(false);
         const [userOverridden, setUserOverridden] = useState(false);
         const [isHovered, setIsHovered] = useState(false);
+        const { resolvedTheme } = useTheme();
 
         // Calculate auto height based on number of lines
         const calculateHeight = useMemo(() => {
@@ -230,6 +232,9 @@ export const CodeBlockWrapper = memo(
                         language={language}
                         value={props.code}
                         options={editorOptions}
+                        theme={
+                            resolvedTheme === "dark" ? "vs-dark" : "vs-light"
+                        }
                     />
                 </div>
 

@@ -20,6 +20,7 @@ import { Transaction } from "../../../api/interface/data/common/Transaction";
 import { User } from "../../../api/interface/data/common/User";
 import { useApiClient } from "../../../data/context/useApiClient";
 import { useUserContext } from "../../../data/context/UserContext";
+import { useTheme } from "../../../data/context/ThemeContext";
 import { UsageDataTable } from "../../component/usage/UsageDataTable";
 import { AppBar } from "../../component/window/AppBar";
 import { StatCard } from "../../component/StatCard";
@@ -34,8 +35,8 @@ const useStyles = makeStyles({
         display: "flex",
         alignItems: "center",
         padding: "12px 16px",
-        borderBottom: "1px solid #e1e1e1",
-        background: "#f8f9fa",
+        borderBottom: "1px solid var(--colorNeutralStroke2)",
+        background: "var(--colorNeutralBackground2)",
         minHeight: "56px",
     },
     backButton: {
@@ -61,9 +62,9 @@ const useStyles = makeStyles({
     },
     section: {
         padding: "24px",
-        border: "1px solid #e1e1e1",
+        border: "1px solid var(--colorNeutralStroke2)",
         borderRadius: "8px",
-        backgroundColor: "#ffffff",
+        backgroundColor: "var(--colorNeutralBackground1)",
         marginBottom: "24px",
     },
     sectionHeader: {
@@ -98,6 +99,7 @@ interface UsagePageProps {
 
 export function UsagePage({ onBack }: UsagePageProps) {
     const styles = useStyles();
+    const { resolvedTheme } = useTheme();
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -227,7 +229,10 @@ export function UsagePage({ onBack }: UsagePageProps) {
                                 <Wallet20Regular
                                     style={{
                                         fontSize: "20px",
-                                        color: "#0078d4",
+                                        color:
+                                            resolvedTheme === "dark"
+                                                ? "var(--colorBrandForeground1)"
+                                                : "#0078d4",
                                     }}
                                 />
                                 <Text className={styles.sectionTitle}>
@@ -267,7 +272,13 @@ export function UsagePage({ onBack }: UsagePageProps) {
                     <div className={styles.section}>
                         <div className={styles.sectionHeader}>
                             <Filter20Regular
-                                style={{ fontSize: "20px", color: "#0078d4" }}
+                                style={{
+                                    fontSize: "20px",
+                                    color:
+                                        resolvedTheme === "dark"
+                                            ? "var(--colorBrandForeground1)"
+                                            : "#0078d4",
+                                }}
                             />
                             <Text className={styles.sectionTitle}>
                                 Filter by Model
@@ -289,7 +300,12 @@ export function UsagePage({ onBack }: UsagePageProps) {
                                 ))}
                             </Dropdown>
                             {selectedModel !== "all" && (
-                                <Text size={300} style={{ color: "#737373" }}>
+                                <Text
+                                    size={300}
+                                    style={{
+                                        color: "var(--colorNeutralForeground2)",
+                                    }}
+                                >
                                     Showing data for:{" "}
                                     <strong>{selectedModel}</strong>
                                 </Text>
@@ -301,7 +317,13 @@ export function UsagePage({ onBack }: UsagePageProps) {
                     <div className={styles.section}>
                         <div className={styles.sectionHeader}>
                             <DataArea20Regular
-                                style={{ fontSize: "20px", color: "#0078d4" }}
+                                style={{
+                                    fontSize: "20px",
+                                    color:
+                                        resolvedTheme === "dark"
+                                            ? "var(--colorBrandForeground1)"
+                                            : "#0078d4",
+                                }}
                             />
                             <Text className={styles.sectionTitle}>
                                 Usage Statistics
@@ -341,7 +363,13 @@ export function UsagePage({ onBack }: UsagePageProps) {
                     <div className={styles.section}>
                         <div className={styles.sectionHeader}>
                             <DataTrending20Regular
-                                style={{ fontSize: "20px", color: "#0078d4" }}
+                                style={{
+                                    fontSize: "20px",
+                                    color:
+                                        resolvedTheme === "dark"
+                                            ? "var(--colorBrandForeground1)"
+                                            : "#0078d4",
+                                }}
                             />
                             <Text className={styles.sectionTitle}>
                                 Transaction History

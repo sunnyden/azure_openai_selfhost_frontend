@@ -2,6 +2,8 @@ import React from "react";
 import { Button, Dropdown, Option, Title3 } from "@fluentui/react-components";
 import { Navigation24Regular } from "@fluentui/react-icons";
 import { AppBar } from "../window/AppBar";
+import { ThemeToggle } from "../theme/ThemeToggle";
+import { useTheme } from "../../../data/context/ThemeContext";
 import { Model } from "../../../api/interface/data/common/Model";
 
 interface ChatPageHeaderProps {
@@ -17,6 +19,8 @@ export function ChatPageHeader({
     onModelChange,
     onMenuClick,
 }: ChatPageHeaderProps) {
+    const { resolvedTheme } = useTheme();
+
     const leftActions = (
         <Button
             appearance="transparent"
@@ -28,24 +32,27 @@ export function ChatPageHeader({
     );
 
     const rightActions = (
-        <Dropdown
-            value={currentModel?.friendlyName || ""}
-            onOptionSelect={(_, data) => {
-                if (data.optionValue) {
-                    onModelChange(data.optionValue);
-                }
-            }}
-            style={{
-                minWidth: "200px",
-                color: "inherit",
-            }}
-        >
-            {modelList.map(model => (
-                <Option key={model.identifier} value={model.identifier}>
-                    {model.friendlyName}
-                </Option>
-            ))}
-        </Dropdown>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Dropdown
+                value={currentModel?.friendlyName || ""}
+                onOptionSelect={(_, data) => {
+                    if (data.optionValue) {
+                        onModelChange(data.optionValue);
+                    }
+                }}
+                style={{
+                    minWidth: "200px",
+                    color: "inherit",
+                }}
+            >
+                {modelList.map(model => (
+                    <Option key={model.identifier} value={model.identifier}>
+                        {model.friendlyName}
+                    </Option>
+                ))}
+            </Dropdown>
+            <ThemeToggle />
+        </div>
     );
 
     return (
@@ -53,8 +60,16 @@ export function ChatPageHeader({
             leftActions={leftActions}
             rightActions={rightActions}
             title={"Chat"}
-            backgroundColor="var(--colorBrandBackground)"
-            color="var(--colorNeutralForegroundOnBrand)"
+            backgroundColor={
+                resolvedTheme === "dark"
+                    ? "var(--colorNeutralBackground3)"
+                    : "var(--colorBrandBackground)"
+            }
+            color={
+                resolvedTheme === "dark"
+                    ? "var(--colorNeutralForeground1)"
+                    : "var(--colorNeutralForegroundOnBrand)"
+            }
             borderBottom="1px solid var(--colorNeutralStroke1)"
         />
     );
