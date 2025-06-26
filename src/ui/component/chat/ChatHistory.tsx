@@ -252,54 +252,9 @@ const ChatItem = memo(function ChatItem({
         }),
         []
     );
-
-    const iconButtonSx = useMemo(() => ({ padding: 0.5 }), []);
-
-    // Memoize Snackbar props
-    const snackbarAnchorOrigin = useMemo(
-        () => ({ vertical: "bottom" as const, horizontal: "center" as const }),
-        []
-    );
-
-    const snackbarSx = useMemo(
-        () => ({
-            // Ensure snackbar content is not draggable in Electron
-            ...(isElectron() && {
-                "& .MuiSnackbar-root": {
-                    WebkitAppRegion: "no-drag",
-                },
-            }),
-        }),
-        []
-    );
-
-    const alertSx = useMemo(() => ({ width: "100%" }), []);
     // Memoize event handlers
     const handleMouseEnter = useCallback(() => setIsHovered(true), []);
     const handleMouseLeave = useCallback(() => setIsHovered(false), []);
-
-    // Memoize Dialog styles
-    const dialogSx = useMemo(
-        () => ({
-            // Ensure dialog content is not draggable in Electron
-            ...(isElectron() && {
-                "& .MuiDialog-paper": {
-                    WebkitAppRegion: "no-drag",
-                },
-            }),
-        }),
-        []
-    );
-
-    const editorBoxSx = useMemo(
-        () => ({
-            height: 400,
-            border: "1px solid #e0e0e0",
-            borderRadius: 1,
-            mt: 1,
-        }),
-        []
-    );
 
     const handleCopyToClipboard = async () => {
         try {
