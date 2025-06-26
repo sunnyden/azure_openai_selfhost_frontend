@@ -1,36 +1,38 @@
 import React, { useState } from "react";
 import {
-    SwipeableDrawer,
-    List,
-    ListItem,
-    ListItemButton,
-    ListItemText,
-    IconButton,
-    Typography,
-    Box,
+    Drawer,
+    DrawerHeader,
+    DrawerHeaderTitle,
+    DrawerBody,
     Button,
-    TextField,
+    Input,
     Dialog,
+    DialogTrigger,
+    DialogSurface,
     DialogTitle,
     DialogContent,
     DialogActions,
+    DialogBody,
     Tooltip,
-    Divider,
     Menu,
+    MenuTrigger,
+    MenuPopover,
+    MenuList,
     MenuItem,
-} from "@mui/material";
+    Text,
+    Title3,
+} from "@fluentui/react-components";
 import {
-    Add as AddIcon,
-    Delete as DeleteIcon,
-    Edit as EditIcon,
-    Close as CloseIcon,
-    Chat as ChatIcon,
-    Assessment as AssessmentIcon,
-    GetApp as ExportIcon,
-    Publish as ImportIcon,
-    FileDownload as FileDownloadIcon,
-    MoreVert as MoreVertIcon,
-} from "@mui/icons-material";
+    Add24Regular,
+    Delete24Regular,
+    Edit24Regular,
+    Dismiss24Regular,
+    Chat24Regular,
+    DataUsage24Regular,
+    ArrowDownload24Regular,
+    ArrowUpload24Regular,
+    MoreVertical24Regular,
+} from "@fluentui/react-icons";
 import { useConversationHistory } from "../../data/context/ConversationHistoryContext";
 import { isElectron } from "../../utils/electronUtils";
 
@@ -118,7 +120,7 @@ export function ConversationSidePanel({
     };
 
     const handleExportMenuOpen = (
-        event: React.MouseEvent<HTMLElement>,
+        event: React.MouseEvent<HTMLButtonElement>,
         conversationId?: string
     ) => {
         setExportMenuAnchor(event.currentTarget);
@@ -169,106 +171,143 @@ export function ConversationSidePanel({
     };
     return (
         <>
-            {" "}
-            <SwipeableDrawer
-                anchor="left"
+            <Drawer
                 open={open}
-                onClose={onClose}
-                onOpen={onOpen}
-                disableBackdropTransition={false}
-                disableDiscovery={true}
-                sx={{
-                    "& .MuiDrawer-paper": {
-                        width: 320,
-                        boxSizing: "border-box",
-                        // Ensure drawer content is not draggable in Electron
-                        ...(isElectron() && {
-                            WebkitAppRegion: "no-drag",
-                        }),
-                    },
+                onOpenChange={(_, { open }) => !open && onClose()}
+                position="start"
+                style={{
+                    maxWidth: "320px",
+                    width: "320px",
+                    ...(isElectron() && {
+                        WebkitAppRegion: "no-drag",
+                    }),
                 }}
             >
-                {" "}
-                <Box
-                    sx={{
-                        p: 2,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                    }}
-                >
-                    <Typography
-                        variant="h6"
-                        component="div"
-                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                <DrawerHeader>
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            width: "100%",
+                        }}
                     >
-                        <ChatIcon />
-                        Chat History
-                    </Typography>
-                    <Box sx={{ display: "flex", gap: 0.5 }}>
-                        <Tooltip title="Export/Import">
-                            <IconButton
-                                onClick={e => handleExportMenuOpen(e)}
-                                size="small"
-                            >
-                                <MoreVertIcon />
-                            </IconButton>
-                        </Tooltip>
-                        <IconButton onClick={onClose} size="small">
-                            <CloseIcon />
-                        </IconButton>
-                    </Box>
-                </Box>
-                <Box sx={{ px: 2, pb: 2 }}>
-                    <Button
-                        variant="contained"
-                        fullWidth
-                        startIcon={<AddIcon />}
-                        onClick={handleNewConversation}
-                        size="small"
-                    >
-                        New Conversation
-                    </Button>
-                </Box>
-                <Divider />{" "}
-                <List sx={{ flex: 1, overflow: "auto" }}>
-                    {conversations.length === 0 ? (
-                        <Box sx={{ p: 3, textAlign: "center" }}>
-                            <Typography variant="body2" color="text.secondary">
-                                No conversations yet. Start a new conversation
-                                to begin chatting!
-                            </Typography>
-                        </Box>
-                    ) : (
-                        conversations.map(conversation => (
-                            <ListItem
-                                key={conversation.id}
-                                disablePadding
-                                sx={{
-                                    backgroundColor:
-                                        currentConversationId ===
-                                        conversation.id
-                                            ? "action.selected"
-                                            : "transparent",
+                        <DrawerHeaderTitle>
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    gap: "8px",
                                 }}
                             >
-                                <ListItemButton
-                                    onClick={() =>
-                                        handleSelectConversation(
-                                            conversation.id
-                                        )
-                                    }
-                                    sx={{ pr: 1 }}
+                                <Chat24Regular />
+                                <Text>Chat History</Text>
+                            </div>
+                        </DrawerHeaderTitle>
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: "4px",
+                            }}
+                        >
+                            <Tooltip
+                                content="Export/Import"
+                                relationship="label"
+                            >
+                                <Button
+                                    icon={<MoreVertical24Regular />}
+                                    appearance="subtle"
+                                    size="small"
+                                    onClick={e => handleExportMenuOpen(e)}
+                                />
+                            </Tooltip>
+                            <Button
+                                icon={<Dismiss24Regular />}
+                                appearance="subtle"
+                                size="small"
+                                onClick={onClose}
+                            />
+                        </div>
+                    </div>
+                </DrawerHeader>
+                <DrawerBody
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        flex: 1,
+                        overflow: "hidden",
+                    }}
+                >
+                    <div style={{ padding: "16px" }}>
+                        <Button
+                            appearance="primary"
+                            icon={<Add24Regular />}
+                            onClick={handleNewConversation}
+                            size="small"
+                            style={{ width: "100%" }}
+                        >
+                            New Conversation
+                        </Button>
+                    </div>
+                    <div
+                        style={{
+                            height: "1px",
+                            backgroundColor: "var(--colorNeutralStroke1)",
+                            margin: 0,
+                            flexShrink: 0,
+                        }}
+                    />
+                    <div style={{ flex: 1, overflow: "auto", padding: "8px" }}>
+                        {conversations.length === 0 ? (
+                            <div
+                                style={{ padding: "24px", textAlign: "center" }}
+                            >
+                                <Text
+                                    align="center"
+                                    style={{
+                                        color: "var(--colorNeutralForeground3)",
+                                    }}
                                 >
-                                    <ListItemText
-                                        primary={
-                                            editingId === conversation.id ? (
-                                                <TextField
+                                    No conversations yet. Start a new
+                                    conversation to begin chatting!
+                                </Text>
+                            </div>
+                        ) : (
+                            conversations.map(conversation => (
+                                <div
+                                    key={conversation.id}
+                                    style={{
+                                        marginBottom: "4px",
+                                        backgroundColor:
+                                            currentConversationId ===
+                                            conversation.id
+                                                ? "var(--colorNeutralBackground1Selected)"
+                                                : "transparent",
+                                        borderRadius: "4px",
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "flex-start", // Changed from center to flex-start for proper alignment
+                                            padding: "8px 12px",
+                                            cursor: "pointer",
+                                            borderRadius: "4px",
+                                            gap: "8px", // Add gap between content and actions
+                                        }}
+                                        onClick={() =>
+                                            handleSelectConversation(
+                                                conversation.id
+                                            )
+                                        }
+                                    >
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            {editingId === conversation.id ? (
+                                                <Input
                                                     value={editTitle}
-                                                    onChange={e =>
-                                                        setEditTitle(
-                                                            e.target.value
-                                                        )
+                                                    onChange={(_, data) =>
+                                                        setEditTitle(data.value)
                                                     }
                                                     onKeyDown={e => {
                                                         if (e.key === "Enter") {
@@ -280,171 +319,217 @@ export function ConversationSidePanel({
                                                         }
                                                     }}
                                                     onBlur={handleSaveEdit}
-                                                    variant="outlined"
                                                     size="small"
-                                                    fullWidth
                                                     autoFocus
                                                 />
                                             ) : (
-                                                <Typography
-                                                    variant="body2"
-                                                    sx={{
-                                                        overflow: "hidden",
-                                                        textOverflow:
-                                                            "ellipsis",
-                                                        whiteSpace: "nowrap",
-                                                        fontWeight:
+                                                <div>
+                                                    <Text
+                                                        size={300}
+                                                        weight={
                                                             currentConversationId ===
                                                             conversation.id
                                                                 ? "medium"
-                                                                : "normal",
-                                                    }}
-                                                >
-                                                    {conversation.title}
-                                                </Typography>
-                                            )
-                                        }
-                                        secondary={
-                                            <Typography
-                                                variant="caption"
-                                                color="text.secondary"
+                                                                : "regular"
+                                                        }
+                                                        style={{
+                                                            display: "block",
+                                                            overflow: "hidden",
+                                                            textOverflow:
+                                                                "ellipsis",
+                                                            whiteSpace:
+                                                                "nowrap",
+                                                            lineHeight: "1.4",
+                                                        }}
+                                                    >
+                                                        {conversation.title}
+                                                    </Text>
+                                                    <Text
+                                                        size={200}
+                                                        style={{
+                                                            color: "var(--colorNeutralForeground3)",
+                                                            display: "block",
+                                                            lineHeight: "1.2",
+                                                            marginTop: "2px",
+                                                        }}
+                                                    >
+                                                        {formatDate(
+                                                            conversation.updatedAt
+                                                        )}{" "}
+                                                        •{" "}
+                                                        {
+                                                            conversation
+                                                                .messages.length
+                                                        }{" "}
+                                                        messages
+                                                    </Text>
+                                                </div>
+                                            )}
+                                        </div>
+                                        {editingId !== conversation.id && (
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    gap: "2px",
+                                                    opacity: 0.7,
+                                                    transition: "opacity 0.2s",
+                                                }}
+                                                onMouseEnter={e => {
+                                                    e.currentTarget.style.opacity =
+                                                        "1";
+                                                }}
+                                                onMouseLeave={e => {
+                                                    e.currentTarget.style.opacity =
+                                                        "0.7";
+                                                }}
                                             >
-                                                {formatDate(
-                                                    conversation.updatedAt
-                                                )}{" "}
-                                                • {conversation.messages.length}{" "}
-                                                messages
-                                            </Typography>
-                                        }
-                                    />{" "}
-                                    {editingId !== conversation.id && (
-                                        <Box sx={{ display: "flex", gap: 0.5 }}>
-                                            <Tooltip title="Export">
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={e => {
-                                                        e.stopPropagation();
-                                                        handleExportSingleConversation(
-                                                            conversation.id
-                                                        );
-                                                    }}
+                                                <Tooltip
+                                                    content="Export"
+                                                    relationship="label"
                                                 >
-                                                    <FileDownloadIcon fontSize="small" />
-                                                </IconButton>
-                                            </Tooltip>
-                                            <Tooltip title="Rename">
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={e => {
-                                                        e.stopPropagation();
-                                                        handleStartEdit(
-                                                            conversation.id,
-                                                            conversation.title
-                                                        );
-                                                    }}
+                                                    <Button
+                                                        icon={
+                                                            <ArrowDownload24Regular />
+                                                        }
+                                                        appearance="subtle"
+                                                        size="small"
+                                                        onClick={e => {
+                                                            e.stopPropagation();
+                                                            handleExportSingleConversation(
+                                                                conversation.id
+                                                            );
+                                                        }}
+                                                    />
+                                                </Tooltip>
+                                                <Tooltip
+                                                    content="Rename"
+                                                    relationship="label"
                                                 >
-                                                    <EditIcon fontSize="small" />
-                                                </IconButton>
-                                            </Tooltip>
-                                            <Tooltip title="Delete">
-                                                <IconButton
-                                                    size="small"
-                                                    onClick={e => {
-                                                        e.stopPropagation();
-                                                        handleDeleteClick(
-                                                            conversation.id
-                                                        );
-                                                    }}
-                                                    color="error"
+                                                    <Button
+                                                        icon={<Edit24Regular />}
+                                                        appearance="subtle"
+                                                        size="small"
+                                                        onClick={e => {
+                                                            e.stopPropagation();
+                                                            handleStartEdit(
+                                                                conversation.id,
+                                                                conversation.title
+                                                            );
+                                                        }}
+                                                    />
+                                                </Tooltip>
+                                                <Tooltip
+                                                    content="Delete"
+                                                    relationship="label"
                                                 >
-                                                    <DeleteIcon fontSize="small" />
-                                                </IconButton>
-                                            </Tooltip>
-                                        </Box>
-                                    )}
-                                </ListItemButton>
-                            </ListItem>
-                        ))
-                    )}
-                </List>
-                {/* Usage Analytics Button */}
-                <Box sx={{ p: 2, pt: 0 }}>
-                    <Divider sx={{ mb: 2 }} />
-                    <Button
-                        variant="outlined"
-                        fullWidth
-                        startIcon={<AssessmentIcon />}
-                        onClick={onNavigateToUsage}
-                        size="small"
-                    >
-                        View Usage Analytics{" "}
-                    </Button>
-                </Box>
-            </SwipeableDrawer>
+                                                    <Button
+                                                        icon={
+                                                            <Delete24Regular />
+                                                        }
+                                                        appearance="subtle"
+                                                        size="small"
+                                                        onClick={e => {
+                                                            e.stopPropagation();
+                                                            handleDeleteClick(
+                                                                conversation.id
+                                                            );
+                                                        }}
+                                                    />
+                                                </Tooltip>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    {/* Usage Analytics Button */}
+                    <div style={{ padding: "16px", paddingTop: 0 }}>
+                        <div
+                            style={{
+                                height: "1px",
+                                backgroundColor: "var(--colorNeutralStroke1)",
+                                marginBottom: "16px",
+                                flexShrink: 0,
+                            }}
+                        />
+                        <Button
+                            appearance="outline"
+                            icon={<DataUsage24Regular />}
+                            onClick={onNavigateToUsage}
+                            size="small"
+                            style={{ width: "100%" }}
+                        >
+                            View Usage Analytics
+                        </Button>
+                    </div>
+                </DrawerBody>
+            </Drawer>
+
             {/* Export/Import Menu */}
-            <Menu
-                anchorEl={exportMenuAnchor}
-                open={Boolean(exportMenuAnchor)}
-                onClose={handleExportMenuClose}
-                sx={{
-                    // Ensure menu content is not draggable in Electron
-                    ...(isElectron() && {
-                        "& .MuiMenu-paper": {
-                            WebkitAppRegion: "no-drag",
-                        },
-                    }),
-                }}
-            >
-                {
-                    // Global export/import menu
-                    [
-                        <MenuItem
-                            key="export-all"
-                            onClick={handleExportAllConversations}
-                        >
-                            <ExportIcon sx={{ mr: 1 }} fontSize="small" />
-                            Export All Conversations
-                        </MenuItem>,
-                        <MenuItem
-                            key="import"
-                            onClick={handleImportConversations}
-                        >
-                            <ImportIcon sx={{ mr: 1 }} fontSize="small" />
-                            Import Conversations
-                        </MenuItem>,
-                    ]
-                }
-            </Menu>
+            {exportMenuAnchor && (
+                <Menu
+                    open={Boolean(exportMenuAnchor)}
+                    onOpenChange={(_, data) =>
+                        !data.open && setExportMenuAnchor(null)
+                    }
+                >
+                    <MenuTrigger>
+                        <div style={{ display: "none" }} />
+                    </MenuTrigger>
+                    <MenuPopover>
+                        <MenuList>
+                            <MenuItem
+                                onClick={handleExportAllConversations}
+                                icon={<ArrowDownload24Regular />}
+                            >
+                                Export All Conversations
+                            </MenuItem>
+                            <MenuItem
+                                onClick={handleImportConversations}
+                                icon={<ArrowUpload24Regular />}
+                            >
+                                Import Conversations
+                            </MenuItem>
+                        </MenuList>
+                    </MenuPopover>
+                </Menu>
+            )}
+
             {/* Delete Confirmation Dialog */}
             <Dialog
                 open={deleteDialogOpen}
-                onClose={handleCancelDelete}
-                sx={{
-                    // Ensure dialog content is not draggable in Electron
-                    ...(isElectron() && {
-                        "& .MuiDialog-paper": {
-                            WebkitAppRegion: "no-drag",
-                        },
-                    }),
-                }}
+                onOpenChange={(_, data) => !data.open && handleCancelDelete()}
             >
-                <DialogTitle>Delete Conversation</DialogTitle>
-                <DialogContent>
-                    <Typography>
-                        Are you sure you want to delete this conversation? This
-                        action cannot be undone.
-                    </Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCancelDelete}>Cancel</Button>
-                    <Button
-                        onClick={handleConfirmDelete}
-                        color="error"
-                        variant="contained"
-                    >
-                        Delete
-                    </Button>
-                </DialogActions>
+                <DialogSurface>
+                    <DialogBody>
+                        <DialogTitle>Delete Conversation</DialogTitle>
+                        <DialogContent>
+                            <Text>
+                                Are you sure you want to delete this
+                                conversation? This action cannot be undone.
+                            </Text>
+                        </DialogContent>
+                        <DialogActions>
+                            <DialogTrigger disableButtonEnhancement>
+                                <Button
+                                    appearance="secondary"
+                                    onClick={handleCancelDelete}
+                                >
+                                    Cancel
+                                </Button>
+                            </DialogTrigger>
+                            <Button
+                                appearance="primary"
+                                onClick={handleConfirmDelete}
+                            >
+                                Delete
+                            </Button>
+                        </DialogActions>
+                    </DialogBody>
+                </DialogSurface>
             </Dialog>
         </>
     );

@@ -1,32 +1,21 @@
 import React, { useEffect, useState, useMemo } from "react";
 import {
-    Box,
-    Container,
-    Typography,
-    Paper,
-    Card,
-    CardContent,
-    Grid,
-    CircularProgress,
-    Alert,
-    Stack,
-    AppBar,
-    Toolbar,
-    IconButton,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    SelectChangeEvent,
-    Chip,
-} from "@mui/material";
+    Button,
+    Text,
+    Spinner,
+    MessageBar,
+    Dropdown,
+    Option,
+    Badge,
+    makeStyles,
+} from "@fluentui/react-components";
 import {
-    ArrowBack,
-    AccountBalanceWallet,
-    TrendingUp,
-    Assessment,
-    FilterList,
-} from "@mui/icons-material";
+    ArrowLeft20Regular,
+    Wallet20Regular,
+    DataTrending20Regular,
+    DataArea20Regular,
+    Filter20Regular,
+} from "@fluentui/react-icons";
 import { Transaction } from "../../../api/interface/data/common/Transaction";
 import { User } from "../../../api/interface/data/common/User";
 import { useApiClient } from "../../../data/context/useApiClient";
@@ -35,17 +24,103 @@ import { UsageDataTable } from "../../component/usage/UsageDataTable";
 import { WindowControls } from "../../component/window/WindowControls";
 import { DraggableArea } from "../../component/window/DraggableArea";
 
+const useStyles = makeStyles({
+    container: {
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+    },
+    header: {
+        display: "flex",
+        alignItems: "center",
+        padding: "12px 16px",
+        borderBottom: "1px solid #e1e1e1",
+        background: "#f8f9fa",
+        minHeight: "56px",
+    },
+    backButton: {
+        marginRight: "12px",
+    },
+    headerTitle: {
+        flexGrow: 1,
+        fontSize: "18px",
+        fontWeight: "600",
+    },
+    content: {
+        flex: 1,
+        padding: "16px",
+        overflowY: "auto",
+    },
+    loadingContainer: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        flexDirection: "column",
+        gap: "16px",
+        height: "100%",
+    },
+    section: {
+        padding: "24px",
+        border: "1px solid #e1e1e1",
+        borderRadius: "8px",
+        backgroundColor: "#ffffff",
+        marginBottom: "24px",
+    },
+    sectionHeader: {
+        display: "flex",
+        alignItems: "center",
+        gap: "12px",
+        marginBottom: "16px",
+    },
+    sectionTitle: {
+        fontSize: "20px",
+        fontWeight: "600",
+    },
+    statsGrid: {
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+        gap: "16px",
+    },
+    statCard: {
+        padding: "16px",
+        border: "1px solid #e1e1e1",
+        borderRadius: "6px",
+        backgroundColor: "#fafafa",
+    },
+    statLabel: {
+        fontSize: "14px",
+        color: "#737373",
+        marginBottom: "8px",
+    },
+    statValue: {
+        fontSize: "32px",
+        fontWeight: "600",
+        color: "#0f1419",
+    },
+    filterContainer: {
+        display: "flex",
+        alignItems: "center",
+        gap: "12px",
+        marginBottom: "16px",
+    },
+    dropdown: {
+        minWidth: "200px",
+    },
+});
+
 interface UsagePageProps {
     onBack: () => void;
 }
 
 export function UsagePage({ onBack }: UsagePageProps) {
+    const styles = useStyles();
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [selectedModel, setSelectedModel] = useState<string>("all");
     const { authenticatedUser } = useUserContext();
     const apiClient = useApiClient();
+
     useEffect(() => {
         const fetchTransactions = async () => {
             try {
@@ -93,386 +168,247 @@ export function UsagePage({ onBack }: UsagePageProps) {
             ? totalCost / filteredTransactions.length
             : 0;
 
-    const handleModelChange = (event: SelectChangeEvent) => {
-        setSelectedModel(event.target.value);
+    const handleModelChange = (event: any, data: any) => {
+        setSelectedModel(data.optionValue);
     };
 
     if (loading) {
         return (
-            <Box
-                sx={{
-                    height: "100vh",
-                    display: "flex",
-                    flexDirection: "column",
-                }}
-            >
-                <AppBar position="static" elevation={1}>
-                    <Toolbar sx={{ minHeight: 56 }}>
-                        <IconButton
-                            edge="start"
-                            color="inherit"
-                            aria-label="back"
-                            onClick={onBack}
-                            sx={{ mr: 2 }}
-                        >
-                            <ArrowBack />
-                        </IconButton>
-                        <DraggableArea>
-                            <Typography
-                                variant="h6"
-                                component="div"
-                                sx={{ flexGrow: 1 }}
-                            >
-                                Usage Analytics
-                            </Typography>
-                        </DraggableArea>
-                        <WindowControls />
-                    </Toolbar>
-                </AppBar>
-                <Container
-                    maxWidth={false}
-                    sx={{
-                        flex: 1,
-                        py: 2,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                    }}
-                >
-                    <Stack alignItems="center" spacing={2}>
-                        <CircularProgress />
-                        <Typography>Loading usage data...</Typography>
-                    </Stack>
-                </Container>
-            </Box>
+            <div className={styles.container}>
+                <div className={styles.header}>
+                    <Button
+                        appearance="subtle"
+                        icon={<ArrowLeft20Regular />}
+                        onClick={onBack}
+                        className={styles.backButton}
+                    />
+                    <DraggableArea>
+                        <Text className={styles.headerTitle}>
+                            Usage Analytics
+                        </Text>
+                    </DraggableArea>
+                    <WindowControls />
+                </div>
+                <div className={styles.content}>
+                    <div className={styles.loadingContainer}>
+                        <Spinner size="large" />
+                        <Text>Loading usage data...</Text>
+                    </div>
+                </div>
+            </div>
         );
     }
 
     if (error) {
         return (
-            <Box
-                sx={{
-                    height: "100vh",
-                    display: "flex",
-                    flexDirection: "column",
-                }}
-            >
-                <AppBar position="static" elevation={1}>
-                    <Toolbar sx={{ minHeight: 56 }}>
-                        <IconButton
-                            edge="start"
-                            color="inherit"
-                            aria-label="back"
-                            onClick={onBack}
-                            sx={{ mr: 2 }}
-                        >
-                            <ArrowBack />
-                        </IconButton>
-                        <DraggableArea>
-                            <Typography
-                                variant="h6"
-                                component="div"
-                                sx={{ flexGrow: 1 }}
-                            >
-                                Usage Analytics
-                            </Typography>
-                        </DraggableArea>
-                        <WindowControls />
-                    </Toolbar>
-                </AppBar>
-                <Container maxWidth={false} sx={{ flex: 1, py: 2 }}>
-                    <Alert severity="error" sx={{ mt: 2 }}>
-                        {error}
-                    </Alert>
-                </Container>
-            </Box>
+            <div className={styles.container}>
+                <div className={styles.header}>
+                    <Button
+                        appearance="subtle"
+                        icon={<ArrowLeft20Regular />}
+                        onClick={onBack}
+                        className={styles.backButton}
+                    />
+                    <DraggableArea>
+                        <Text className={styles.headerTitle}>
+                            Usage Analytics
+                        </Text>
+                    </DraggableArea>
+                    <WindowControls />
+                </div>
+                <div className={styles.content}>
+                    <MessageBar intent="error">{error}</MessageBar>
+                </div>
+            </div>
         );
     }
 
     return (
-        <Box sx={{ height: "100vh", display: "flex", flexDirection: "column" }}>
-            <AppBar position="static" elevation={1}>
-                <Toolbar sx={{ minHeight: 56 }}>
-                    <IconButton
-                        edge="start"
-                        color="inherit"
-                        aria-label="back"
-                        onClick={onBack}
-                        sx={{ mr: 2 }}
-                    >
-                        <ArrowBack />
-                    </IconButton>
-                    <DraggableArea>
-                        <Typography
-                            variant="h6"
-                            component="div"
-                            sx={{ flexGrow: 1 }}
-                        >
-                            Usage Analytics
-                        </Typography>
-                    </DraggableArea>
-                    <WindowControls />
-                </Toolbar>
-            </AppBar>{" "}
-            <Container
-                maxWidth={false}
-                sx={{ flex: 1, py: 2, overflow: "auto" }}
-            >
-                <Stack spacing={3}>
+        <div className={styles.container}>
+            <div className={styles.header}>
+                <Button
+                    appearance="subtle"
+                    icon={<ArrowLeft20Regular />}
+                    onClick={onBack}
+                    className={styles.backButton}
+                />
+                <DraggableArea>
+                    <Text className={styles.headerTitle}>Usage Analytics</Text>
+                </DraggableArea>
+                <WindowControls />
+            </div>
+
+            <div className={styles.content}>
+                <div
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "24px",
+                    }}
+                >
                     {/* User Credit Information */}
                     {authenticatedUser && (
-                        <Paper elevation={2} sx={{ p: 3 }}>
-                            <Typography
-                                variant="h5"
-                                gutterBottom
-                                sx={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: 1,
-                                }}
-                            >
-                                <AccountBalanceWallet color="primary" />
-                                Credit Information
-                            </Typography>
-                            <Grid container spacing={3}>
-                                <Grid item xs={12} md={4}>
-                                    <Card variant="outlined">
-                                        <CardContent>
-                                            <Typography
-                                                color="text.secondary"
-                                                gutterBottom
-                                            >
-                                                Remaining Credit
-                                            </Typography>
-                                            <Typography
-                                                variant="h4"
-                                                component="div"
-                                                color="primary"
-                                            >
-                                                {authenticatedUser.remainingCredit.toFixed(
-                                                    2
-                                                )}
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                                <Grid item xs={12} md={4}>
-                                    <Card variant="outlined">
-                                        <CardContent>
-                                            <Typography
-                                                color="text.secondary"
-                                                gutterBottom
-                                            >
-                                                Credit Quota
-                                            </Typography>
-                                            <Typography
-                                                variant="h4"
-                                                component="div"
-                                            >
-                                                {authenticatedUser.creditQuota.toFixed(
-                                                    2
-                                                )}
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                                <Grid item xs={12} md={4}>
-                                    <Card variant="outlined">
-                                        <CardContent>
-                                            <Typography
-                                                color="text.secondary"
-                                                gutterBottom
-                                            >
-                                                Used Credit
-                                            </Typography>
-                                            <Typography
-                                                variant="h4"
-                                                component="div"
-                                                color="secondary"
-                                            >
-                                                {(
-                                                    authenticatedUser.creditQuota -
-                                                    authenticatedUser.remainingCredit
-                                                ).toFixed(2)}
-                                            </Typography>
-                                        </CardContent>
-                                    </Card>
-                                </Grid>
-                            </Grid>
-                        </Paper>
+                        <div className={styles.section}>
+                            <div className={styles.sectionHeader}>
+                                <Wallet20Regular
+                                    style={{
+                                        fontSize: "20px",
+                                        color: "#0078d4",
+                                    }}
+                                />
+                                <Text className={styles.sectionTitle}>
+                                    Credit Information
+                                </Text>
+                            </div>
+                            <div className={styles.statsGrid}>
+                                <div className={styles.statCard}>
+                                    <Text className={styles.statLabel}>
+                                        Remaining Credit
+                                    </Text>
+                                    <Text
+                                        className={styles.statValue}
+                                        style={{ color: "#0078d4" }}
+                                    >
+                                        {authenticatedUser.remainingCredit.toFixed(
+                                            2
+                                        )}
+                                    </Text>
+                                </div>
+                                <div className={styles.statCard}>
+                                    <Text className={styles.statLabel}>
+                                        Credit Quota
+                                    </Text>
+                                    <Text className={styles.statValue}>
+                                        {authenticatedUser.creditQuota.toFixed(
+                                            2
+                                        )}
+                                    </Text>
+                                </div>
+                                <div className={styles.statCard}>
+                                    <Text className={styles.statLabel}>
+                                        Used Credit
+                                    </Text>
+                                    <Text
+                                        className={styles.statValue}
+                                        style={{ color: "#d13438" }}
+                                    >
+                                        {(
+                                            authenticatedUser.creditQuota -
+                                            authenticatedUser.remainingCredit
+                                        ).toFixed(2)}
+                                    </Text>
+                                </div>
+                            </div>
+                        </div>
                     )}
+
                     {/* Model Filter */}
-                    <Paper elevation={2} sx={{ p: 3 }}>
-                        <Typography
-                            variant="h5"
-                            gutterBottom
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                                mb: 2,
-                            }}
-                        >
-                            <FilterList color="primary" />
-                            Filter by Model
-                        </Typography>
-                        <FormControl sx={{ minWidth: 200 }}>
-                            <InputLabel id="model-filter-label">
-                                Model
-                            </InputLabel>
-                            <Select
-                                labelId="model-filter-label"
-                                id="model-filter"
+                    <div className={styles.section}>
+                        <div className={styles.sectionHeader}>
+                            <Filter20Regular
+                                style={{ fontSize: "20px", color: "#0078d4" }}
+                            />
+                            <Text className={styles.sectionTitle}>
+                                Filter by Model
+                            </Text>
+                        </div>
+                        <div className={styles.filterContainer}>
+                            <Dropdown
+                                className={styles.dropdown}
+                                placeholder="Select a model"
                                 value={selectedModel}
-                                label="Model"
-                                onChange={handleModelChange}
+                                selectedOptions={[selectedModel]}
+                                onOptionSelect={handleModelChange}
                             >
-                                <MenuItem value="all">All Models</MenuItem>
+                                <Option value="all">All Models</Option>
                                 {availableModels.map(model => (
-                                    <MenuItem key={model} value={model}>
+                                    <Option key={model} value={model}>
                                         {model}
-                                    </MenuItem>
+                                    </Option>
                                 ))}
-                            </Select>
-                        </FormControl>
-                        {selectedModel !== "all" && (
-                            <Typography
-                                variant="body2"
-                                color="text.secondary"
-                                sx={{ mt: 1 }}
-                            >
-                                Showing data for:{" "}
-                                <strong>{selectedModel}</strong>
-                            </Typography>
-                        )}
-                    </Paper>
+                            </Dropdown>
+                            {selectedModel !== "all" && (
+                                <Text size={300} style={{ color: "#737373" }}>
+                                    Showing data for:{" "}
+                                    <strong>{selectedModel}</strong>
+                                </Text>
+                            )}
+                        </div>
+                    </div>
+
                     {/* Usage Statistics */}
-                    <Paper elevation={2} sx={{ p: 3 }}>
-                        {" "}
-                        <Typography
-                            variant="h5"
-                            gutterBottom
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                            }}
-                        >
-                            <Assessment color="primary" />
-                            Usage Statistics
+                    <div className={styles.section}>
+                        <div className={styles.sectionHeader}>
+                            <DataArea20Regular
+                                style={{ fontSize: "20px", color: "#0078d4" }}
+                            />
+                            <Text className={styles.sectionTitle}>
+                                Usage Statistics
+                            </Text>
                             {selectedModel !== "all" && (
-                                <Chip
-                                    label={selectedModel}
-                                    size="small"
-                                    color="primary"
-                                    sx={{ ml: 1 }}
-                                />
+                                <Badge color="brand" size="small">
+                                    {selectedModel}
+                                </Badge>
                             )}
-                        </Typography>
-                        <Grid container spacing={3}>
-                            <Grid item xs={12} md={3}>
-                                <Card variant="outlined">
-                                    <CardContent>
-                                        <Typography
-                                            color="text.secondary"
-                                            gutterBottom
-                                        >
-                                            Total Transactions
-                                        </Typography>{" "}
-                                        <Typography
-                                            variant="h4"
-                                            component="div"
-                                        >
-                                            {filteredTransactions.length}
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                            <Grid item xs={12} md={3}>
-                                <Card variant="outlined">
-                                    <CardContent>
-                                        <Typography
-                                            color="text.secondary"
-                                            gutterBottom
-                                        >
-                                            Total Cost
-                                        </Typography>
-                                        <Typography
-                                            variant="h4"
-                                            component="div"
-                                            color="secondary"
-                                        >
-                                            {totalCost.toFixed(4)}
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                            <Grid item xs={12} md={3}>
-                                <Card variant="outlined">
-                                    <CardContent>
-                                        <Typography
-                                            color="text.secondary"
-                                            gutterBottom
-                                        >
-                                            Total Tokens
-                                        </Typography>
-                                        <Typography
-                                            variant="h4"
-                                            component="div"
-                                        >
-                                            {totalTokens.toLocaleString()}
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                            <Grid item xs={12} md={3}>
-                                <Card variant="outlined">
-                                    <CardContent>
-                                        <Typography
-                                            color="text.secondary"
-                                            gutterBottom
-                                        >
-                                            Avg Cost/Transaction
-                                        </Typography>
-                                        <Typography
-                                            variant="h4"
-                                            component="div"
-                                        >
-                                            {averageCostPerTransaction.toFixed(
-                                                4
-                                            )}
-                                        </Typography>
-                                    </CardContent>
-                                </Card>
-                            </Grid>
-                        </Grid>
-                    </Paper>{" "}
+                        </div>
+                        <div className={styles.statsGrid}>
+                            <div className={styles.statCard}>
+                                <Text className={styles.statLabel}>
+                                    Total Transactions
+                                </Text>
+                                <Text className={styles.statValue}>
+                                    {filteredTransactions.length}
+                                </Text>
+                            </div>
+                            <div className={styles.statCard}>
+                                <Text className={styles.statLabel}>
+                                    Total Cost
+                                </Text>
+                                <Text
+                                    className={styles.statValue}
+                                    style={{ color: "#d13438" }}
+                                >
+                                    {totalCost.toFixed(4)}
+                                </Text>
+                            </div>
+                            <div className={styles.statCard}>
+                                <Text className={styles.statLabel}>
+                                    Total Tokens
+                                </Text>
+                                <Text className={styles.statValue}>
+                                    {totalTokens.toLocaleString()}
+                                </Text>
+                            </div>
+                            <div className={styles.statCard}>
+                                <Text className={styles.statLabel}>
+                                    Avg Cost/Transaction
+                                </Text>
+                                <Text className={styles.statValue}>
+                                    {averageCostPerTransaction.toFixed(4)}
+                                </Text>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Usage Data Table */}
-                    <Paper elevation={2} sx={{ p: 3 }}>
-                        <Typography
-                            variant="h5"
-                            gutterBottom
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 1,
-                            }}
-                        >
-                            <TrendingUp color="primary" />
-                            Transaction History
+                    <div className={styles.section}>
+                        <div className={styles.sectionHeader}>
+                            <DataTrending20Regular
+                                style={{ fontSize: "20px", color: "#0078d4" }}
+                            />
+                            <Text className={styles.sectionTitle}>
+                                Transaction History
+                            </Text>
                             {selectedModel !== "all" && (
-                                <Chip
-                                    label={selectedModel}
-                                    size="small"
-                                    color="primary"
-                                    sx={{ ml: 1 }}
-                                />
+                                <Badge color="brand" size="small">
+                                    {selectedModel}
+                                </Badge>
                             )}
-                        </Typography>
+                        </div>
                         <UsageDataTable transactions={filteredTransactions} />
-                    </Paper>
-                </Stack>
-            </Container>
-        </Box>
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }

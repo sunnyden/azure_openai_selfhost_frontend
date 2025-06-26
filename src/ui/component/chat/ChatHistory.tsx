@@ -1,28 +1,26 @@
 import {
     Avatar,
     Divider,
-    List,
-    ListItem,
-    ListItemAvatar,
-    ListItemText,
-    Box,
-    IconButton,
-    Tooltip,
-    Snackbar,
-    Alert,
+    Button,
     Dialog,
+    DialogTrigger,
+    DialogSurface,
     DialogTitle,
     DialogContent,
     DialogActions,
-    Button,
-} from "@mui/material";
+    DialogBody,
+    Tooltip,
+    Text,
+} from "@fluentui/react-components";
+import {
+    Bot24Regular,
+    MegaphoneRegular,
+    Person24Regular,
+    Copy24Regular,
+    Delete24Regular,
+    Edit24Regular,
+} from "@fluentui/react-icons";
 import Editor from "@monaco-editor/react";
-import SmartToyIcon from "@mui/icons-material/SmartToy";
-import CampaignIcon from "@mui/icons-material/Campaign";
-import PersonIcon from "@mui/icons-material/Person";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
 import { useConversationContext } from "../../../data/context/ConversationContext";
 import { ChatRole, ToolInfo } from "../../../api/interface/data/common/Chat";
 import React, {
@@ -54,11 +52,11 @@ loader.config({ monaco });
 function renderAvatar(role: ChatRole) {
     switch (role) {
         case ChatRole.Assistant:
-            return <SmartToyIcon />;
+            return <Bot24Regular />;
         case ChatRole.User:
-            return <PersonIcon />;
+            return <Person24Regular />;
         case ChatRole.System:
-            return <CampaignIcon />;
+            return <MegaphoneRegular />;
         default:
             throw new Error("Invalid role");
     }
@@ -169,7 +167,7 @@ const ChatItem = memo(function ChatItem({
                 return <code>{props.children}</code>;
             },
             table: ({ node, ...props }: any) => (
-                <Box sx={{ overflowX: "auto", my: 2 }}>
+                <div style={{ overflowX: "auto", margin: "16px 0" }}>
                     <table
                         style={{
                             borderCollapse: "collapse",
@@ -181,7 +179,7 @@ const ChatItem = memo(function ChatItem({
                         }}
                         {...props}
                     />
-                </Box>
+                </div>
             ),
             thead: ({ node, ...props }: any) => (
                 <thead
@@ -367,22 +365,35 @@ const ChatItem = memo(function ChatItem({
 
     return (
         <>
-            {" "}
-            <ListItem
-                alignItems="flex-start"
+            <div
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
                 onTouchCancel={handleTouchEnd}
-                sx={listItemSx}
+                style={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    padding: "16px",
+                    position: "relative",
+                    ...(isElectron() && {
+                        WebkitAppRegion: "no-drag",
+                    }),
+                }}
             >
-                <ListItemAvatar>
-                    <Avatar alt={role}>{renderAvatar(role)}</Avatar>
-                </ListItemAvatar>
-                <ListItemText
-                    primary={userRoleText}
-                    secondary={
+                <Avatar
+                    style={{ marginRight: "16px" }}
+                    icon={renderAvatar(role)}
+                />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                    <Text
+                        weight="semibold"
+                        size={300}
+                        style={{ marginBottom: "8px" }}
+                    >
+                        {userRoleText}
+                    </Text>
+                    <div>
                         <Markdown
                             remarkPlugins={remarkPlugins}
                             rehypePlugins={rehypePlugins}
@@ -390,93 +401,127 @@ const ChatItem = memo(function ChatItem({
                         >
                             {message}
                         </Markdown>
-                    }
-                />{" "}
+                    </div>
+                </div>
                 {isHovered && (
-                    <Box sx={actionBoxSx}>
-                        <Tooltip title="Copy message">
-                            <IconButton
+                    <div
+                        style={{
+                            position: "absolute",
+                            top: "16px",
+                            right: "16px",
+                            display: "flex",
+                            gap: "4px",
+                            backgroundColor: "var(--colorNeutralBackground1)",
+                            borderRadius: "4px",
+                            padding: "4px",
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                            opacity: 0.9,
+                            zIndex: 10,
+                        }}
+                    >
+                        <Tooltip content="Copy message" relationship="label">
+                            <Button
+                                icon={<Copy24Regular />}
+                                appearance="subtle"
                                 size="small"
                                 onClick={handleCopyToClipboard}
-                                sx={iconButtonSx}
-                            >
-                                <ContentCopyIcon fontSize="small" />
-                            </IconButton>
+                            />
                         </Tooltip>
-                        <Tooltip title="Edit message">
-                            <IconButton
+                        <Tooltip content="Edit message" relationship="label">
+                            <Button
+                                icon={<Edit24Regular />}
+                                appearance="subtle"
                                 size="small"
                                 onClick={handleEditMessage}
-                                sx={iconButtonSx}
-                            >
-                                <EditIcon fontSize="small" />
-                            </IconButton>
-                        </Tooltip>{" "}
-                        <Tooltip title="Delete message">
-                            <IconButton
+                            />
+                        </Tooltip>
+                        <Tooltip content="Delete message" relationship="label">
+                            <Button
+                                icon={<Delete24Regular />}
+                                appearance="subtle"
                                 size="small"
                                 onClick={handleDeleteMessage}
-                                sx={iconButtonSx}
-                                color="error"
-                            >
-                                <DeleteIcon fontSize="small" />
-                            </IconButton>
+                            />
                         </Tooltip>
-                    </Box>
+                    </div>
                 )}
-            </ListItem>{" "}
-            <Snackbar
-                open={showCopySuccess}
-                autoHideDuration={2000}
-                onClose={handleCloseCopySuccess}
-                anchorOrigin={snackbarAnchorOrigin}
-                sx={snackbarSx}
-            >
-                <Alert
-                    onClose={handleCloseCopySuccess}
-                    severity="success"
-                    sx={alertSx}
+            </div>
+
+            {/* Copy Success Toast */}
+            {showCopySuccess && (
+                <div
+                    style={{
+                        position: "fixed",
+                        top: "20px",
+                        right: "20px",
+                        zIndex: 1000,
+                        backgroundColor: "var(--colorBrandBackground)",
+                        color: "white",
+                        padding: "12px 16px",
+                        borderRadius: "4px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                    }}
                 >
                     Message copied to clipboard!
-                </Alert>
-            </Snackbar>
-            {/* Edit Dialog */}{" "}
+                </div>
+            )}
+
+            {/* Edit Dialog */}
             <Dialog
                 open={editDialogOpen}
-                onClose={handleCancelEdit}
-                maxWidth="lg"
-                fullWidth
-                sx={dialogSx}
+                onOpenChange={(_, data) => !data.open && handleCancelEdit()}
             >
-                <DialogTitle>Edit Message</DialogTitle>
-                <DialogContent>
-                    <Box sx={editorBoxSx}>
-                        <Editor
-                            height="400px"
-                            defaultLanguage="markdown"
-                            value={editedMessage}
-                            onChange={value => setEditedMessage(value || "")}
-                            options={{
-                                minimap: { enabled: false },
-                                wordWrap: "on",
-                                lineNumbers: "on",
-                                scrollBeyondLastLine: false,
-                                automaticLayout: true,
-                                fontSize: 14,
-                                lineHeight: 20,
-                                padding: { top: 10, bottom: 10 },
-                            }}
-                            theme="vs-light"
-                        />
-                    </Box>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCancelEdit}>Cancel</Button>
-                    <Button onClick={handleSaveEdit} variant="contained">
-                        Save
-                    </Button>
-                </DialogActions>
-            </Dialog>{" "}
+                <DialogSurface
+                    style={{
+                        minWidth: "600px",
+                        width: "80vw",
+                        maxWidth: "1000px",
+                    }}
+                >
+                    <DialogBody>
+                        <DialogTitle>Edit Message</DialogTitle>
+                        <DialogContent>
+                            <div style={{ marginTop: "16px" }}>
+                                <Editor
+                                    height="400px"
+                                    defaultLanguage="markdown"
+                                    value={editedMessage}
+                                    onChange={value =>
+                                        setEditedMessage(value || "")
+                                    }
+                                    options={{
+                                        minimap: { enabled: false },
+                                        wordWrap: "on",
+                                        lineNumbers: "on",
+                                        scrollBeyondLastLine: false,
+                                        automaticLayout: true,
+                                        fontSize: 14,
+                                        lineHeight: 20,
+                                        padding: { top: 10, bottom: 10 },
+                                    }}
+                                    theme="vs-light"
+                                />
+                            </div>
+                        </DialogContent>
+                        <DialogActions>
+                            <DialogTrigger disableButtonEnhancement>
+                                <Button
+                                    appearance="secondary"
+                                    onClick={handleCancelEdit}
+                                >
+                                    Cancel
+                                </Button>
+                            </DialogTrigger>
+                            <Button
+                                appearance="primary"
+                                onClick={handleSaveEdit}
+                            >
+                                Save
+                            </Button>
+                        </DialogActions>
+                    </DialogBody>
+                </DialogSurface>
+            </Dialog>
         </>
     );
 });
@@ -528,9 +573,15 @@ const ToolListItem = memo(function ToolListItem({
     working: boolean;
 }) {
     return (
-        <ListItem alignItems="flex-start">
+        <div
+            style={{
+                display: "flex",
+                alignItems: "flex-start",
+                padding: "16px",
+            }}
+        >
             <ToolItem tool={tool} working={working} />
-        </ListItem>
+        </div>
     );
 });
 
@@ -538,26 +589,44 @@ export function ChatHistory() {
     const { currentConversation, toolUsed, usingTool } =
         useConversationContext();
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (scrollContainerRef.current) {
+            // Use scrollTop to scroll to bottom of the container
+            scrollContainerRef.current.scrollTop =
+                scrollContainerRef.current.scrollHeight;
+        }
     };
 
     useEffect(() => {
-        scrollToBottom();
+        // Use setTimeout to ensure DOM is updated before scrolling
+        const timer = setTimeout(() => {
+            scrollToBottom();
+        }, 0);
+
+        return () => clearTimeout(timer);
     }, [currentConversation, toolUsed]);
 
     return (
-        <Box
-            sx={{
+        <div
+            ref={scrollContainerRef}
+            style={{
                 height: "100%",
-                overflow: "auto",
+                overflowY: "auto",
+                overflowX: "hidden",
                 display: "flex",
                 flexDirection: "column",
             }}
         >
-            <List
-                sx={{ width: "100%", bgcolor: "background.paper", flexGrow: 1 }}
+            <div
+                style={{
+                    width: "100%",
+                    backgroundColor: "var(--colorNeutralBackground1)",
+                    minHeight: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                }}
             >
                 {currentConversation.map((message, index, array) => (
                     <React.Fragment key={index}>
@@ -567,7 +636,7 @@ export function ChatHistory() {
                             messageIndex={index}
                         />
                         {index !== array.length - 1 && (
-                            <Divider variant="inset" component="li" />
+                            <Divider style={{ padding: "0 0 0 60px" }} />
                         )}
                     </React.Fragment>
                 ))}
@@ -579,8 +648,8 @@ export function ChatHistory() {
                         />
                     </React.Fragment>
                 ))}
-            </List>
+            </div>
             <div ref={messagesEndRef} />
-        </Box>
+        </div>
     );
 }

@@ -1,21 +1,22 @@
 import {
-    Alert,
-    Backdrop,
+    Card,
     Button,
-    CircularProgress,
-    Paper,
-    Stack,
-    TextField,
-} from "@mui/material";
+    Input,
+    MessageBar,
+    Spinner,
+    Field,
+} from "@fluentui/react-components";
 import "./Login.css";
 import { useUserContext } from "../../../data/context/UserContext";
 import { useCallback, useState } from "react";
+
 export function Login() {
     const { authenticate } = useUserContext();
     const [isLoading, setIsLoading] = useState(false);
     const [userName, setUserName] = useState("");
     const [password, setPassword] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
+
     const login = useCallback(async () => {
         setIsLoading(true);
         try {
@@ -26,40 +27,75 @@ export function Login() {
             setIsLoading(false);
         }
     }, [authenticate, userName, password]);
+
+    const handleKeyPress = (event: React.KeyboardEvent) => {
+        if (event.key === "Enter") {
+            login();
+        }
+    };
+
+    if (isLoading) {
+        return (
+            <div
+                style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    minHeight: "400px",
+                    gap: "20px",
+                }}
+            >
+                <Spinner label="Logging in..." size="large" />
+            </div>
+        );
+    }
+
     return (
-        <Paper elevation={3} className="login-panel">
-            <Stack spacing={2}>
-                {errorMessage && (
-                    <Alert severity="error">
-                        Failed to login, error: {errorMessage}.
-                    </Alert>
-                )}
-                <TextField
-                    label="Username"
-                    variant="outlined"
+        <Card
+            className="login-panel"
+            style={{
+                maxWidth: "400px",
+                margin: "0 auto",
+                padding: "32px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "20px",
+            }}
+        >
+            {errorMessage && (
+                <MessageBar intent="error">
+                    Failed to login, error: {errorMessage}.
+                </MessageBar>
+            )}
+
+            <Field label="Username">
+                <Input
                     value={userName}
-                    onChange={e => setUserName(e.target.value)}
+                    onChange={(e, data) => setUserName(data.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Enter your username"
                 />
-                <TextField
-                    label="Password"
-                    variant="outlined"
+            </Field>
+
+            <Field label="Password">
+                <Input
                     type="password"
                     value={password}
-                    onChange={e => setPassword(e.target.value)}
+                    onChange={(e, data) => setPassword(data.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Enter your password"
                 />
-                <Button variant="contained" onClick={login}>
-                    Login
-                </Button>
-            </Stack>
-            <Backdrop
-                sx={{
-                    color: "#fff",
-                    zIndex: theme => theme.zIndex.drawer + 1,
-                }}
-                open={isLoading}
+            </Field>
+
+            <Button
+                appearance="primary"
+                onClick={login}
+                disabled={!userName || !password}
+                style={{ width: "100%" }}
             >
-                <CircularProgress color="inherit" />
-            </Backdrop>
-        </Paper>
+                Login
+            </Button>
+        </Card>
     );
 }

@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Box, IconButton } from "@mui/material";
+import { Button } from "@fluentui/react-components";
 import {
-    Minimize as MinimizeIcon,
-    CropSquare as MaximizeIcon,
-    FilterNone as RestoreIcon,
-    Close as CloseIcon,
-} from "@mui/icons-material";
+    Subtract24Regular,
+    Square24Regular,
+    SquareMultiple24Regular,
+    Dismiss24Regular,
+} from "@fluentui/react-icons";
 import {
     electronWindowControls,
     isElectron,
@@ -44,59 +44,60 @@ export function WindowControls() {
         return null;
     }
 
+    const buttonStyle = {
+        minWidth: "32px",
+        height: "32px",
+        padding: "0",
+        color: "inherit",
+    };
+
+    const closeButtonStyle = {
+        ...buttonStyle,
+        ":hover": {
+            backgroundColor: "rgba(255, 0, 0, 0.3)",
+        },
+    };
+
     return (
-        <Box
-            sx={{
+        <div
+            style={{
                 display: "flex",
                 alignItems: "center",
-                gap: 0.5,
+                gap: "4px",
             }}
         >
-            <IconButton
+            <Button
+                appearance="transparent"
                 size="small"
                 onClick={handleMinimize}
-                sx={{
-                    color: "inherit",
-                    "&:hover": {
-                        backgroundColor: "rgba(255, 255, 255, 0.1)",
-                    },
-                }}
+                style={buttonStyle}
                 aria-label="minimize window"
-            >
-                <MinimizeIcon fontSize="small" />
-            </IconButton>
+                icon={<Subtract24Regular />}
+            />
 
-            <IconButton
+            <Button
+                appearance="transparent"
                 size="small"
                 onClick={handleMaximize}
-                sx={{
-                    color: "inherit",
-                    "&:hover": {
-                        backgroundColor: "rgba(255, 255, 255, 0.1)",
-                    },
-                }}
+                style={buttonStyle}
                 aria-label={isMaximized ? "restore window" : "maximize window"}
-            >
-                {isMaximized ? (
-                    <RestoreIcon fontSize="small" />
-                ) : (
-                    <MaximizeIcon fontSize="small" />
-                )}
-            </IconButton>
+                icon={
+                    isMaximized ? (
+                        <SquareMultiple24Regular />
+                    ) : (
+                        <Square24Regular />
+                    )
+                }
+            />
 
-            <IconButton
+            <Button
+                appearance="transparent"
                 size="small"
                 onClick={handleClose}
-                sx={{
-                    color: "inherit",
-                    "&:hover": {
-                        backgroundColor: "rgba(255, 0, 0, 0.3)",
-                    },
-                }}
+                style={closeButtonStyle}
                 aria-label="close window"
-            >
-                <CloseIcon fontSize="small" />
-            </IconButton>
-        </Box>
+                icon={<Dismiss24Regular />}
+            />
+        </div>
     );
 }

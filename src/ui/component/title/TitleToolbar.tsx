@@ -1,20 +1,21 @@
 import {
-    AppBar,
-    Avatar,
-    Box,
-    Container,
-    IconButton,
-    Menu,
-    MenuItem,
     Toolbar,
+    Title3,
+    Avatar,
+    Button,
+    Menu,
+    MenuTrigger,
+    MenuPopover,
+    MenuList,
+    MenuItem,
     Tooltip,
-    Typography,
-} from "@mui/material";
+} from "@fluentui/react-components";
 import { useState } from "react";
 import { useUserContext } from "../../../data/context/UserContext";
 import { WindowControls } from "../window/WindowControls";
 import { DraggableArea } from "../window/DraggableArea";
 import { isElectron } from "../../../utils/electronUtils";
+
 function stringToColor(string: string) {
     let hash = 0;
     let i;
@@ -35,127 +36,113 @@ function stringToColor(string: string) {
     return color;
 }
 
-function stringAvatar(name: string) {
+function getInitials(name: string) {
     const splitedName = name.split(" ");
     if (splitedName.length < 2) {
-        return {
-            sx: {
-                bgcolor: stringToColor(name),
-            },
-            children: name[0][0],
-        };
+        return name[0]?.toUpperCase() || "";
     }
-    return {
-        sx: {
-            bgcolor: stringToColor(name),
-        },
-        children: `${splitedName[0][0]}${splitedName[1][0]}`,
-    };
+    return `${splitedName[0][0]}${splitedName[1][0]}`.toUpperCase();
 }
+
 export function TitleToolbar() {
     const { authenticatedUser, logout } = useUserContext();
-    const [anchorElUser, setAnchorElUser] = useState<null | HTMLElement>(null);
+    const [menuOpen, setMenuOpen] = useState(false);
 
-    const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
-        setAnchorElUser(event.currentTarget);
-    };
-    const handleCloseUserMenu = () => {
-        setAnchorElUser(null);
-    };
     const handleLogout = () => {
-        handleCloseUserMenu();
+        setMenuOpen(false);
         logout();
     };
+
     return (
-        <AppBar position="static">
-            <Container maxWidth="xl">
-                <Toolbar disableGutters>
-                    <DraggableArea>
-                        <Typography
-                            variant="h6"
-                            noWrap
-                            sx={{
-                                mr: 2,
-                                flexGrow: 1,
-                                display: { xs: "none", md: "flex" },
+        <div
+            style={{
+                backgroundColor: "var(--colorBrandBackground)",
+                color: "var(--colorNeutralForegroundOnBrand)",
+                padding: "0 16px",
+                borderBottom: "1px solid var(--colorNeutralStroke1)",
+            }}
+        >
+            <Toolbar
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    minHeight: "56px",
+                }}
+            >
+                <DraggableArea>
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            flex: 1,
+                        }}
+                    >
+                        <Title3
+                            style={{
+                                color: "inherit",
                                 fontFamily: "monospace",
                                 fontWeight: 700,
-                                letterSpacing: ".3rem",
-                                color: "inherit",
-                                textDecoration: "none",
+                                letterSpacing: "0.3rem",
+                                margin: 0,
                             }}
                         >
                             ChatGPT Selfhost
-                        </Typography>
-                        <Typography
-                            variant="h5"
-                            noWrap
-                            sx={{
-                                mr: 2,
-                                display: { xs: "flex", md: "none" },
-                                flexGrow: 1,
-                                fontFamily: "monospace",
-                                fontWeight: 700,
-                                letterSpacing: ".3rem",
-                                color: "inherit",
-                                textDecoration: "none",
-                            }}
-                        >
-                            ChatGPT Selfhost
-                        </Typography>
+                        </Title3>
+                    </div>
 
-                        {authenticatedUser?.userName && (
-                            <Box sx={{ flexGrow: 0 }}>
-                                <Tooltip title="Open settings">
-                                    <IconButton
-                                        onClick={handleOpenUserMenu}
-                                        sx={{ p: 0 }}
+                    {authenticatedUser?.userName && (
+                        <div style={{ display: "flex", alignItems: "center" }}>
+                            <Menu
+                                open={menuOpen}
+                                onOpenChange={(e, data) =>
+                                    setMenuOpen(data.open)
+                                }
+                            >
+                                <MenuTrigger disableButtonEnhancement>
+                                    <Tooltip
+                                        content="Open settings"
+                                        relationship="label"
                                     >
-                                        <Avatar
-                                            alt={authenticatedUser.userName}
-                                            {...stringAvatar(
-                                                authenticatedUser.userName
-                                            )}
-                                        />
-                                    </IconButton>
-                                </Tooltip>{" "}
-                                <Menu
-                                    sx={{
-                                        mt: "45px",
-                                        // Ensure menu content is not draggable in Electron
-                                        ...(isElectron() && {
-                                            "& .MuiMenu-paper": {
-                                                WebkitAppRegion: "no-drag",
-                                            },
-                                        }),
-                                    }}
-                                    id="menu-appbar"
-                                    anchorEl={anchorElUser}
-                                    anchorOrigin={{
-                                        vertical: "top",
-                                        horizontal: "right",
-                                    }}
-                                    keepMounted
-                                    transformOrigin={{
-                                        vertical: "top",
-                                        horizontal: "right",
-                                    }}
-                                    open={Boolean(anchorElUser)}
-                                    onClose={handleCloseUserMenu}
-                                >
-                                    <MenuItem onClick={handleLogout}>
-                                        <Typography textAlign="center">
+                                        <Button
+                                            appearance="transparent"
+                                            style={{
+                                                padding: 0,
+                                                minWidth: "auto",
+                                            }}
+                                        >
+                                            <Avatar
+                                                name={
+                                                    authenticatedUser.userName
+                                                }
+                                                color="colorful"
+                                                initials={getInitials(
+                                                    authenticatedUser.userName
+                                                )}
+                                                style={{
+                                                    backgroundColor:
+                                                        stringToColor(
+                                                            authenticatedUser.userName
+                                                        ),
+                                                }}
+                                            />
+                                        </Button>
+                                    </Tooltip>
+                                </MenuTrigger>
+                                <MenuPopover>
+                                    <MenuList>
+                                        <MenuItem onClick={handleLogout}>
                                             Logout
-                                        </Typography>
-                                    </MenuItem>
-                                </Menu>
-                            </Box>
-                        )}
-                    </DraggableArea>
+                                        </MenuItem>
+                                    </MenuList>
+                                </MenuPopover>
+                            </Menu>
+                        </div>
+                    )}
+                </DraggableArea>
 
-                    <WindowControls />
-                </Toolbar>
-            </Container>
-        </AppBar>
+                <WindowControls />
+            </Toolbar>
+        </div>
     );
 }

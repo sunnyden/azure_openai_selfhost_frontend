@@ -1,16 +1,5 @@
-import {
-    Box,
-    FormControl,
-    InputLabel,
-    MenuItem,
-    Select,
-    Stack,
-    IconButton,
-    Tooltip,
-    Snackbar,
-    Alert,
-} from "@mui/material";
-import { ContentCopy } from "@mui/icons-material";
+import { Button, Dropdown, Option, Tooltip } from "@fluentui/react-components";
+import { Copy24Regular } from "@fluentui/react-icons";
 import { useState, useMemo, memo, useCallback, useEffect } from "react";
 import { Editor } from "@monaco-editor/react";
 import "./CodeBlockWrapper.css";
@@ -126,14 +115,13 @@ export const CodeBlockWrapper = memo(
             []
         );
 
-        const alertSx = useMemo(() => ({ width: "100%" }), []);
-        // Memoize language options to avoid recreating MenuItem components
+        // Memoize language options for dropdown
         const languageOptions = useMemo(
             () =>
                 languages.map(lang => (
-                    <MenuItem key={lang} value={lang}>
+                    <Option key={lang} value={lang}>
                         {lang}
-                    </MenuItem>
+                    </Option>
                 )),
             []
         );
@@ -174,8 +162,9 @@ export const CodeBlockWrapper = memo(
         const handleCloseSnackbar = useCallback(() => {
             setCopySuccess(false);
         }, []);
-        const handleLanguageChange = useCallback((e: any) => {
-            setLanguage(e.target.value);
+
+        const handleLanguageChange = useCallback((event: any, data: any) => {
+            setLanguage(data.optionValue || "plaintext");
             setUserOverridden(true);
         }, []);
 
@@ -186,56 +175,55 @@ export const CodeBlockWrapper = memo(
         const handleMouseLeave = useCallback(() => {
             setIsHovered(false);
         }, []);
+
         return (
-            <Stack
+            <div
                 className="code-block-wrapper"
                 onMouseEnter={handleMouseEnter}
                 onMouseLeave={handleMouseLeave}
+                style={{ position: "relative" }}
             >
-                <Box sx={{ ...editorBoxSx, position: "relative" }}>
+                <div style={{ position: "relative" }}>
                     {isHovered && (
-                        <Box
-                            sx={{
+                        <div
+                            style={{
                                 position: "absolute",
                                 top: 8,
                                 right: 15,
                                 zIndex: 10,
                                 display: "flex",
-                                gap: 1,
+                                gap: "8px",
                                 alignItems: "center",
                                 backgroundColor: "rgba(255, 255, 255, 0.9)",
-                                borderRadius: 1,
+                                borderRadius: "4px",
                                 padding: "4px 8px",
                                 backdropFilter: "blur(4px)",
                                 boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
                             }}
                         >
-                            <Box minWidth={100}>
-                                <FormControl fullWidth size="small">
-                                    <InputLabel id="code-type-label">
-                                        Language
-                                    </InputLabel>
-                                    <Select
-                                        labelId="code-type-label"
-                                        value={language}
-                                        label="Language"
-                                        onChange={handleLanguageChange}
-                                        sx={{ minWidth: 100 }}
-                                    >
-                                        {languageOptions}
-                                    </Select>
-                                </FormControl>
-                            </Box>
-                            <Tooltip title="Copy code">
-                                <IconButton
-                                    onClick={handleCopy}
-                                    color="primary"
+                            <Tooltip
+                                content="Select language"
+                                relationship="label"
+                            >
+                                <Dropdown
+                                    value={language}
+                                    selectedOptions={[language]}
+                                    onOptionSelect={handleLanguageChange}
+                                    style={{ minWidth: "100px" }}
                                     size="small"
                                 >
-                                    <ContentCopy />
-                                </IconButton>
+                                    {languageOptions}
+                                </Dropdown>
                             </Tooltip>
-                        </Box>
+                            <Tooltip content="Copy code" relationship="label">
+                                <Button
+                                    icon={<Copy24Regular />}
+                                    appearance="subtle"
+                                    size="small"
+                                    onClick={handleCopy}
+                                />
+                            </Tooltip>
+                        </div>
                     )}
                     <Editor
                         height={`${calculateHeight}px`}
@@ -243,22 +231,27 @@ export const CodeBlockWrapper = memo(
                         value={props.code}
                         options={editorOptions}
                     />
-                </Box>{" "}
-                <Snackbar
-                    open={copySuccess}
-                    autoHideDuration={3000}
-                    onClose={handleCloseSnackbar}
-                    anchorOrigin={snackbarAnchorOrigin}
-                >
-                    <Alert
-                        onClose={handleCloseSnackbar}
-                        severity="success"
-                        sx={alertSx}
+                </div>
+
+                {/* Copy Success Notification */}
+                {copySuccess && (
+                    <div
+                        style={{
+                            position: "fixed",
+                            top: "20px",
+                            right: "20px",
+                            zIndex: 1000,
+                            backgroundColor: "var(--colorBrandBackground)",
+                            color: "white",
+                            padding: "12px 16px",
+                            borderRadius: "4px",
+                            boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                        }}
                     >
                         Code copied to clipboard!
-                    </Alert>
-                </Snackbar>{" "}
-            </Stack>
+                    </div>
+                )}
+            </div>
         );
     },
     (prevProps, nextProps) => {

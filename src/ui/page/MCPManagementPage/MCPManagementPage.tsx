@@ -1,115 +1,193 @@
 import React, { useState, useCallback } from "react";
 import {
-    Box,
-    Container,
-    Typography,
-    Stack,
     Button,
-    TextField,
-    Chip,
-    Alert,
-    Paper,
-    List,
-    ListItem,
-    ListItemText,
-    ListItemSecondaryAction,
-    IconButton,
+    Input,
+    Field,
+    Text,
+    Spinner,
+    Badge,
+    MessageBar,
     Accordion,
-    AccordionSummary,
-    AccordionDetails,
-    Divider,
-    AppBar,
-    Toolbar,
+    AccordionHeader,
+    AccordionItem,
+    AccordionPanel,
+    ToggleButton,
     Tooltip,
-    CircularProgress,
-} from "@mui/material";
+    makeStyles,
+} from "@fluentui/react-components";
 import {
-    ArrowBack as ArrowBackIcon,
-    Add as AddIcon,
-    Delete as DeleteIcon,
-    PlayArrow as PlayIcon,
-    Stop as StopIcon,
-    ExpandMore as ExpandMoreIcon,
-    Computer as ServerIcon,
-    Build as ToolIcon,
-    Refresh as RefreshIcon,
-    ElectricBolt,
-} from "@mui/icons-material";
+    ArrowLeft20Regular,
+    Add20Regular,
+    Delete20Regular,
+    Play20Regular,
+    Stop20Regular,
+    ChevronDown20Regular,
+    Server20Regular,
+    Wrench20Regular,
+    ArrowClockwise20Regular,
+    Flash20Regular,
+    Dismiss20Regular,
+} from "@fluentui/react-icons";
 import { useMCPContext } from "../../../data/context/MCPContext";
 import { isElectron } from "../../../utils/electronUtils";
+
+interface StdioMCPConfiguration {
+    command: string;
+    args?: string[];
+}
+
+const useStyles = makeStyles({
+    container: {
+        height: "100dvh",
+        display: "flex",
+        flexDirection: "column",
+    },
+    header: {
+        display: "flex",
+        alignItems: "center",
+        padding: "12px 16px",
+        borderBottom: "1px solid #e1e1e1",
+        background: "#f8f9fa",
+        WebkitAppRegion: "drag",
+        gap: "12px",
+    },
+    backButton: {
+        WebkitAppRegion: "no-drag",
+    },
+    headerTitle: {
+        flexGrow: 1,
+        fontSize: "18px",
+        fontWeight: "600",
+    },
+    headerActions: {
+        WebkitAppRegion: "no-drag",
+    },
+    content: {
+        flex: 1,
+        padding: "16px",
+        overflowY: "auto",
+        maxWidth: "1200px",
+        margin: "0 auto",
+        width: "100%",
+    },
+    notAvailableContainer: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "32px",
+        textAlign: "center",
+        background: "#f8f9fa",
+        borderRadius: "8px",
+        maxWidth: "500px",
+        margin: "32px auto",
+    },
+    statusCard: {
+        padding: "16px",
+        border: "1px solid #e1e1e1",
+        borderRadius: "8px",
+        backgroundColor: "#ffffff",
+        marginBottom: "16px",
+    },
+    statusHeader: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: "16px",
+    },
+    statusInfo: {
+        display: "flex",
+        alignItems: "center",
+        gap: "12px",
+    },
+    serverList: {
+        marginBottom: "16px",
+    },
+    serverItem: {
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        padding: "12px",
+        border: "1px solid #e1e1e1",
+        borderRadius: "6px",
+        marginBottom: "8px",
+        backgroundColor: "#ffffff",
+    },
+    serverActions: {
+        display: "flex",
+        gap: "8px",
+    },
+    toolsGrid: {
+        display: "flex",
+        flexWrap: "wrap",
+        gap: "8px",
+        marginTop: "8px",
+    },
+    form: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "16px",
+    },
+    argsContainer: {
+        display: "flex",
+        gap: "8px",
+        alignItems: "center",
+    },
+    argsList: {
+        display: "flex",
+        flexWrap: "wrap",
+        gap: "8px",
+        marginTop: "8px",
+    },
+    actionButtons: {
+        display: "flex",
+        gap: "12px",
+        alignItems: "center",
+    },
+});
 
 interface MCPManagementPageProps {
     onBack: () => void;
 }
 
 export function MCPManagementPage({ onBack }: MCPManagementPageProps) {
+    const styles = useStyles();
+
     // Only show MCP management in desktop environment
     if (!isElectron()) {
         return (
-            <Box
-                sx={{
-                    height: "100dvh",
-                    display: "flex",
-                    flexDirection: "column",
-                }}
-            >
-                <AppBar
-                    position="static"
-                    elevation={1}
-                    sx={{
-                        WebkitAppRegion: "drag",
-                        "& .MuiToolbar-root": {
-                            WebkitAppRegion: "drag",
-                        },
-                    }}
-                >
-                    <Toolbar>
-                        <IconButton
-                            edge="start"
-                            color="inherit"
-                            onClick={onBack}
-                            sx={{
-                                mr: 2,
-                                WebkitAppRegion: "no-drag",
-                            }}
-                        >
-                            <ArrowBackIcon />
-                        </IconButton>
-                        <Typography
-                            variant="h6"
-                            component="div"
-                            sx={{ flexGrow: 1 }}
-                        >
-                            MCP Server Management
-                        </Typography>
-                    </Toolbar>
-                </AppBar>
-                <Container
-                    maxWidth="lg"
-                    sx={{
-                        flex: 1,
-                        py: 3,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                    }}
-                >
-                    <Paper
-                        elevation={1}
-                        sx={{ p: 4, textAlign: "center", maxWidth: 500 }}
-                    >
-                        <Typography variant="h5" gutterBottom>
-                            Desktop Mode Required
-                        </Typography>
-                        <Typography variant="body1" color="text.secondary">
-                            MCP (Model Context Protocol) features are only
-                            available when running the application in desktop
-                            mode. Please use the desktop version of the
-                            application to manage MCP servers.
-                        </Typography>
-                    </Paper>
-                </Container>
-            </Box>
+            <div className={styles.container}>
+                <div className={styles.header}>
+                    <Button
+                        appearance="subtle"
+                        icon={<ArrowLeft20Regular />}
+                        onClick={onBack}
+                        className={styles.backButton}
+                    />
+                    <Text className={styles.headerTitle}>
+                        MCP Server Management
+                    </Text>
+                </div>
+                <div className={styles.content}>
+                    <div className={styles.notAvailableContainer}>
+                        <div>
+                            <Text
+                                size={500}
+                                weight="semibold"
+                                block
+                                style={{ marginBottom: "12px" }}
+                            >
+                                Desktop Mode Required
+                            </Text>
+                            <Text size={300} block>
+                                MCP (Model Context Protocol) features are only
+                                available when running the application in
+                                desktop mode. Please use the desktop version of
+                                the application to manage MCP servers.
+                            </Text>
+                        </div>
+                    </div>
+                </div>
+            </div>
         );
     }
 
@@ -339,112 +417,116 @@ export function MCPManagementPage({ onBack }: MCPManagementPageProps) {
     );
 
     return (
-        <Box
-            sx={{ height: "100dvh", display: "flex", flexDirection: "column" }}
-        >
-            {/* App Bar */}
-            <AppBar
-                position="static"
-                elevation={1}
-                sx={{
-                    WebkitAppRegion: "drag",
-                    "& .MuiToolbar-root": {
-                        WebkitAppRegion: "drag",
-                    },
-                }}
-            >
-                <Toolbar>
-                    <IconButton
-                        edge="start"
-                        color="inherit"
-                        onClick={onBack}
-                        sx={{
-                            mr: 2,
-                            WebkitAppRegion: "no-drag",
-                        }}
-                    >
-                        <ArrowBackIcon />
-                    </IconButton>
-                    <Typography
-                        variant="h6"
-                        component="div"
-                        sx={{ flexGrow: 1 }}
-                    >
-                        MCP Server Management
-                    </Typography>
-                    {isHubRunning && (
-                        <Tooltip title="Refresh Tools">
-                            <IconButton
-                                color="inherit"
-                                onClick={handleRefreshTools}
-                                disabled={loading}
-                                sx={{
-                                    WebkitAppRegion: "no-drag",
-                                }}
-                            >
-                                <RefreshIcon />
-                            </IconButton>
-                        </Tooltip>
-                    )}
-                </Toolbar>
-            </AppBar>
+        <div className={styles.container}>
+            {/* Header */}
+            <div className={styles.header}>
+                <Button
+                    appearance="subtle"
+                    icon={<ArrowLeft20Regular />}
+                    onClick={onBack}
+                    className={styles.backButton}
+                />
+                <Text className={styles.headerTitle}>
+                    MCP Server Management
+                </Text>
+                {isHubRunning && (
+                    <Tooltip content="Refresh Tools" relationship="label">
+                        <Button
+                            appearance="subtle"
+                            icon={<ArrowClockwise20Regular />}
+                            onClick={handleRefreshTools}
+                            disabled={loading}
+                            className={styles.headerActions}
+                        />
+                    </Tooltip>
+                )}
+            </div>
 
             {/* Main Content */}
-            <Container maxWidth="lg" sx={{ flex: 1, py: 3, overflow: "auto" }}>
-                <Stack spacing={3}>
+            <div className={styles.content}>
+                <div
+                    style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: "16px",
+                    }}
+                >
                     {error && (
-                        <Alert severity="error" onClose={() => setError(null)}>
-                            {error}
-                        </Alert>
+                        <MessageBar intent="error">
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                }}
+                            >
+                                <span>{error}</span>
+                                <Button
+                                    appearance="transparent"
+                                    icon={<Dismiss20Regular />}
+                                    onClick={() => setError(null)}
+                                    size="small"
+                                />
+                            </div>
+                        </MessageBar>
                     )}
 
                     {testSuccess && (
-                        <Alert
-                            severity="success"
-                            onClose={() => setTestSuccess(null)}
-                        >
-                            {testSuccess}
-                        </Alert>
+                        <MessageBar intent="success">
+                            <div
+                                style={{
+                                    display: "flex",
+                                    alignItems: "center",
+                                    justifyContent: "space-between",
+                                }}
+                            >
+                                <span>{testSuccess}</span>
+                                <Button
+                                    appearance="transparent"
+                                    icon={<Dismiss20Regular />}
+                                    onClick={() => setTestSuccess(null)}
+                                    size="small"
+                                />
+                            </div>
+                        </MessageBar>
                     )}
 
                     {/* Hub Status */}
-                    <Paper elevation={1} sx={{ p: 3 }}>
-                        <Stack
-                            direction="row"
-                            alignItems="center"
-                            justifyContent="space-between"
-                            spacing={2}
-                        >
-                            <Stack
-                                direction="row"
-                                alignItems="center"
-                                spacing={2}
-                            >
-                                <ServerIcon
-                                    color={
-                                        isHubRunning ? "success" : "disabled"
-                                    }
+                    <div className={styles.statusCard}>
+                        <div className={styles.statusHeader}>
+                            <div className={styles.statusInfo}>
+                                <Server20Regular
+                                    style={{
+                                        color: isHubRunning
+                                            ? "#107c10"
+                                            : "#737373",
+                                        fontSize: "20px",
+                                    }}
                                 />
-                                <Typography variant="h6">
+                                <Text size={400} weight="semibold">
                                     Hub Status:{" "}
                                     {isHubRunning ? "Running" : "Stopped"}
-                                </Typography>
+                                </Text>
                                 {isHubRunning && (
-                                    <Chip
-                                        icon={<ToolIcon />}
-                                        label={`${totalTools} tools available`}
+                                    <Badge
+                                        icon={<Wrench20Regular />}
                                         color="success"
                                         size="small"
-                                    />
+                                    >
+                                        {totalTools} tools available
+                                    </Badge>
                                 )}
-                            </Stack>
+                            </div>
                             {isHubRunning ? (
                                 <Button
                                     onClick={handleStopHub}
                                     disabled={loading}
-                                    variant="outlined"
-                                    color="error"
-                                    startIcon={<StopIcon />}
+                                    appearance="outline"
+                                    icon={<Stop20Regular />}
+                                    style={{
+                                        color: "#d13438",
+                                        borderColor: "#d13438",
+                                    }}
                                 >
                                     Stop Hub
                                 </Button>
@@ -452,289 +534,382 @@ export function MCPManagementPage({ onBack }: MCPManagementPageProps) {
                                 <Button
                                     onClick={handleStartHub}
                                     disabled={loading || servers.length === 0}
-                                    variant="contained"
-                                    startIcon={<PlayIcon />}
+                                    appearance="primary"
+                                    icon={<Play20Regular />}
                                 >
                                     Start Hub
                                 </Button>
                             )}
-                        </Stack>
-                    </Paper>
+                        </div>
+                    </div>
 
                     {/* Server List */}
-                    <Accordion defaultExpanded>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                            <Typography variant="h6">
-                                Configured Servers ({servers.length})
-                            </Typography>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                            {servers.length === 0 ? (
-                                <Typography
-                                    variant="body2"
-                                    color="text.secondary"
-                                >
-                                    No MCP servers configured. Add a server
-                                    below to get started.
-                                </Typography>
-                            ) : (
-                                <List>
-                                    {servers.map(server => {
-                                        const config = server.config
-                                            .config as StdioMCPConfiguration;
-                                        const isTestingThisServer =
-                                            testingServer === server.name;
+                    <Accordion collapsible>
+                        <AccordionItem value="servers">
+                            <AccordionHeader
+                                expandIcon={<ChevronDown20Regular />}
+                            >
+                                <Text size={400} weight="semibold">
+                                    Configured Servers ({servers.length})
+                                </Text>
+                            </AccordionHeader>
+                            <AccordionPanel>
+                                {servers.length === 0 ? (
+                                    <Text
+                                        size={300}
+                                        style={{ color: "#737373" }}
+                                    >
+                                        No MCP servers configured. Add a server
+                                        below to get started.
+                                    </Text>
+                                ) : (
+                                    <div className={styles.serverList}>
+                                        {servers.map(server => {
+                                            const config = server.config
+                                                .config as StdioMCPConfiguration;
+                                            const isTestingThisServer =
+                                                testingServer === server.name;
 
-                                        return (
-                                            <ListItem key={server.name} divider>
-                                                <ListItemText
-                                                    primary={server.name}
-                                                    secondary={`Command: ${config.command} ${(config.args || []).join(" ")}`}
-                                                />
-                                                <ListItemSecondaryAction>
-                                                    <IconButton
-                                                        onClick={async () => {
-                                                            try {
-                                                                await testServerConnection(
-                                                                    server.name,
-                                                                    config.command,
-                                                                    config.args ||
-                                                                        []
-                                                                );
-                                                            } catch (err) {
-                                                                setError(
-                                                                    err instanceof
-                                                                        Error
-                                                                        ? err.message
-                                                                        : "Server test failed"
-                                                                );
-                                                            }
-                                                        }}
-                                                        disabled={
-                                                            loading ||
-                                                            isTestingThisServer
+                                            return (
+                                                <div
+                                                    key={server.name}
+                                                    className={
+                                                        styles.serverItem
+                                                    }
+                                                >
+                                                    <div>
+                                                        <Text
+                                                            size={300}
+                                                            weight="semibold"
+                                                            block
+                                                        >
+                                                            {server.name}
+                                                        </Text>
+                                                        <Text
+                                                            size={200}
+                                                            style={{
+                                                                color: "#737373",
+                                                            }}
+                                                        >
+                                                            Command:{" "}
+                                                            {config.command}{" "}
+                                                            {(
+                                                                config.args ||
+                                                                []
+                                                            ).join(" ")}
+                                                        </Text>
+                                                    </div>
+                                                    <div
+                                                        className={
+                                                            styles.serverActions
                                                         }
-                                                        sx={{ mr: 1 }}
-                                                        title="Test Server Connection"
                                                     >
-                                                        {isTestingThisServer ? (
-                                                            <CircularProgress
-                                                                size={20}
+                                                        <Tooltip
+                                                            content="Test Server Connection"
+                                                            relationship="label"
+                                                        >
+                                                            <Button
+                                                                appearance="subtle"
+                                                                icon={
+                                                                    isTestingThisServer ? (
+                                                                        <Spinner size="tiny" />
+                                                                    ) : (
+                                                                        <Flash20Regular />
+                                                                    )
+                                                                }
+                                                                onClick={async () => {
+                                                                    try {
+                                                                        await testServerConnection(
+                                                                            server.name,
+                                                                            config.command,
+                                                                            config.args ||
+                                                                                []
+                                                                        );
+                                                                    } catch (err) {
+                                                                        setError(
+                                                                            err instanceof
+                                                                                Error
+                                                                                ? err.message
+                                                                                : "Server test failed"
+                                                                        );
+                                                                    }
+                                                                }}
+                                                                disabled={
+                                                                    loading ||
+                                                                    isTestingThisServer
+                                                                }
                                                             />
-                                                        ) : (
-                                                            <ElectricBolt />
-                                                        )}
-                                                    </IconButton>
-                                                    <IconButton
-                                                        edge="end"
-                                                        onClick={() =>
-                                                            handleRemoveServer(
-                                                                server.name
-                                                            )
-                                                        }
-                                                        disabled={loading}
-                                                        color="error"
-                                                        title="Remove Server"
-                                                    >
-                                                        <DeleteIcon />
-                                                    </IconButton>
-                                                </ListItemSecondaryAction>
-                                            </ListItem>
-                                        );
-                                    })}
-                                </List>
-                            )}
-                        </AccordionDetails>
+                                                        </Tooltip>
+                                                        <Tooltip
+                                                            content="Remove Server"
+                                                            relationship="label"
+                                                        >
+                                                            <Button
+                                                                appearance="subtle"
+                                                                icon={
+                                                                    <Delete20Regular />
+                                                                }
+                                                                onClick={() =>
+                                                                    handleRemoveServer(
+                                                                        server.name
+                                                                    )
+                                                                }
+                                                                disabled={
+                                                                    loading
+                                                                }
+                                                                style={{
+                                                                    color: "#d13438",
+                                                                }}
+                                                            />
+                                                        </Tooltip>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+                            </AccordionPanel>
+                        </AccordionItem>
                     </Accordion>
 
                     {/* Available Tools */}
                     {isHubRunning && availableTools.size > 0 && (
-                        <Accordion>
-                            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                                <Typography variant="h6">
-                                    Available Tools ({totalTools})
-                                </Typography>
-                            </AccordionSummary>
-                            <AccordionDetails>
-                                <Stack spacing={2}>
-                                    {Array.from(availableTools.entries()).map(
-                                        ([serverName, tools]) => (
-                                            <Paper
+                        <Accordion collapsible>
+                            <AccordionItem value="tools">
+                                <AccordionHeader
+                                    expandIcon={<ChevronDown20Regular />}
+                                >
+                                    <Text size={400} weight="semibold">
+                                        Available Tools ({totalTools})
+                                    </Text>
+                                </AccordionHeader>
+                                <AccordionPanel>
+                                    <div
+                                        style={{
+                                            display: "flex",
+                                            flexDirection: "column",
+                                            gap: "12px",
+                                        }}
+                                    >
+                                        {Array.from(
+                                            availableTools.entries()
+                                        ).map(([serverName, tools]) => (
+                                            <div
                                                 key={serverName}
-                                                variant="outlined"
-                                                sx={{ p: 2 }}
+                                                style={{
+                                                    padding: "12px",
+                                                    border: "1px solid #e1e1e1",
+                                                    borderRadius: "6px",
+                                                    backgroundColor: "#ffffff",
+                                                }}
                                             >
-                                                <Typography
-                                                    variant="subtitle1"
-                                                    gutterBottom
+                                                <Text
+                                                    size={300}
+                                                    weight="semibold"
+                                                    block
+                                                    style={{
+                                                        marginBottom: "8px",
+                                                    }}
                                                 >
                                                     {serverName} ({tools.length}{" "}
                                                     tools)
-                                                </Typography>
-                                                <Box
-                                                    sx={{
-                                                        display: "flex",
-                                                        flexWrap: "wrap",
-                                                        gap: 1,
-                                                    }}
+                                                </Text>
+                                                <div
+                                                    className={styles.toolsGrid}
                                                 >
                                                     {tools.map(
                                                         (
                                                             tool: any,
                                                             index: number
                                                         ) => (
-                                                            <Chip
+                                                            <Tooltip
                                                                 key={index}
-                                                                label={
-                                                                    tool.name
-                                                                }
-                                                                size="small"
-                                                                variant="outlined"
-                                                                title={
+                                                                content={
                                                                     tool.description ||
                                                                     "No description"
                                                                 }
-                                                            />
+                                                                relationship="label"
+                                                            >
+                                                                <Badge
+                                                                    size="small"
+                                                                    appearance="outline"
+                                                                >
+                                                                    {tool.name}
+                                                                </Badge>
+                                                            </Tooltip>
                                                         )
                                                     )}
-                                                </Box>
-                                            </Paper>
-                                        )
-                                    )}
-                                </Stack>
-                            </AccordionDetails>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </AccordionPanel>
+                            </AccordionItem>
                         </Accordion>
                     )}
 
-                    <Divider />
+                    <div
+                        style={{
+                            height: "1px",
+                            backgroundColor: "#e1e1e1",
+                            margin: "8px 0",
+                        }}
+                    />
 
                     {/* Add New Server */}
-                    <Accordion>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                            <Typography variant="h6">
-                                Add New MCP Server
-                            </Typography>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                            <Stack spacing={3}>
-                                <TextField
-                                    fullWidth
-                                    label="Server Name"
-                                    placeholder="e.g., filesystem-server"
-                                    value={serverName}
-                                    onChange={e =>
-                                        handleServerNameChange(e.target.value)
-                                    }
-                                    disabled={loading}
-                                    error={!!nameValidationError}
-                                    helperText={
-                                        nameValidationError ||
-                                        "Unique name to identify this MCP server (letters, numbers, underscores, dots, and hyphens only)"
-                                    }
-                                />
-
-                                <TextField
-                                    fullWidth
-                                    label="Executable Path"
-                                    placeholder="e.g., /path/to/mcp-server or node"
-                                    value={command}
-                                    onChange={e => setCommand(e.target.value)}
-                                    disabled={loading}
-                                    helperText="Full path to the MCP server executable"
-                                />
-
-                                <Box>
-                                    <Typography
-                                        variant="subtitle2"
-                                        gutterBottom
+                    <Accordion collapsible>
+                        <AccordionItem value="add-server">
+                            <AccordionHeader
+                                expandIcon={<ChevronDown20Regular />}
+                            >
+                                <Text size={400} weight="semibold">
+                                    Add New MCP Server
+                                </Text>
+                            </AccordionHeader>
+                            <AccordionPanel>
+                                <div className={styles.form}>
+                                    <Field
+                                        label="Server Name"
+                                        hint="Unique name to identify this MCP server (letters, numbers, underscores, dots, and hyphens only)"
+                                        validationState={
+                                            nameValidationError
+                                                ? "error"
+                                                : "none"
+                                        }
+                                        validationMessage={nameValidationError}
                                     >
-                                        Arguments
-                                    </Typography>
-                                    <Stack
-                                        direction="row"
-                                        spacing={1}
-                                        sx={{ mb: 1 }}
-                                    >
-                                        <TextField
-                                            fullWidth
-                                            label="Add argument"
-                                            placeholder="e.g., --port 8080"
-                                            value={newArg}
+                                        <Input
+                                            placeholder="e.g., filesystem-server"
+                                            value={serverName}
                                             onChange={e =>
-                                                setNewArg(e.target.value)
+                                                handleServerNameChange(
+                                                    e.target.value
+                                                )
                                             }
-                                            onKeyPress={handleKeyPress}
-                                            onBlur={handleArgBlur}
                                             disabled={loading}
-                                            helperText="Press Enter or blur to auto-add arguments"
                                         />
-                                        <IconButton
-                                            onClick={handleAddArgument}
-                                            disabled={!newArg.trim() || loading}
-                                            color="primary"
-                                        >
-                                            <AddIcon />
-                                        </IconButton>
-                                    </Stack>
+                                    </Field>
 
-                                    <Box
-                                        sx={{
-                                            display: "flex",
-                                            flexWrap: "wrap",
-                                            gap: 1,
-                                        }}
+                                    <Field
+                                        label="Executable Path"
+                                        hint="Full path to the MCP server executable"
                                     >
-                                        {args.map((arg, index) => (
-                                            <Chip
-                                                key={index}
-                                                label={arg}
-                                                onDelete={() =>
-                                                    handleRemoveArgument(index)
-                                                }
-                                                deleteIcon={<DeleteIcon />}
-                                                variant="outlined"
-                                            />
-                                        ))}
-                                    </Box>
-                                </Box>
-
-                                <Stack direction="row" spacing={2}>
-                                    <Button
-                                        onClick={handleAddServer}
-                                        disabled={
-                                            loading ||
-                                            !serverName.trim() ||
-                                            !command.trim()
-                                        }
-                                        variant="contained"
-                                        startIcon={
-                                            loading ? (
-                                                <CircularProgress size={16} />
-                                            ) : (
-                                                <AddIcon />
-                                            )
-                                        }
-                                        sx={{ minWidth: 120 }}
-                                    >
-                                        {loading ? "Adding..." : "Add Server"}
-                                    </Button>
-
-                                    {testingServer && (
-                                        <Chip
-                                            label={`Testing ${testingServer}...`}
-                                            color="primary"
-                                            size="small"
-                                            icon={
-                                                <CircularProgress size={16} />
+                                        <Input
+                                            placeholder="e.g., /path/to/mcp-server or node"
+                                            value={command}
+                                            onChange={e =>
+                                                setCommand(e.target.value)
                                             }
+                                            disabled={loading}
                                         />
-                                    )}
-                                </Stack>
-                            </Stack>
-                        </AccordionDetails>
+                                    </Field>
+
+                                    <div>
+                                        <Text
+                                            size={300}
+                                            weight="semibold"
+                                            block
+                                            style={{ marginBottom: "8px" }}
+                                        >
+                                            Arguments
+                                        </Text>
+                                        <div className={styles.argsContainer}>
+                                            <Field
+                                                hint="Press Enter or blur to auto-add arguments"
+                                                style={{ flex: 1 }}
+                                            >
+                                                <Input
+                                                    placeholder="e.g., --port 8080"
+                                                    value={newArg}
+                                                    onChange={e =>
+                                                        setNewArg(
+                                                            e.target.value
+                                                        )
+                                                    }
+                                                    onKeyDown={handleKeyPress}
+                                                    onBlur={handleArgBlur}
+                                                    disabled={loading}
+                                                />
+                                            </Field>
+                                            <Button
+                                                appearance="subtle"
+                                                icon={<Add20Regular />}
+                                                onClick={handleAddArgument}
+                                                disabled={
+                                                    !newArg.trim() || loading
+                                                }
+                                            />
+                                        </div>
+
+                                        <div className={styles.argsList}>
+                                            {args.map((arg, index) => (
+                                                <Badge
+                                                    key={index}
+                                                    appearance="outline"
+                                                    icon={
+                                                        <Button
+                                                            appearance="transparent"
+                                                            icon={
+                                                                <Dismiss20Regular />
+                                                            }
+                                                            onClick={() =>
+                                                                handleRemoveArgument(
+                                                                    index
+                                                                )
+                                                            }
+                                                            size="small"
+                                                            style={{
+                                                                minWidth:
+                                                                    "auto",
+                                                                padding: "0",
+                                                            }}
+                                                        />
+                                                    }
+                                                >
+                                                    {arg}
+                                                </Badge>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className={styles.actionButtons}>
+                                        <Button
+                                            onClick={handleAddServer}
+                                            disabled={
+                                                loading ||
+                                                !serverName.trim() ||
+                                                !command.trim()
+                                            }
+                                            appearance="primary"
+                                            icon={
+                                                loading ? (
+                                                    <Spinner size="tiny" />
+                                                ) : (
+                                                    <Add20Regular />
+                                                )
+                                            }
+                                        >
+                                            {loading
+                                                ? "Adding..."
+                                                : "Add Server"}
+                                        </Button>
+
+                                        {testingServer && (
+                                            <Badge
+                                                icon={<Spinner size="tiny" />}
+                                                color="brand"
+                                                size="small"
+                                            >
+                                                Testing {testingServer}...
+                                            </Badge>
+                                        )}
+                                    </div>
+                                </div>
+                            </AccordionPanel>
+                        </AccordionItem>
                     </Accordion>
-                </Stack>
-            </Container>
-        </Box>
+                </div>
+            </div>
+        </div>
     );
 }
