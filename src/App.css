@@ -15,3 +15,13 @@ html,
 .electron-no-drag {
     -webkit-app-region: no-drag;
 }
+
+.draggable-area button,
+.draggable-area input,
+.draggable-area select,
+.draggable-area [role="button"],
+.draggable-area [role="menuitem"],
+.draggable-area [role="combobox"],
+.draggable-area [role="textbox"] {
+    -webkit-app-region: no-drag;
+}

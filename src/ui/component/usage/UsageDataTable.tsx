@@ -64,6 +64,7 @@ const useStyles = makeStyles({
         overflow: "hidden",
         textOverflow: "ellipsis",
         whiteSpace: "nowrap",
+        textWrap: "wrap",
     },
     tableContainer: {
         border: "1px solid #e1e1e1",
@@ -268,9 +269,7 @@ export function UsageDataTable({ transactions }: UsageDataTableProps) {
                                     <TableCellLayout>
                                         <Badge
                                             size="small"
-                                            color={getServiceColor(
-                                                transaction.requestedService
-                                            )}
+                                            color={"brand"}
                                             appearance="outline"
                                         >
                                             {transaction.requestedService}

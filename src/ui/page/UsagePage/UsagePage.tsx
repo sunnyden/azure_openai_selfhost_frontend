@@ -23,6 +23,7 @@ import { useUserContext } from "../../../data/context/UserContext";
 import { UsageDataTable } from "../../component/usage/UsageDataTable";
 import { WindowControls } from "../../component/window/WindowControls";
 import { DraggableArea } from "../../component/window/DraggableArea";
+import { StatCard } from "../../component/StatCard";
 
 const useStyles = makeStyles({
     container: {
@@ -80,22 +81,6 @@ const useStyles = makeStyles({
         display: "grid",
         gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
         gap: "16px",
-    },
-    statCard: {
-        padding: "16px",
-        border: "1px solid #e1e1e1",
-        borderRadius: "6px",
-        backgroundColor: "#fafafa",
-    },
-    statLabel: {
-        fontSize: "14px",
-        color: "#737373",
-        marginBottom: "8px",
-    },
-    statValue: {
-        fontSize: "32px",
-        fontWeight: "600",
-        color: "#0f1419",
     },
     filterContainer: {
         display: "flex",
@@ -261,43 +246,30 @@ export function UsagePage({ onBack }: UsagePageProps) {
                                 </Text>
                             </div>
                             <div className={styles.statsGrid}>
-                                <div className={styles.statCard}>
-                                    <Text className={styles.statLabel}>
-                                        Remaining Credit
-                                    </Text>
-                                    <Text
-                                        className={styles.statValue}
-                                        style={{ color: "#0078d4" }}
-                                    >
-                                        {authenticatedUser.remainingCredit.toFixed(
-                                            2
-                                        )}
-                                    </Text>
-                                </div>
-                                <div className={styles.statCard}>
-                                    <Text className={styles.statLabel}>
-                                        Credit Quota
-                                    </Text>
-                                    <Text className={styles.statValue}>
-                                        {authenticatedUser.creditQuota.toFixed(
-                                            2
-                                        )}
-                                    </Text>
-                                </div>
-                                <div className={styles.statCard}>
-                                    <Text className={styles.statLabel}>
-                                        Used Credit
-                                    </Text>
-                                    <Text
-                                        className={styles.statValue}
-                                        style={{ color: "#d13438" }}
-                                    >
-                                        {(
-                                            authenticatedUser.creditQuota -
-                                            authenticatedUser.remainingCredit
-                                        ).toFixed(2)}
-                                    </Text>
-                                </div>
+                                <StatCard
+                                    icon={<Wallet20Regular />}
+                                    label="Remaining Credit"
+                                    value={authenticatedUser.remainingCredit.toFixed(
+                                        2
+                                    )}
+                                    valueColor="#0078d4"
+                                />
+                                <StatCard
+                                    icon={<Wallet20Regular />}
+                                    label="Credit Quota"
+                                    value={authenticatedUser.creditQuota.toFixed(
+                                        2
+                                    )}
+                                />
+                                <StatCard
+                                    icon={<Wallet20Regular />}
+                                    label="Used Credit"
+                                    value={(
+                                        authenticatedUser.creditQuota -
+                                        authenticatedUser.remainingCredit
+                                    ).toFixed(2)}
+                                    valueColor="#d13438"
+                                />
                             </div>
                         </div>
                     )}
@@ -352,41 +324,27 @@ export function UsagePage({ onBack }: UsagePageProps) {
                             )}
                         </div>
                         <div className={styles.statsGrid}>
-                            <div className={styles.statCard}>
-                                <Text className={styles.statLabel}>
-                                    Total Transactions
-                                </Text>
-                                <Text className={styles.statValue}>
-                                    {filteredTransactions.length}
-                                </Text>
-                            </div>
-                            <div className={styles.statCard}>
-                                <Text className={styles.statLabel}>
-                                    Total Cost
-                                </Text>
-                                <Text
-                                    className={styles.statValue}
-                                    style={{ color: "#d13438" }}
-                                >
-                                    {totalCost.toFixed(4)}
-                                </Text>
-                            </div>
-                            <div className={styles.statCard}>
-                                <Text className={styles.statLabel}>
-                                    Total Tokens
-                                </Text>
-                                <Text className={styles.statValue}>
-                                    {totalTokens.toLocaleString()}
-                                </Text>
-                            </div>
-                            <div className={styles.statCard}>
-                                <Text className={styles.statLabel}>
-                                    Avg Cost/Transaction
-                                </Text>
-                                <Text className={styles.statValue}>
-                                    {averageCostPerTransaction.toFixed(4)}
-                                </Text>
-                            </div>
+                            <StatCard
+                                icon={<DataTrending20Regular />}
+                                label="Total Transactions"
+                                value={filteredTransactions.length}
+                            />
+                            <StatCard
+                                icon={<Wallet20Regular />}
+                                label="Total Cost"
+                                value={totalCost.toFixed(4)}
+                                valueColor="#d13438"
+                            />
+                            <StatCard
+                                icon={<DataArea20Regular />}
+                                label="Total Tokens"
+                                value={totalTokens.toLocaleString()}
+                            />
+                            <StatCard
+                                icon={<DataTrending20Regular />}
+                                label="Avg Cost/Transaction"
+                                value={averageCostPerTransaction.toFixed(4)}
+                            />
                         </div>
                     </div>
 

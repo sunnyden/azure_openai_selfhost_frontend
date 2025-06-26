@@ -23,19 +23,8 @@ export function DraggableArea({ children }: DraggableAreaProps) {
     return (
         <div
             style={combinedStyles}
-            className={isElectron() ? "draggable-area" : ""}
+            className={isElectron() ? "draggable-area electron-drag" : ""}
         >
-            <style>{`
-                .draggable-area button,
-                .draggable-area input,
-                .draggable-area select,
-                .draggable-area [role="button"],
-                .draggable-area [role="menuitem"],
-                .draggable-area [role="combobox"],
-                .draggable-area [role="textbox"] {
-                    -webkit-app-region: no-drag;
-                }
-            `}</style>
             {children}
         </div>
     );

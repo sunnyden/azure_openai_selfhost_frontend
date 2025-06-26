@@ -55,19 +55,18 @@ export function ChatPageHeader({
                         aria-label="menu"
                         style={{ color: "inherit" }}
                     />
-
-                    <DraggableArea>
-                        <Title3
-                            style={{
-                                color: "inherit",
-                                margin: 0,
-                                flex: 1,
-                            }}
-                        >
-                            Chat
-                        </Title3>
-                    </DraggableArea>
                 </div>
+                <DraggableArea>
+                    <Title3
+                        style={{
+                            color: "inherit",
+                            margin: 0,
+                            flex: 1,
+                        }}
+                    >
+                        Chat
+                    </Title3>
+                </DraggableArea>
 
                 <div
                     style={{
@@ -76,29 +75,27 @@ export function ChatPageHeader({
                         gap: "16px",
                     }}
                 >
-                    <DraggableArea>
-                        <Dropdown
-                            value={currentModel?.friendlyName || ""}
-                            onOptionSelect={(_, data) => {
-                                if (data.optionValue) {
-                                    onModelChange(data.optionValue);
-                                }
-                            }}
-                            style={{
-                                minWidth: "200px",
-                                color: "inherit",
-                            }}
-                        >
-                            {modelList.map(model => (
-                                <Option
-                                    key={model.identifier}
-                                    value={model.identifier}
-                                >
-                                    {model.friendlyName}
-                                </Option>
-                            ))}
-                        </Dropdown>
-                    </DraggableArea>
+                    <Dropdown
+                        value={currentModel?.friendlyName || ""}
+                        onOptionSelect={(_, data) => {
+                            if (data.optionValue) {
+                                onModelChange(data.optionValue);
+                            }
+                        }}
+                        style={{
+                            minWidth: "200px",
+                            color: "inherit",
+                        }}
+                    >
+                        {modelList.map(model => (
+                            <Option
+                                key={model.identifier}
+                                value={model.identifier}
+                            >
+                                {model.friendlyName}
+                            </Option>
+                        ))}
+                    </Dropdown>
 
                     <WindowControls />
                 </div>
