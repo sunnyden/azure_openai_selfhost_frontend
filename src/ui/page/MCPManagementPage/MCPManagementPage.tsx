@@ -218,13 +218,6 @@ export function MCPManagementPage({ onBack }: MCPManagementPageProps) {
     >(null);
 
     // Auto-add server when user types Enter or blurs from argument field
-    const handleAutoAddServer = useCallback(() => {
-        if (serverName.trim() && command.trim() && newArg.trim()) {
-            setArgs(prev => [...prev, newArg.trim()]);
-            setNewArg("");
-        }
-    }, [serverName, command, newArg]);
-
     const handleAddArgument = useCallback(() => {
         if (newArg.trim()) {
             setArgs(prev => [...prev, newArg.trim()]);
@@ -403,15 +396,15 @@ export function MCPManagementPage({ onBack }: MCPManagementPageProps) {
         (event: React.KeyboardEvent) => {
             if (event.key === "Enter") {
                 event.preventDefault();
-                handleAutoAddServer();
+                handleAddArgument();
             }
         },
-        [handleAutoAddServer]
+        [handleAddArgument]
     );
 
     const handleArgBlur = useCallback(() => {
-        handleAutoAddServer();
-    }, [handleAutoAddServer]);
+        handleAddArgument();
+    }, [handleAddArgument]);
 
     const totalTools = Array.from(availableTools.values()).reduce(
         (total, tools) => total + tools.length,
@@ -830,24 +823,28 @@ export function MCPManagementPage({ onBack }: MCPManagementPageProps) {
                                         >
                                             Arguments
                                         </Text>
+                                        <Text
+                                            size={200}
+                                            style={{
+                                                color: "var(--colorNeutralForeground2)",
+                                                marginBottom: "8px",
+                                                display: "block",
+                                            }}
+                                        >
+                                            Press Enter to add argument
+                                        </Text>
                                         <div className={styles.argsContainer}>
-                                            <Field
-                                                hint="Press Enter or blur to auto-add arguments"
+                                            <Input
+                                                placeholder="e.g., --port 8080"
+                                                value={newArg}
+                                                onChange={e =>
+                                                    setNewArg(e.target.value)
+                                                }
+                                                onKeyDown={handleKeyPress}
+                                                onBlur={handleArgBlur}
+                                                disabled={loading}
                                                 style={{ flex: 1 }}
-                                            >
-                                                <Input
-                                                    placeholder="e.g., --port 8080"
-                                                    value={newArg}
-                                                    onChange={e =>
-                                                        setNewArg(
-                                                            e.target.value
-                                                        )
-                                                    }
-                                                    onKeyDown={handleKeyPress}
-                                                    onBlur={handleArgBlur}
-                                                    disabled={loading}
-                                                />
-                                            </Field>
+                                            />
                                             <Button
                                                 appearance="subtle"
                                                 icon={<Add20Regular />}

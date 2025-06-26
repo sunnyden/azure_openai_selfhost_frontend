@@ -118,15 +118,19 @@ export const CodeBlockWrapper = memo(
         );
 
         // Memoize language options for dropdown
-        const languageOptions = useMemo(
-            () =>
-                languages.map(lang => (
-                    <Option key={lang} value={lang}>
-                        {lang}
-                    </Option>
-                )),
-            []
-        );
+        const languageOptions = useMemo(() => {
+            // Create a list that includes the current language if it's not in the predefined list
+            const allLanguages: string[] = [...languages];
+            if (!languages.includes(language as any)) {
+                allLanguages.unshift(language); // Add current language at the beginning
+            }
+            
+            return allLanguages.map(lang => (
+                <Option key={lang} value={lang}>
+                    {lang}
+                </Option>
+            ));
+        }, [language]);
 
         // Memoize editor options to avoid object recreation
         const editorOptions = useMemo(
@@ -196,11 +200,17 @@ export const CodeBlockWrapper = memo(
                                 display: "flex",
                                 gap: "8px",
                                 alignItems: "center",
-                                backgroundColor: "rgba(255, 255, 255, 0.9)",
+                                backgroundColor:
+                                    resolvedTheme === "dark"
+                                        ? "rgba(32, 32, 32, 0.9)"
+                                        : "rgba(255, 255, 255, 0.9)",
                                 borderRadius: "4px",
                                 padding: "4px 8px",
                                 backdropFilter: "blur(4px)",
-                                boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
+                                boxShadow:
+                                    resolvedTheme === "dark"
+                                        ? "0 2px 8px rgba(0,0,0,0.3)"
+                                        : "0 2px 8px rgba(0,0,0,0.1)",
                             }}
                         >
                             <Tooltip

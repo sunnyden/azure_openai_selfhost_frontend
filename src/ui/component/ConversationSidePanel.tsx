@@ -469,34 +469,37 @@ export function ConversationSidePanel({
             </Drawer>
 
             {/* Export/Import Menu */}
-            {exportMenuAnchor && (
-                <Menu
-                    open={Boolean(exportMenuAnchor)}
-                    onOpenChange={(_, data) =>
-                        !data.open && setExportMenuAnchor(null)
-                    }
-                >
-                    <MenuTrigger>
-                        <div style={{ display: "none" }} />
-                    </MenuTrigger>
-                    <MenuPopover>
-                        <MenuList>
-                            <MenuItem
-                                onClick={handleExportAllConversations}
-                                icon={<ArrowDownload24Regular />}
-                            >
-                                Export All Conversations
-                            </MenuItem>
-                            <MenuItem
-                                onClick={handleImportConversations}
-                                icon={<ArrowUpload24Regular />}
-                            >
-                                Import Conversations
-                            </MenuItem>
-                        </MenuList>
-                    </MenuPopover>
-                </Menu>
-            )}
+            <Menu
+                open={Boolean(exportMenuAnchor)}
+                onOpenChange={(_, data) =>
+                    !data.open && setExportMenuAnchor(null)
+                }
+                positioning={{
+                    target: exportMenuAnchor,
+                    position: "below",
+                    align: "start",
+                }}
+            >
+                <MenuTrigger>
+                    <div style={{ display: "none" }} />
+                </MenuTrigger>
+                <MenuPopover>
+                    <MenuList>
+                        <MenuItem
+                            onClick={handleExportAllConversations}
+                            icon={<ArrowDownload24Regular />}
+                        >
+                            Export All Conversations
+                        </MenuItem>
+                        <MenuItem
+                            onClick={handleImportConversations}
+                            icon={<ArrowUpload24Regular />}
+                        >
+                            Import Conversations
+                        </MenuItem>
+                    </MenuList>
+                </MenuPopover>
+            </Menu>
 
             {/* Delete Confirmation Dialog */}
             <Dialog
