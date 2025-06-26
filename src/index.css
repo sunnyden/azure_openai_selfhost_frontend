@@ -7,6 +7,16 @@ body {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     color-scheme: light dark;
+    /* Ensure background matches the HTML to prevent flashing */
+    background-color: #ffffff;
+    transition: background-color 0.15s ease;
+}
+
+/* Dark mode background for body */
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: #1a1a1a;
+    }
 }
 
 /* Scrollbar theming for WebKit browsers */
