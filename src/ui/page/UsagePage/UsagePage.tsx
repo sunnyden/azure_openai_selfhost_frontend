@@ -21,8 +21,7 @@ import { User } from "../../../api/interface/data/common/User";
 import { useApiClient } from "../../../data/context/useApiClient";
 import { useUserContext } from "../../../data/context/UserContext";
 import { UsageDataTable } from "../../component/usage/UsageDataTable";
-import { WindowControls } from "../../component/window/WindowControls";
-import { DraggableArea } from "../../component/window/DraggableArea";
+import { AppBar } from "../../component/window/AppBar";
 import { StatCard } from "../../component/StatCard";
 
 const useStyles = makeStyles({
@@ -160,20 +159,16 @@ export function UsagePage({ onBack }: UsagePageProps) {
     if (loading) {
         return (
             <div className={styles.container}>
-                <div className={styles.header}>
-                    <Button
-                        appearance="subtle"
-                        icon={<ArrowLeft20Regular />}
-                        onClick={onBack}
-                        className={styles.backButton}
-                    />
-                    <DraggableArea>
-                        <Text className={styles.headerTitle}>
-                            Usage Analytics
-                        </Text>
-                    </DraggableArea>
-                    <WindowControls />
-                </div>
+                <AppBar
+                    title="Usage Analytics"
+                    leftActions={
+                        <Button
+                            appearance="subtle"
+                            icon={<ArrowLeft20Regular />}
+                            onClick={onBack}
+                        />
+                    }
+                />
                 <div className={styles.content}>
                     <div className={styles.loadingContainer}>
                         <Spinner size="large" />
@@ -187,20 +182,16 @@ export function UsagePage({ onBack }: UsagePageProps) {
     if (error) {
         return (
             <div className={styles.container}>
-                <div className={styles.header}>
-                    <Button
-                        appearance="subtle"
-                        icon={<ArrowLeft20Regular />}
-                        onClick={onBack}
-                        className={styles.backButton}
-                    />
-                    <DraggableArea>
-                        <Text className={styles.headerTitle}>
-                            Usage Analytics
-                        </Text>
-                    </DraggableArea>
-                    <WindowControls />
-                </div>
+                <AppBar
+                    title="Usage Analytics"
+                    leftActions={
+                        <Button
+                            appearance="subtle"
+                            icon={<ArrowLeft20Regular />}
+                            onClick={onBack}
+                        />
+                    }
+                />
                 <div className={styles.content}>
                     <MessageBar intent="error">{error}</MessageBar>
                 </div>
@@ -210,18 +201,16 @@ export function UsagePage({ onBack }: UsagePageProps) {
 
     return (
         <div className={styles.container}>
-            <div className={styles.header}>
-                <Button
-                    appearance="subtle"
-                    icon={<ArrowLeft20Regular />}
-                    onClick={onBack}
-                    className={styles.backButton}
-                />
-                <DraggableArea>
-                    <Text className={styles.headerTitle}>Usage Analytics</Text>
-                </DraggableArea>
-                <WindowControls />
-            </div>
+            <AppBar
+                title="Usage Analytics"
+                leftActions={
+                    <Button
+                        appearance="subtle"
+                        icon={<ArrowLeft20Regular />}
+                        onClick={onBack}
+                    />
+                }
+            />
 
             <div className={styles.content}>
                 <div

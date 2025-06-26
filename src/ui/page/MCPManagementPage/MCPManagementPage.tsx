@@ -30,6 +30,7 @@ import {
 } from "@fluentui/react-icons";
 import { useMCPContext } from "../../../data/context/MCPContext";
 import { isElectron } from "../../../utils/electronUtils";
+import { AppBar } from "../../component/window/AppBar";
 
 interface StdioMCPConfiguration {
     command: string;
@@ -156,17 +157,16 @@ export function MCPManagementPage({ onBack }: MCPManagementPageProps) {
     if (!isElectron()) {
         return (
             <div className={styles.container}>
-                <div className={styles.header}>
-                    <Button
-                        appearance="subtle"
-                        icon={<ArrowLeft20Regular />}
-                        onClick={onBack}
-                        className={styles.backButton}
-                    />
-                    <Text className={styles.headerTitle}>
-                        MCP Server Management
-                    </Text>
-                </div>
+                <AppBar
+                    title="MCP Server Management"
+                    leftActions={
+                        <Button
+                            appearance="subtle"
+                            icon={<ArrowLeft20Regular />}
+                            onClick={onBack}
+                        />
+                    }
+                />
                 <div className={styles.content}>
                     <div className={styles.notAvailableContainer}>
                         <div>
@@ -419,28 +419,28 @@ export function MCPManagementPage({ onBack }: MCPManagementPageProps) {
     return (
         <div className={styles.container}>
             {/* Header */}
-            <div className={styles.header}>
-                <Button
-                    appearance="subtle"
-                    icon={<ArrowLeft20Regular />}
-                    onClick={onBack}
-                    className={styles.backButton}
-                />
-                <Text className={styles.headerTitle}>
-                    MCP Server Management
-                </Text>
-                {isHubRunning && (
-                    <Tooltip content="Refresh Tools" relationship="label">
-                        <Button
-                            appearance="subtle"
-                            icon={<ArrowClockwise20Regular />}
-                            onClick={handleRefreshTools}
-                            disabled={loading}
-                            className={styles.headerActions}
-                        />
-                    </Tooltip>
-                )}
-            </div>
+            <AppBar
+                title="MCP Server Management"
+                leftActions={
+                    <Button
+                        appearance="subtle"
+                        icon={<ArrowLeft20Regular />}
+                        onClick={onBack}
+                    />
+                }
+                rightActions={
+                    isHubRunning ? (
+                        <Tooltip content="Refresh Tools" relationship="label">
+                            <Button
+                                appearance="subtle"
+                                icon={<ArrowClockwise20Regular />}
+                                onClick={handleRefreshTools}
+                                disabled={loading}
+                            />
+                        </Tooltip>
+                    ) : undefined
+                }
+            />
 
             {/* Main Content */}
             <div className={styles.content}>

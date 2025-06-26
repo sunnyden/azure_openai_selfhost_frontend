@@ -1,5 +1,4 @@
 import {
-    Toolbar,
     Title3,
     Avatar,
     Button,
@@ -12,8 +11,7 @@ import {
 } from "@fluentui/react-components";
 import { useState } from "react";
 import { useUserContext } from "../../../data/context/UserContext";
-import { WindowControls } from "../window/WindowControls";
-import { DraggableArea } from "../window/DraggableArea";
+import { AppBar } from "../window/AppBar";
 import { isElectron } from "../../../utils/electronUtils";
 
 function stringToColor(string: string) {
@@ -53,96 +51,59 @@ export function TitleToolbar() {
         logout();
     };
 
-    return (
-        <div
-            style={{
-                backgroundColor: "var(--colorBrandBackground)",
-                color: "var(--colorNeutralForegroundOnBrand)",
-                padding: "0 16px",
-                borderBottom: "1px solid var(--colorNeutralStroke1)",
-            }}
+    const rightActions = authenticatedUser?.userName ? (
+        <Menu
+            open={menuOpen}
+            onOpenChange={(e, data) => setMenuOpen(data.open)}
         >
-            <Toolbar
-                style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    minHeight: "56px",
-                }}
-            >
-                <DraggableArea>
-                    <div
+            <MenuTrigger disableButtonEnhancement>
+                <Tooltip content="Open settings" relationship="label">
+                    <Button
+                        appearance="transparent"
                         style={{
-                            display: "flex",
-                            alignItems: "center",
-                            flex: 1,
+                            padding: 0,
+                            minWidth: "auto",
                         }}
                     >
-                        <Title3
+                        <Avatar
+                            name={authenticatedUser.userName}
+                            color="colorful"
+                            initials={getInitials(authenticatedUser.userName)}
                             style={{
-                                color: "inherit",
-                                fontFamily: "monospace",
-                                fontWeight: 700,
-                                letterSpacing: "0.3rem",
-                                margin: 0,
+                                backgroundColor: stringToColor(
+                                    authenticatedUser.userName
+                                ),
                             }}
-                        >
-                            ChatGPT Selfhost
-                        </Title3>
-                    </div>
+                        />
+                    </Button>
+                </Tooltip>
+            </MenuTrigger>
+            <MenuPopover>
+                <MenuList>
+                    <MenuItem onClick={handleLogout}>Logout</MenuItem>
+                </MenuList>
+            </MenuPopover>
+        </Menu>
+    ) : undefined;
 
-                    {authenticatedUser?.userName && (
-                        <div style={{ display: "flex", alignItems: "center" }}>
-                            <Menu
-                                open={menuOpen}
-                                onOpenChange={(e, data) =>
-                                    setMenuOpen(data.open)
-                                }
-                            >
-                                <MenuTrigger disableButtonEnhancement>
-                                    <Tooltip
-                                        content="Open settings"
-                                        relationship="label"
-                                    >
-                                        <Button
-                                            appearance="transparent"
-                                            style={{
-                                                padding: 0,
-                                                minWidth: "auto",
-                                            }}
-                                        >
-                                            <Avatar
-                                                name={
-                                                    authenticatedUser.userName
-                                                }
-                                                color="colorful"
-                                                initials={getInitials(
-                                                    authenticatedUser.userName
-                                                )}
-                                                style={{
-                                                    backgroundColor:
-                                                        stringToColor(
-                                                            authenticatedUser.userName
-                                                        ),
-                                                }}
-                                            />
-                                        </Button>
-                                    </Tooltip>
-                                </MenuTrigger>
-                                <MenuPopover>
-                                    <MenuList>
-                                        <MenuItem onClick={handleLogout}>
-                                            Logout
-                                        </MenuItem>
-                                    </MenuList>
-                                </MenuPopover>
-                            </Menu>
-                        </div>
-                    )}
-                </DraggableArea>
-
-                <WindowControls />
-            </Toolbar>
-        </div>
+    return (
+        <AppBar
+            rightActions={rightActions}
+            backgroundColor="var(--colorBrandBackground)"
+            color="var(--colorNeutralForegroundOnBrand)"
+            borderBottom="1px solid var(--colorNeutralStroke1)"
+        >
+            <Title3
+                style={{
+                    color: "inherit",
+                    fontFamily: "monospace",
+                    fontWeight: 700,
+                    letterSpacing: "0.3rem",
+                    margin: 0,
+                }}
+            >
+                ChatGPT Selfhost
+            </Title3>
+        </AppBar>
     );
 }

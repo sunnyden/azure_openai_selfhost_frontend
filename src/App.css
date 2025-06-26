@@ -16,12 +16,83 @@ html,
     -webkit-app-region: no-drag;
 }
 
+/* Ensure all interactive elements in draggable areas are non-draggable */
 .draggable-area button,
 .draggable-area input,
 .draggable-area select,
+.draggable-area textarea,
 .draggable-area [role="button"],
 .draggable-area [role="menuitem"],
 .draggable-area [role="combobox"],
-.draggable-area [role="textbox"] {
+.draggable-area [role="textbox"],
+.draggable-area [role="option"],
+.draggable-area [role="menuitemcheckbox"],
+.draggable-area [role="menuitemradio"],
+.draggable-area .fui-Button,
+.draggable-area .fui-Input,
+.draggable-area .fui-Dropdown,
+.draggable-area .fui-Menu,
+.draggable-area .fui-MenuButton {
     -webkit-app-region: no-drag;
+}
+
+/* Window controls styling enhancements */
+.window-controls {
+    display: flex;
+    align-items: center;
+    height: 32px;
+    -webkit-app-region: no-drag;
+}
+
+.window-control-button {
+    width: 46px;
+    height: 32px;
+    border: none;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.1s ease;
+    -webkit-app-region: no-drag;
+    user-select: none;
+}
+
+.window-control-button:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.window-control-button:active {
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.window-control-button.close:hover {
+    background-color: #e81123;
+    color: white;
+}
+
+.window-control-button.close:active {
+    background-color: #c42b1c;
+    color: white;
+}
+
+/* App bar enhancements */
+.app-bar {
+    -webkit-app-region: drag;
+    user-select: none;
+}
+
+.app-bar .left-actions,
+.app-bar .right-actions {
+    -webkit-app-region: no-drag;
+}
+
+/* Disable text selection in title bars */
+.app-bar,
+.draggable-area {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
