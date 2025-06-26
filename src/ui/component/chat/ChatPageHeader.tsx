@@ -60,16 +60,6 @@ export function ChatPageHeader({
             leftActions={leftActions}
             rightActions={rightActions}
             title={"Chat"}
-            backgroundColor={
-                resolvedTheme === "dark"
-                    ? "var(--colorNeutralBackground3)"
-                    : "var(--colorBrandBackground)"
-            }
-            color={
-                resolvedTheme === "dark"
-                    ? "var(--colorNeutralForeground1)"
-                    : "var(--colorNeutralForegroundOnBrand)"
-            }
             borderBottom="1px solid var(--colorNeutralStroke1)"
         />
     );

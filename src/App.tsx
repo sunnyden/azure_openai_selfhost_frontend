@@ -11,7 +11,13 @@ function App() {
     const { authenticatedUser, initialized } = useUserContext();
     return (
         <FluentProvider>
-            <div className="App">
+            <div
+                className="App"
+                style={{
+                    backgroundColor: "var(--colorNeutralBackground1)",
+                    minHeight: "100dvh",
+                }}
+            >
                 {initialized ? (
                     authenticatedUser ? (
                         <ChatPage />
@@ -23,6 +29,8 @@ function App() {
                                     maxWidth: "1200px",
                                     margin: "0 auto",
                                     padding: "20px",
+                                    backgroundColor:
+                                        "var(--colorNeutralBackground1)",
                                 }}
                             >
                                 <Login />

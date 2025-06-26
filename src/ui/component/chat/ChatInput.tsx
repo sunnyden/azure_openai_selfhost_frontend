@@ -42,6 +42,7 @@ function ChatButtonGroup({
             >
                 <MenuTrigger disableButtonEnhancement>
                     <SplitButton
+                        appearance="primary"
                         primaryActionButton={{
                             onClick: onSend,
                             children: "Send",

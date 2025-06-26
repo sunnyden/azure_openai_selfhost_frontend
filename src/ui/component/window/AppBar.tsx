@@ -13,15 +13,14 @@ interface AppBarProps {
     color?: string;
     borderBottom?: string;
 }
-
 const useStyles = makeStyles({
     appBar: {
         display: "flex",
         alignItems: "center",
-        minHeight: "56px",
-        padding: "0 16px",
+        height: "56px",
+        padding: "0 0 0 16px",
         borderBottom: "1px solid var(--colorNeutralStroke1)",
-        background: "var(--colorNeutralBackground1)",
+        background: "var(--colorNeutralBackground3)",
         gap: "12px",
         // Base draggable area styles
         WebkitAppRegion: "drag",

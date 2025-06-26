@@ -52,8 +52,8 @@ export function WindowControls() {
 
     const getButtonStyle = (buttonType: "minimize" | "maximize" | "close") => {
         const baseStyle = {
-            minWidth: "46px",
-            height: "32px",
+            minWidth: "52px",
+            height: "100%",
             padding: "0",
             color: "inherit",
             borderRadius: "0",
@@ -92,6 +92,7 @@ export function WindowControls() {
                 alignItems: "center",
                 gap: "0px", // No gap between buttons like Windows
                 userSelect: "none",
+                height: "54px",
             }}
         >
             <Button

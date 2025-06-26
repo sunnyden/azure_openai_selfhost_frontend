@@ -19,7 +19,7 @@ export function MCPStatusIndicator({
 
     // Only show MCP features in desktop environment
     if (!isElectron()) {
-        return null;
+        return <div style={{ display: "flex", alignItems: "center" }}></div>;
     }
 
     const totalTools = Array.from(availableTools.values()).reduce(

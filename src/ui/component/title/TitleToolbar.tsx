@@ -13,6 +13,7 @@ import { useState } from "react";
 import { useUserContext } from "../../../data/context/UserContext";
 import { AppBar } from "../window/AppBar";
 import { ThemeToggle } from "../theme/ThemeToggle";
+import { useTheme } from "../../../data/context/ThemeContext";
 import { isElectron } from "../../../utils/electronUtils";
 
 function stringToColor(string: string) {
@@ -45,6 +46,7 @@ function getInitials(name: string) {
 
 export function TitleToolbar() {
     const { authenticatedUser, logout } = useUserContext();
+    const { resolvedTheme } = useTheme();
     const [menuOpen, setMenuOpen] = useState(false);
 
     const handleLogout = () => {
@@ -97,8 +99,6 @@ export function TitleToolbar() {
     return (
         <AppBar
             rightActions={rightActions}
-            backgroundColor="var(--colorBrandBackground)"
-            color="var(--colorNeutralForegroundOnBrand)"
             borderBottom="1px solid var(--colorNeutralStroke1)"
         >
             <Title3
