@@ -124,7 +124,7 @@ export const CodeBlockWrapper = memo(
             if (!languages.includes(language as any)) {
                 allLanguages.unshift(language); // Add current language at the beginning
             }
-            
+
             return allLanguages.map(lang => (
                 <Option key={lang} value={lang}>
                     {lang}
