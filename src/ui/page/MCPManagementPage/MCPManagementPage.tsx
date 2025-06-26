@@ -70,7 +70,7 @@ const useStyles = makeStyles({
         overflowY: "auto",
         maxWidth: "1200px",
         margin: "0 auto",
-        width: "100%",
+        width: "calc(100% - 32px)",
     },
     notAvailableContainer: {
         display: "flex",
