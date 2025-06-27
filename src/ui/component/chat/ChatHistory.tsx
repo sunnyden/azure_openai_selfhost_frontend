@@ -11,6 +11,8 @@ import {
     DialogBody,
     Tooltip,
     Text,
+    Spinner,
+    Badge,
 } from "@fluentui/react-components";
 import {
     Bot24Regular,
@@ -19,6 +21,9 @@ import {
     Copy24Regular,
     Delete24Regular,
     Edit24Regular,
+    ChevronDown16Regular,
+    ChevronRight16Regular,
+    Brain20Regular,
 } from "@fluentui/react-icons";
 import Editor from "@monaco-editor/react";
 import { useConversationContext } from "../../../data/context/ConversationContext";
@@ -47,6 +52,8 @@ import {
 } from "./Tools";
 import remarkMath from "./remarkMath";
 import { isElectron } from "../../../utils/electronUtils";
+import "../../styles/thinking-animations.css";
+
 function renderAvatar(role: ChatRole) {
     switch (role) {
         case ChatRole.Assistant:
@@ -59,51 +66,107 @@ function renderAvatar(role: ChatRole) {
             throw new Error("Invalid role");
     }
 }
-function isBlockCode(message: string, node: any) {
-    const startPos: number = node?.position?.start?.offset;
-    if (!!startPos) {
-        return message.substring(startPos, startPos + 3) === "```";
-    }
-    return false;
+function isBlockCode(node: any) {
+    const startLine: number = node?.position?.start?.line;
+    const endLine: number = node?.position?.end?.line;
+    return startLine !== endLine;
 }
 
-function detectLanguageFromMessage(message: string, node: any) {
-    const startPos: number = node?.position?.start?.offset;
-    if (!startPos) return "plaintext";
+function detectLanguageFromMessage(node: any) {
+    const languageClass: string | undefined = node?.properties?.className?.[0];
+    if (!languageClass) return "plaintext";
+    const language = languageClass.replace("language-", "");
+    const languageMap: { [key: string]: string } = {
+        js: "javascript",
+        jsx: "javascript",
+        ts: "typescript",
+        tsx: "typescript",
+        py: "python",
+        rb: "ruby",
+        cs: "csharp",
+        cpp: "cpp",
+        "c++": "cpp",
+        sh: "shell",
+        bash: "shell",
+        ps1: "powershell",
+        yml: "yaml",
+        md: "markdown",
+    };
 
-    // Find the first line of the code block (```language)
-    const codeBlockStart = message.substring(startPos);
-    const firstLineEnd = codeBlockStart.indexOf("\n");
-    if (firstLineEnd === -1) return "plaintext";
-
-    const firstLine = codeBlockStart.substring(0, firstLineEnd);
-    const languageMatch = firstLine.match(/^```(\w+)/);
-
-    if (languageMatch && languageMatch[1]) {
-        const language = languageMatch[1].toLowerCase();
-        // Map common language aliases to supported languages
-        const languageMap: { [key: string]: string } = {
-            js: "javascript",
-            jsx: "javascript",
-            ts: "typescript",
-            tsx: "typescript",
-            py: "python",
-            rb: "ruby",
-            cs: "csharp",
-            cpp: "cpp",
-            "c++": "cpp",
-            sh: "shell",
-            bash: "shell",
-            ps1: "powershell",
-            yml: "yaml",
-            md: "markdown",
-        };
-
-        return languageMap[language] || language;
-    }
-
-    return "plaintext";
+    return languageMap[language] || language;
 }
+
+const markdownComponents = {
+    code: ({ node, ...props }: any) => {
+        if (isBlockCode(node)) {
+            const detectedLanguage = detectLanguageFromMessage(node);
+            const code = props.children as string | null;
+
+            return (
+                <CodeBlockWrapper
+                    code={code ?? ""}
+                    detectedLanguage={detectedLanguage}
+                />
+            );
+        }
+        return <code>{props.children}</code>;
+    },
+    table: ({ node, ...props }: any) => (
+        <div style={{ overflowX: "auto", margin: "16px 0" }}>
+            <table
+                style={{
+                    borderCollapse: "collapse",
+                    border: "1px solid var(--colorNeutralStroke2)",
+                    borderRadius: "4px",
+                    width: "100%",
+                    fontSize: "0.875rem",
+                    backgroundColor: "var(--colorNeutralBackground2)",
+                }}
+                {...props}
+            />
+        </div>
+    ),
+    thead: ({ node, ...props }: any) => (
+        <thead
+            style={{
+                backgroundColor: "var(--colorNeutralBackground3)",
+                borderBottom: "2px solid var(--colorNeutralStroke2)",
+            }}
+            {...props}
+        />
+    ),
+    tbody: ({ node, ...props }: any) => <tbody {...props} />,
+    tr: ({ node, ...props }: any) => (
+        <tr
+            style={{
+                borderBottom: "1px solid var(--colorNeutralStroke2)",
+            }}
+            {...props}
+        />
+    ),
+    th: ({ node, ...props }: any) => (
+        <th
+            style={{
+                padding: "12px 16px",
+                textAlign: "left",
+                fontWeight: 600,
+                color: "var(--colorNeutralForeground1)",
+                borderRight: "1px solid var(--colorNeutralStroke2)",
+            }}
+            {...props}
+        />
+    ),
+    td: ({ node, ...props }: any) => (
+        <td
+            style={{
+                padding: "12px 16px",
+                borderRight: "1px solid var(--colorNeutralStroke2)",
+                verticalAlign: "top",
+            }}
+            {...props}
+        />
+    ),
+};
 
 const ChatItem = memo(function ChatItem({
     role,
@@ -121,14 +184,35 @@ const ChatItem = memo(function ChatItem({
     );
     const [editDialogOpen, setEditDialogOpen] = useState(false);
     const [editedMessage, setEditedMessage] = useState(message);
+    const [isThinkingExpanded, setIsThinkingExpanded] = useState(false);
     const { deleteMessage, updateMessage } = useConversationContext();
     const { resolvedTheme } = useTheme();
 
-    // Use a ref to store the current message without triggering re-renders
-    const messageRef = useRef(message);
-    useEffect(() => {
-        messageRef.current = message;
+    const thinkMessage = useMemo(() => {
+        // case 1. still generating <think> data... no ending tag
+        // case 2, think finished, <think>data</think>
+        // think is starting at the beginning of the message
+        const regex = /^<think>([\s\S]*?)(?:<\/think>|$)/;
+        const match = message.match(regex);
+        if (match) {
+            const thinkContent = match[1].trim();
+            if (thinkContent) {
+                return thinkContent;
+            }
+        }
+        return "";
     }, [message]);
+
+    const restOfMessage = useMemo(() => {
+        // Remove <think> tags and their content from the message
+        const regex = /^<think>[\s\S]*?(?:<\/think>|$)/;
+        return message.replace(regex, "").trim();
+    }, [message]);
+
+    const thinking = useMemo(
+        () => !!thinkMessage && !restOfMessage,
+        [thinkMessage, restOfMessage]
+    );
 
     const userRoleText = useMemo(() => {
         switch (role) {
@@ -144,85 +228,7 @@ const ChatItem = memo(function ChatItem({
     }, [role]);
     // Memoize the Markdown components with a stable code component
     // Use messageRef to avoid dependency on message prop
-    const markdownComponents = useMemo(
-        () => ({
-            code: ({ node, ...props }: any) => {
-                const currentMessage = messageRef.current;
 
-                if (isBlockCode(currentMessage, node)) {
-                    const detectedLanguage = detectLanguageFromMessage(
-                        currentMessage,
-                        node
-                    );
-                    const code = props.children as string | null;
-
-                    return (
-                        <CodeBlockWrapper
-                            code={code ?? ""}
-                            detectedLanguage={detectedLanguage}
-                        />
-                    );
-                }
-                return <code>{props.children}</code>;
-            },
-            table: ({ node, ...props }: any) => (
-                <div style={{ overflowX: "auto", margin: "16px 0" }}>
-                    <table
-                        style={{
-                            borderCollapse: "collapse",
-                            border: "1px solid var(--colorNeutralStroke2)",
-                            borderRadius: "4px",
-                            width: "100%",
-                            fontSize: "0.875rem",
-                            backgroundColor: "var(--colorNeutralBackground2)",
-                        }}
-                        {...props}
-                    />
-                </div>
-            ),
-            thead: ({ node, ...props }: any) => (
-                <thead
-                    style={{
-                        backgroundColor: "var(--colorNeutralBackground3)",
-                        borderBottom: "2px solid var(--colorNeutralStroke2)",
-                    }}
-                    {...props}
-                />
-            ),
-            tbody: ({ node, ...props }: any) => <tbody {...props} />,
-            tr: ({ node, ...props }: any) => (
-                <tr
-                    style={{
-                        borderBottom: "1px solid var(--colorNeutralStroke2)",
-                    }}
-                    {...props}
-                />
-            ),
-            th: ({ node, ...props }: any) => (
-                <th
-                    style={{
-                        padding: "12px 16px",
-                        textAlign: "left",
-                        fontWeight: 600,
-                        color: "var(--colorNeutralForeground1)",
-                        borderRight: "1px solid var(--colorNeutralStroke2)",
-                    }}
-                    {...props}
-                />
-            ),
-            td: ({ node, ...props }: any) => (
-                <td
-                    style={{
-                        padding: "12px 16px",
-                        borderRight: "1px solid var(--colorNeutralStroke2)",
-                        verticalAlign: "top",
-                    }}
-                    {...props}
-                />
-            ),
-        }),
-        [] // No dependencies - keeps the component stable
-    );
     // Memoize plugins to prevent recreation
     const remarkPlugins = useMemo(() => [remarkGfm, remarkMath], []);
     const rehypePlugins = useMemo(() => [rehypeKatex], []);
@@ -324,6 +330,10 @@ const ChatItem = memo(function ChatItem({
         setEditDialogOpen(false);
     };
 
+    const handleToggleThinking = () => {
+        setIsThinkingExpanded(!isThinkingExpanded);
+    };
+
     return (
         <>
             <div
@@ -352,12 +362,183 @@ const ChatItem = memo(function ChatItem({
                         {userRoleText}
                     </Text>
                     <div>
+                        {!!thinkMessage && (
+                            <div
+                                style={{
+                                    marginBottom: "16px",
+                                    border: "1px solid var(--colorNeutralStroke2)",
+                                    borderRadius: "8px",
+                                    backgroundColor:
+                                        "var(--colorNeutralBackground2)",
+                                    overflow: "hidden",
+                                }}
+                            >
+                                <div
+                                    className="thinking-header"
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        padding: "12px 16px",
+                                        cursor: "pointer",
+                                        backgroundColor:
+                                            "var(--colorNeutralBackground3)",
+                                        borderBottom: isThinkingExpanded
+                                            ? "1px solid var(--colorNeutralStroke2)"
+                                            : "none",
+                                    }}
+                                    onClick={handleToggleThinking}
+                                >
+                                    <Brain20Regular
+                                        className={
+                                            thinking ? "thinking-pulse" : ""
+                                        }
+                                        style={{
+                                            marginRight: "8px",
+                                            color: "var(--colorBrandForeground1)",
+                                        }}
+                                    />
+                                    <Text
+                                        size={300}
+                                        weight="semibold"
+                                        style={{ marginRight: "auto" }}
+                                    >
+                                        Thinking Process
+                                    </Text>
+                                    {thinking && (
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                marginRight: "12px",
+                                            }}
+                                        >
+                                            <Spinner size="extra-small" />
+                                            <Badge
+                                                appearance="filled"
+                                                color="brand"
+                                                size="small"
+                                                style={{ marginLeft: "8px" }}
+                                            >
+                                                Thinking...
+                                            </Badge>
+                                        </div>
+                                    )}
+                                    {isThinkingExpanded ? (
+                                        <ChevronDown16Regular />
+                                    ) : (
+                                        <ChevronRight16Regular />
+                                    )}
+                                </div>
+                                {isThinkingExpanded && (
+                                    <div
+                                        className="thinking-expand thinking-fade-in"
+                                        style={{
+                                            padding: "16px",
+                                            maxHeight: "400px",
+                                            overflowY: "auto",
+                                            fontSize: "0.9rem",
+                                            lineHeight: "1.5",
+                                            position: "relative",
+                                        }}
+                                    >
+                                        {thinking && !thinkMessage && (
+                                            <div>
+                                                <div
+                                                    style={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent:
+                                                            "center",
+                                                        padding: "20px",
+                                                        color: "var(--colorNeutralForeground2)",
+                                                        fontStyle: "italic",
+                                                    }}
+                                                >
+                                                    <Spinner
+                                                        size="small"
+                                                        style={{
+                                                            marginRight: "8px",
+                                                        }}
+                                                    />
+                                                    AI is thinking...
+                                                </div>
+                                                {/* Shimmer placeholder lines */}
+                                                <div
+                                                    style={{
+                                                        marginTop: "12px",
+                                                    }}
+                                                >
+                                                    <div
+                                                        className="thinking-shimmer"
+                                                        style={{
+                                                            height: "16px",
+                                                            borderRadius: "4px",
+                                                            marginBottom: "8px",
+                                                            width: "90%",
+                                                        }}
+                                                    />
+                                                    <div
+                                                        className="thinking-shimmer"
+                                                        style={{
+                                                            height: "16px",
+                                                            borderRadius: "4px",
+                                                            marginBottom: "8px",
+                                                            width: "75%",
+                                                        }}
+                                                    />
+                                                    <div
+                                                        className="thinking-shimmer"
+                                                        style={{
+                                                            height: "16px",
+                                                            borderRadius: "4px",
+                                                            width: "85%",
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        )}
+                                        {thinkMessage && (
+                                            <Markdown
+                                                remarkPlugins={remarkPlugins}
+                                                rehypePlugins={rehypePlugins}
+                                                components={markdownComponents}
+                                            >
+                                                {thinkMessage}
+                                            </Markdown>
+                                        )}
+                                        {thinking && thinkMessage && (
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    alignItems: "center",
+                                                    marginTop: "12px",
+                                                    padding: "8px 12px",
+                                                    backgroundColor:
+                                                        "var(--colorNeutralBackground4)",
+                                                    borderRadius: "4px",
+                                                    fontSize: "0.8rem",
+                                                    color: "var(--colorNeutralForeground2)",
+                                                }}
+                                            >
+                                                <Spinner
+                                                    size="extra-small"
+                                                    style={{
+                                                        marginRight: "6px",
+                                                    }}
+                                                />
+                                                Still thinking...
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
                         <Markdown
                             remarkPlugins={remarkPlugins}
                             rehypePlugins={rehypePlugins}
                             components={markdownComponents}
                         >
-                            {message}
+                            {restOfMessage}
                         </Markdown>
                     </div>
                 </div>

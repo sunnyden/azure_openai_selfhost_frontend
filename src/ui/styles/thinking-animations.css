@@ -1,0 +1,107 @@
+/* Thinking Process Animations */
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 400px;
+    }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+        max-height: 400px;
+    }
+    to {
+        opacity: 0;
+        transform: translateY(-10px);
+        max-height: 0;
+    }
+}
+
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.6;
+        transform: scale(1.05);
+    }
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: -200px 0;
+    }
+    100% {
+        background-position: calc(200px + 100%) 0;
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+/* Thinking section animations */
+.thinking-expand {
+    animation: slideDown 0.3s ease-out;
+}
+
+.thinking-collapse {
+    animation: slideUp 0.3s ease-in;
+}
+
+.thinking-pulse {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.thinking-shimmer {
+    background: linear-gradient(
+        90deg,
+        var(--colorNeutralBackground3) 0%,
+        var(--colorNeutralBackground4) 50%,
+        var(--colorNeutralBackground3) 100%
+    );
+    background-size: 200px 100%;
+    animation: shimmer 2s infinite linear;
+}
+
+.thinking-fade-in {
+    animation: fadeIn 0.5s ease-in;
+}
+
+/* Hover effects */
+.thinking-header:hover {
+    background-color: var(--colorNeutralBackground4) !important;
+    transition: background-color 0.2s ease;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-5px);
+            max-height: 0;
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+            max-height: 300px;
+        }
+    }
+}
