@@ -254,11 +254,18 @@ const ChatItem = memo(function ChatItem({
     // Memoize event handlers
     const handleMouseEnter = useCallback(() => setIsHovered(true), []);
     const handleMouseLeave = useCallback(() => setIsHovered(false), []);
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
 
     const handleCopyToClipboard = async () => {
         try {
             await navigator.clipboard.writeText(message);
             setShowCopySuccess(true);
+            if (timerRef.current) {
+                clearTimeout(timerRef.current);
+            }
+            timerRef.current = setTimeout(() => {
+                setShowCopySuccess(false);
+            }, 3000);
         } catch (err) {
             console.error("Failed to copy text: ", err);
             // Fallback for older browsers

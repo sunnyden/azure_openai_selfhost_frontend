@@ -37,7 +37,7 @@ export function ImageGenerateTool(props: ToolProps) {
     const param = JSON.parse(parameter) as ImageGenerationParameter;
     return (
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <Tooltip content={param.prompt} relationship="label">
+            <Tooltip content={param?.prompt} relationship="label">
                 <Badge
                     size="medium"
                     color="informative"
@@ -202,7 +202,7 @@ export function SearchTool(props: ToolProps) {
                         gap: "4px",
                     }}
                 >
-                    <Text size={200}>Search: {param.keywords}</Text>
+                    <Text size={200}>Search: {param?.keywords}</Text>
                     {props.working ? (
                         <Spinner size="extra-tiny" appearance="inverted" />
                     ) : (
@@ -235,11 +235,11 @@ export function BrowseWebPageTool(props: ToolProps) {
                     <Text size={200}>
                         Visit:
                         <Link
-                            href={param.url}
+                            href={param?.url}
                             target="_blank"
                             style={{ color: "inherit", marginLeft: "4px" }}
                         >
-                            {param.url.substring(0, 60)}...
+                            {param?.url?.substring?.(0, 60)}...
                         </Link>
                     </Text>
                     {props.working ? (
