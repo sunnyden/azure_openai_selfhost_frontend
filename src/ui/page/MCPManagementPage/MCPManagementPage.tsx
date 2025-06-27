@@ -235,7 +235,7 @@ export function MCPManagementPage({ onBack }: MCPManagementPageProps) {
                 return "Server name cannot be empty";
             }
 
-            const nameRegex = /^[a-zA-Z0-9_\.-]+$/;
+            const nameRegex = /^[a-zA-Z0-9_-]+$/;
             if (!nameRegex.test(name.trim())) {
                 return "Server name can only contain letters, numbers, underscores, dots, and hyphens";
             }
@@ -859,26 +859,13 @@ export function MCPManagementPage({ onBack }: MCPManagementPageProps) {
                                             {args.map((arg, index) => (
                                                 <Badge
                                                     key={index}
-                                                    appearance="outline"
-                                                    icon={
-                                                        <Button
-                                                            appearance="transparent"
-                                                            icon={
-                                                                <Dismiss20Regular />
-                                                            }
-                                                            onClick={() =>
-                                                                handleRemoveArgument(
-                                                                    index
-                                                                )
-                                                            }
-                                                            size="small"
-                                                            style={{
-                                                                minWidth:
-                                                                    "auto",
-                                                                padding: "0",
-                                                            }}
-                                                        />
+                                                    onClick={() =>
+                                                        handleRemoveArgument(
+                                                            index
+                                                        )
                                                     }
+                                                    appearance="outline"
+                                                    icon={<Dismiss20Regular />}
                                                 >
                                                     {arg}
                                                 </Badge>

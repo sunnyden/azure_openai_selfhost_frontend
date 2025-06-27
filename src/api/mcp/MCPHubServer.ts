@@ -125,7 +125,7 @@ export class MCPHubServer implements IHubService {
             for (const tool of tools.tools) {
                 const sanitizedClientName = this.sanitizeName(clientName);
                 const sanitizedToolName = this.sanitizeName(tool.name);
-                const prefixedToolName = `${sanitizedClientName}.${sanitizedToolName}`;
+                const prefixedToolName = `${sanitizedClientName}-${sanitizedToolName}`;
 
                 if (!this.registeredTools.has(prefixedToolName)) {
                     this.server.registerTool(
@@ -213,7 +213,7 @@ export class MCPHubServer implements IHubService {
                 for (const tool of tools.tools) {
                     const sanitizedClientName = this.sanitizeName(clientName);
                     const sanitizedToolName = this.sanitizeName(tool.name);
-                    const prefixedToolName = `${sanitizedClientName}.${sanitizedToolName}`;
+                    const prefixedToolName = `${sanitizedClientName}-${sanitizedToolName}`;
 
                     // Avoid registering the same tool multiple times
                     if (!this.registeredTools.has(prefixedToolName)) {
