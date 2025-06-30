@@ -1,6 +1,4 @@
 import {
-    Avatar,
-    Divider,
     Button,
     Dialog,
     DialogTrigger,
@@ -15,9 +13,7 @@ import {
     Badge,
 } from "@fluentui/react-components";
 import {
-    Bot24Regular,
     MegaphoneRegular,
-    Person24Regular,
     Copy24Regular,
     Delete24Regular,
     Edit24Regular,
@@ -53,19 +49,8 @@ import {
 import remarkMath from "./remarkMath";
 import { isElectron } from "../../../utils/electronUtils";
 import "../../styles/thinking-animations.css";
+import "./ChatHistory.css";
 
-function renderAvatar(role: ChatRole) {
-    switch (role) {
-        case ChatRole.Assistant:
-            return <Bot24Regular />;
-        case ChatRole.User:
-            return <Person24Regular />;
-        case ChatRole.System:
-            return <MegaphoneRegular />;
-        default:
-            throw new Error("Invalid role");
-    }
-}
 function isBlockCode(node: any) {
     const startLine: number = node?.position?.start?.line;
     const endLine: number = node?.position?.end?.line;
@@ -214,18 +199,22 @@ const ChatItem = memo(function ChatItem({
         [thinkMessage, restOfMessage]
     );
 
-    const userRoleText = useMemo(() => {
-        switch (role) {
-            case ChatRole.Assistant:
-                return "Assistant";
-            case ChatRole.User:
-                return "User";
-            case ChatRole.System:
-                return "System";
-            default:
-                return "Unknown";
-        }
-    }, [role]);
+    // Check if user message needs full width
+    const needsFullWidth = useMemo(() => {
+        if (role !== ChatRole.User) return false;
+
+        // Check for multiline code blocks (```code```)
+        const hasCodeBlock = /```[\s\S]*?```/.test(restOfMessage);
+
+        // Check for markdown tables (| column | column |)
+        const hasTable =
+            /\|.*\|/.test(restOfMessage) && restOfMessage.includes("\n");
+
+        // Check for formulas (LaTeX: $...$ or $$...$$)
+        const hasFormula = /\$\$[\s\S]*?\$\$|\$[^$\n]+\$/.test(restOfMessage);
+
+        return hasCodeBlock || hasTable || hasFormula;
+    }, [role, restOfMessage]);
     // Memoize the Markdown components with a stable code component
     // Use messageRef to avoid dependency on message prop
 
@@ -334,6 +323,107 @@ const ChatItem = memo(function ChatItem({
         setIsThinkingExpanded(!isThinkingExpanded);
     };
 
+    // Get role-specific styles
+    const getRoleStyles = () => {
+        switch (role) {
+            case ChatRole.User:
+                return {
+                    container: {
+                        display: "flex",
+                        justifyContent: needsFullWidth
+                            ? "flex-start"
+                            : "flex-end",
+                        padding: "8px 16px", // Standard padding since buttons are now on the right
+                        position: "relative" as const,
+                    },
+                    messageWrapper: {
+                        width: "100%", // Full width to handle code blocks and long content
+                        position: "relative" as const,
+                        display: "flex",
+                        justifyContent: needsFullWidth
+                            ? "flex-start"
+                            : "flex-end",
+                    },
+                    messageContent: {
+                        backgroundColor: "var(--colorNeutralBackground3)",
+                        color: "var(--colorNeutralForeground1)",
+                        padding: "12px 16px",
+                        borderRadius: "18px 18px 4px 18px",
+                        wordWrap: "break-word" as const,
+                        wordBreak: "break-word" as const,
+                        fontSize: "14px",
+                        lineHeight: "1.4",
+                        maxWidth: needsFullWidth ? "100%" : "calc(100% - 20px)", // Full width for special content
+                        width: needsFullWidth ? "100%" : "fit-content",
+                    },
+                    actionsPosition: {
+                        top: "8px",
+                        right: "16px",
+                    },
+                };
+            case ChatRole.Assistant:
+                return {
+                    container: {
+                        display: "flex",
+                        justifyContent: "flex-start",
+                        padding: "16px",
+                        position: "relative" as const,
+                    },
+                    messageWrapper: {
+                        width: "100%",
+                    },
+                    messageContent: {
+                        backgroundColor: "transparent",
+                        color: "var(--colorNeutralForeground1)",
+                        padding: "0",
+                        fontSize: "14px",
+                        lineHeight: "1.5",
+                    },
+                    actionsPosition: {
+                        top: "16px",
+                        right: "16px",
+                    },
+                };
+            case ChatRole.System:
+                return {
+                    container: {
+                        display: "flex",
+                        justifyContent: "flex-start",
+                        padding: "12px 16px",
+                        position: "relative" as const,
+                    },
+                    messageWrapper: {
+                        width: "100%",
+                    },
+                    messageContent: {
+                        backgroundColor: "var(--colorNeutralBackground3)",
+                        border: "1px solid var(--colorNeutralStroke2)",
+                        borderLeft:
+                            "4px solid var(--colorPaletteYellowBackground3)",
+                        padding: "12px 16px",
+                        borderRadius: "8px",
+                        position: "relative" as const,
+                        fontSize: "13px",
+                        lineHeight: "1.4",
+                        color: "var(--colorNeutralForeground2)",
+                    },
+                    actionsPosition: {
+                        top: "12px",
+                        right: "16px",
+                    },
+                };
+            default:
+                return {
+                    container: {},
+                    messageWrapper: {},
+                    messageContent: {},
+                    actionsPosition: {},
+                };
+        }
+    };
+
+    const roleStyles = getRoleStyles();
+
     return (
         <>
             <div
@@ -342,26 +432,31 @@ const ChatItem = memo(function ChatItem({
                 onTouchStart={handleTouchStart}
                 onTouchEnd={handleTouchEnd}
                 onTouchCancel={handleTouchEnd}
-                style={{
-                    display: "flex",
-                    alignItems: "flex-start",
-                    padding: "16px",
-                    position: "relative",
-                }}
+                style={roleStyles.container}
             >
-                <Avatar
-                    style={{ marginRight: "16px" }}
-                    icon={renderAvatar(role)}
-                />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                    <Text
-                        weight="semibold"
-                        size={300}
-                        style={{ marginBottom: "8px" }}
-                    >
-                        {userRoleText}
-                    </Text>
-                    <div>
+                <div style={roleStyles.messageWrapper}>
+                    {/* System role indicator */}
+                    {role === ChatRole.System && (
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "center",
+                                marginBottom: "8px",
+                                color: "var(--colorNeutralForeground2)",
+                                fontSize: "12px",
+                                fontWeight: "600",
+                                textTransform: "uppercase" as const,
+                                letterSpacing: "0.5px",
+                            }}
+                        >
+                            <MegaphoneRegular
+                                style={{ marginRight: "6px", fontSize: "14px" }}
+                            />
+                            System Message
+                        </div>
+                    )}
+
+                    <div style={roleStyles.messageContent}>
                         {!!thinkMessage && (
                             <div
                                 style={{
@@ -533,21 +628,29 @@ const ChatItem = memo(function ChatItem({
                                 )}
                             </div>
                         )}
-                        <Markdown
-                            remarkPlugins={remarkPlugins}
-                            rehypePlugins={rehypePlugins}
-                            components={markdownComponents}
+                        <div
+                            className={
+                                role === ChatRole.User
+                                    ? "user-message-content"
+                                    : ""
+                            }
                         >
-                            {restOfMessage}
-                        </Markdown>
+                            <Markdown
+                                remarkPlugins={remarkPlugins}
+                                rehypePlugins={rehypePlugins}
+                                components={markdownComponents}
+                            >
+                                {restOfMessage}
+                            </Markdown>
+                        </div>
                     </div>
                 </div>
+
                 {isHovered && (
                     <div
                         style={{
                             position: "absolute",
-                            top: "16px",
-                            right: "16px",
+                            ...roleStyles.actionsPosition,
                             display: "flex",
                             gap: "4px",
                             backgroundColor: "var(--colorNeutralBackground1)",
@@ -772,33 +875,19 @@ export function ChatHistory() {
                 }}
             >
                 {currentConversation.map((message, index, array) => (
-                    <React.Fragment key={index}>
-                        <ChatItem
-                            role={message.role}
-                            message={message.content[0].text || ""}
-                            messageIndex={index}
-                        />
-                        {index !== array.length - 1 && (
-                            <div
-                                style={{
-                                    height: "1px",
-                                    backgroundColor:
-                                        "var(--colorNeutralStroke1)",
-                                    padding: "0 0 0 60px",
-                                    margin: 0,
-                                    flexShrink: 0,
-                                }}
-                            />
-                        )}
-                    </React.Fragment>
+                    <ChatItem
+                        key={index}
+                        role={message.role}
+                        message={message.content[0].text || ""}
+                        messageIndex={index}
+                    />
                 ))}
                 {toolUsed.map((tool, index, array) => (
-                    <React.Fragment key={index}>
-                        <ToolListItem
-                            tool={tool}
-                            working={usingTool && array.length === index + 1}
-                        />
-                    </React.Fragment>
+                    <ToolListItem
+                        key={index}
+                        tool={tool}
+                        working={usingTool && array.length === index + 1}
+                    />
                 ))}
             </div>
             <div ref={messagesEndRef} />
