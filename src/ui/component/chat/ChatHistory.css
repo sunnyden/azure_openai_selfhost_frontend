@@ -1,0 +1,7 @@
+/* User message content styling - minimal overrides for bubble appearance */
+.user-message-content {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+}
+

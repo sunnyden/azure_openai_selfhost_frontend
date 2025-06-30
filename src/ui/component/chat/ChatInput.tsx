@@ -114,9 +114,9 @@ export function ChatInput({
             case ChatRole.User:
                 return "User";
             case ChatRole.System:
-                return "System Prompt";
+                return "System";
             case ChatRole.Assistant:
-                return "Assistant Response";
+                return "Assistant";
             default:
                 return "User";
         }
@@ -215,8 +215,8 @@ export function ChatInput({
                         style={{ minWidth: "150px" }}
                     >
                         <Option value="User">User</Option>
-                        <Option value="System">System Prompt</Option>
-                        <Option value="Assistant">Assistant Response</Option>
+                        <Option value="System">System</Option>
+                        <Option value="Assistant">Assistant</Option>
                     </Dropdown>
 
                     {/* Send Button Group */}
