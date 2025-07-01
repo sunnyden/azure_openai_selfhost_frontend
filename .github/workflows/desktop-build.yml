@@ -1,0 +1,139 @@
+name: Build and Release Desktop App
+
+on:
+    push:
+        branches: [master]
+    pull_request:
+        branches: [master]
+
+jobs:
+    build-desktop:
+        strategy:
+            matrix:
+                os: [windows-latest, ubuntu-latest]
+
+        runs-on: ${{ matrix.os }}
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "22"
+                  cache: "npm"
+
+            - name: Install frontend dependencies
+              run: npm ci
+
+            - name: Build frontend
+              run: npm run build
+
+            - name: Install desktop app dependencies
+              run: |
+                  cd desktop-app
+                  npm ci
+
+            - name: Build desktop app (Windows)
+              if: matrix.os == 'windows-latest'
+              run: |
+                  cd desktop-app
+                  npm run dist -- --win
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Build desktop app (Linux)
+              if: matrix.os == 'ubuntu-latest'
+              run: |
+                  cd desktop-app
+                  npm run dist -- --linux
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Upload Windows artifacts
+              if: matrix.os == 'windows-latest'
+              uses: actions/upload-artifact@v4
+              with:
+                  name: desktop-app-windows-${{ github.sha }}
+                  path: |
+                      desktop-app/dist-electron/*.exe
+                      desktop-app/dist-electron/*.msi
+                      desktop-app/dist-electron/*.zip
+                      desktop-app/dist-electron/*.blockmap
+                  retention-days: 30
+
+            - name: Upload Linux artifacts
+              if: matrix.os == 'ubuntu-latest'
+              uses: actions/upload-artifact@v4
+              with:
+                  name: desktop-app-linux-${{ github.sha }}
+                  path: |
+                      desktop-app/dist-electron/*.AppImage
+                      desktop-app/dist-electron/*.deb
+                      desktop-app/dist-electron/*.rpm
+                      desktop-app/dist-electron/*.tar.gz
+                      desktop-app/dist-electron/*.zip
+                      desktop-app/dist-electron/*.blockmap
+                  retention-days: 30
+
+    create-release:
+        if: github.ref == 'refs/heads/master'
+        needs: build-desktop
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+
+            - name: Download Windows artifacts
+              uses: actions/download-artifact@v4
+              with:
+                  name: desktop-app-windows-${{ github.sha }}
+                  path: ./release-artifacts/windows/
+
+            - name: Download Linux artifacts
+              uses: actions/download-artifact@v4
+              with:
+                  name: desktop-app-linux-${{ github.sha }}
+                  path: ./release-artifacts/linux/
+
+            - name: Get package version
+              id: package-version
+              run: echo "version=$(node -p "require('./desktop-app/package.json').version")" >> $GITHUB_OUTPUT
+
+            - name: Create Release
+              id: create_release
+              run: |
+                  gh release create v${{ steps.package-version.outputs.version }}-${{ github.run_number }} \
+                    --title "Release v${{ steps.package-version.outputs.version }}-${{ github.run_number }}" \
+                    --notes "Desktop application release for commit ${{ github.sha }}
+
+                  ## Changes
+                  - Built from latest master branch
+                  - Includes Windows and Linux binaries
+
+                  ## Downloads
+                  - **Windows**: Download the \`.exe\` installer or \`.zip\` portable version
+                  - **Linux**: Download the \`.AppImage\` portable version, \`.deb\` for Debian/Ubuntu, or \`.rpm\` for Red Hat/Fedora"
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Find and upload release assets
+              run: |
+                  # Upload all Windows artifacts
+                  find ./release-artifacts/windows/ -type f \( -name "*.exe" -o -name "*.msi" -o -name "*.zip" \) | while read file; do
+                    filename=$(basename "$file")
+                    echo "Uploading Windows asset: $filename"
+                    gh release upload v${{ steps.package-version.outputs.version }}-${{ github.run_number }} "$file" --clobber
+                  done
+
+                  # Upload all Linux artifacts  
+                  find ./release-artifacts/linux/ -type f \( -name "*.AppImage" -o -name "*.deb" -o -name "*.rpm" -o -name "*.tar.gz" \) | while read file; do
+                    filename=$(basename "$file")
+                    echo "Uploading Linux asset: $filename"
+                    gh release upload v${{ steps.package-version.outputs.version }}-${{ github.run_number }} "$file" --clobber
+                  done
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
