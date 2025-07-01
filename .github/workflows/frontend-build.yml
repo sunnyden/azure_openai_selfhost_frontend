@@ -50,7 +50,9 @@ jobs:
               uses: actions/download-artifact@v4
               with:
                   name: frontend-build-${{ github.sha }}
-                  path: ./build-artifacts            - name: Clean remote directory (preserve images folder)
+                  path: ./build-artifacts
+
+            - name: Clean remote directory (preserve images folder)
               uses: appleboy/ssh-action@v1.0.3
               with:
                   host: ${{ secrets.SFTP_HOST }}
@@ -59,13 +61,13 @@ jobs:
                   script: |
                       # Navigate to the target directory
                       cd /var/www/openai/
-                      
+
                       # Remove all files (not directories) in the root
                       find . -maxdepth 1 -type f -delete
-                      
+
                       # Remove all directories except 'images'
                       find . -maxdepth 1 -type d ! -name '.' ! -name 'images' -exec rm -rf {} +
-                      
+
                       # Remove hidden files and directories except . and .. and anything starting with images
                       find . -maxdepth 1 -name '.*' ! -name '.' ! -name '..' ! -name '.images*' -exec rm -rf {} +
 

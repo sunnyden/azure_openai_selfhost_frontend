@@ -17,6 +17,10 @@
     ],
     "author": "",
     "license": "ISC",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/sunnyden/azure_openai_selfhost_frontend.git"
+    },
     "devDependencies": {
         "@types/node": "^20.0.0",
         "cross-env": "^7.0.3",
@@ -27,6 +31,7 @@
     "build": {
         "appId": "com.openai.selfhost.desktop",
         "productName": "OpenAI Self-Host",
+        "publish": null,
         "directories": {
             "output": "dist-electron"
         },

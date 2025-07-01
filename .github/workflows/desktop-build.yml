@@ -41,17 +41,13 @@ jobs:
               if: matrix.os == 'windows-latest'
               run: |
                   cd desktop-app
-                  npm run dist -- --win
-              env:
-                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  npm run dist -- --win --publish=never
 
             - name: Build desktop app (Linux)
               if: matrix.os == 'ubuntu-latest'
               run: |
                   cd desktop-app
-                  npm run dist -- --linux
-              env:
-                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  npm run dist -- --linux --publish=never
 
             - name: Upload Windows artifacts
               if: matrix.os == 'windows-latest'
