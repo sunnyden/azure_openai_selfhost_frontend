@@ -72,16 +72,15 @@ jobs:
                       find . -maxdepth 1 -name '.*' ! -name '.' ! -name '..' ! -name '.images*' -exec rm -rf {} +
 
             - name: Deploy to server via SFTP
-              uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+              uses: easingthemes/ssh-deploy@v5.0.3
               with:
-                  server: ${{ secrets.SFTP_HOST }}
-                  username: ${{ secrets.SFTP_USERNAME }}
-                  password: ${{ secrets.SFTP_PRIVATE_KEY }}
-                  protocol: sftp
-                  local-dir: ./build-artifacts/build/
-                  server-dir: /var/www/openai/
-                  exclude: |
-                      **/.git*
-                      **/.git*/**
-                      **/node_modules/**
+                  SSH_PRIVATE_KEY: ${{ secrets.SFTP_PRIVATE_KEY }}
+                  REMOTE_HOST: ${{ secrets.SFTP_HOST }}
+                  REMOTE_USER: ${{ secrets.SFTP_USERNAME }}
+                  SOURCE: "./build-artifacts/build/"
+                  TARGET: "/var/www/openai/"
+                  EXCLUDE: "/node_modules/, /.git/, /.github/"
+                  SCRIPT_BEFORE: |
+                      whoami
+                      ls -al
 
