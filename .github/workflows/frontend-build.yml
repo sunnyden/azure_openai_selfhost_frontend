@@ -80,7 +80,4 @@ jobs:
                   SOURCE: "./build-artifacts/build/"
                   TARGET: "/var/www/openai/"
                   EXCLUDE: "/node_modules/, /.git/, /.github/"
-                  SCRIPT_BEFORE: |
-                      whoami
-                      ls -al
 
