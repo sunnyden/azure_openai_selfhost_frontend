@@ -14,9 +14,6 @@ jobs:
 
         runs-on: ${{ matrix.os }}
 
-        # Skip macOS builds on master branch (only run on release branches)
-        if: ${{ !(matrix.os == 'macos-latest' && !startsWith(github.ref, 'refs/heads/release/')) }}
-
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
@@ -47,7 +44,7 @@ jobs:
                   npm run dist -- --linux --publish=never
 
             - name: Build desktop app (macOS)
-              if: matrix.os == 'macos-latest'
+              if: matrix.os == 'macos-latest' && startsWith(github.ref, 'refs/heads/release/')
               run: |
                   cd desktop-app
                   npm run dist -- --mac --publish=never
@@ -79,7 +76,7 @@ jobs:
                   retention-days: 30
 
             - name: Upload macOS artifacts
-              if: matrix.os == 'macos-latest'
+              if: matrix.os == 'macos-latest' && startsWith(github.ref, 'refs/heads/release/')
               uses: actions/upload-artifact@v4
               with:
                   name: desktop-app-macos-${{ github.sha }}
