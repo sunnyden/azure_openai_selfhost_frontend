@@ -10,9 +10,12 @@ jobs:
     build-desktop:
         strategy:
             matrix:
-                os: [windows-latest, ubuntu-latest]
+                os: [windows-latest, ubuntu-latest, macos-latest]
 
         runs-on: ${{ matrix.os }}
+
+        # Skip macOS builds on master branch (only run on release branches)
+        if: ${{ !(matrix.os == 'macos-latest' && !startsWith(github.ref, 'refs/heads/release/')) }}
 
         steps:
             - name: Checkout repository
@@ -25,12 +28,6 @@ jobs:
               with:
                   node-version: "22"
                   cache: "npm"
-
-            - name: Install frontend dependencies
-              run: npm ci
-
-            - name: Build frontend
-              run: npm run build
 
             - name: Install desktop app dependencies
               run: |
@@ -48,6 +45,12 @@ jobs:
               run: |
                   cd desktop-app
                   npm run dist -- --linux --publish=never
+
+            - name: Build desktop app (macOS)
+              if: matrix.os == 'macos-latest'
+              run: |
+                  cd desktop-app
+                  npm run dist -- --mac --publish=never
 
             - name: Upload Windows artifacts
               if: matrix.os == 'windows-latest'
@@ -75,6 +78,17 @@ jobs:
                       desktop-app/dist-electron/*.blockmap
                   retention-days: 30
 
+            - name: Upload macOS artifacts
+              if: matrix.os == 'macos-latest'
+              uses: actions/upload-artifact@v4
+              with:
+                  name: desktop-app-macos-${{ github.sha }}
+                  path: |
+                      desktop-app/dist-electron/*.dmg
+                      desktop-app/dist-electron/*.zip
+                      desktop-app/dist-electron/*.blockmap
+                  retention-days: 30
+
     create-release:
         if: startsWith(github.ref, 'refs/heads/release/')
         needs: build-desktop
@@ -98,6 +112,12 @@ jobs:
                   name: desktop-app-linux-${{ github.sha }}
                   path: ./release-artifacts/linux/
 
+            - name: Download macOS artifacts
+              uses: actions/download-artifact@v4
+              with:
+                  name: desktop-app-macos-${{ github.sha }}
+                  path: ./release-artifacts/macos/
+
             - name: Get package version
               id: package-version
               run: echo "version=$(node -p "require('./desktop-app/package.json').version")" >> $GITHUB_OUTPUT
@@ -115,7 +135,8 @@ jobs:
 
                   ## Downloads
                   - **Windows**: Download the \`.exe\` installer or \`.zip\` portable version
-                  - **Linux**: Download the \`.AppImage\` portable version, \`.deb\` for Debian/Ubuntu, or \`.rpm\` for Red Hat/Fedora"
+                  - **Linux**: Download the \`.AppImage\` portable version, \`.deb\` for Debian/Ubuntu, or \`.rpm\` for Red Hat/Fedora
+                  - **macOS**: Download the \`.dmg\` installer"
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -132,6 +153,13 @@ jobs:
                   find ./release-artifacts/linux/ -type f \( -name "*.AppImage" -o -name "*.deb" -o -name "*.rpm" -o -name "*.tar.gz" \) | while read file; do
                     filename=$(basename "$file")
                     echo "Uploading Linux asset: $filename"
+                    gh release upload v${{ steps.package-version.outputs.version }}-${{ github.run_number }} "$file" --clobber
+                  done
+
+                  # Upload all macOS artifacts
+                  find ./release-artifacts/macos/ -type f \( -name "*.dmg" -o -name "*.zip" \) | while read file; do
+                    filename=$(basename "$file")
+                    echo "Uploading macOS asset: $filename"
                     gh release upload v${{ steps.package-version.outputs.version }}-${{ github.run_number }} "$file" --clobber
                   done
               env:
