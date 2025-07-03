@@ -13,11 +13,17 @@ import { useMCPContext } from "./MCPContext";
 
 type ConversationData = {
     currentConversation: ChatMessage[];
-    addMessage: (role: ChatRole, message: string, images?: string[]) => void;
+    addMessage: (
+        role: ChatRole,
+        message: string,
+        images?: string[],
+        audios?: string[]
+    ) => void;
     requestCompletion: (
         role?: ChatRole,
         message?: string,
-        images?: string[]
+        images?: string[],
+        audios?: string[]
     ) => Promise<void>;
     clearConversation: () => void;
     lastStopReason: string;
@@ -29,7 +35,12 @@ type ConversationData = {
 
 const defaultData: ConversationData = {
     currentConversation: [],
-    addMessage: (role: ChatRole, message: string, images?: string[]) => {},
+    addMessage: (
+        role: ChatRole,
+        message: string,
+        images?: string[],
+        audios?: string[]
+    ) => {},
     requestCompletion: async () => {},
     clearConversation: () => {},
     lastStopReason: "",
@@ -60,7 +71,12 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
     // Get current conversation messages from conversation history
     const currentConversation = getCurrentConversation()?.messages || [];
 
-    const addMessage = (role: ChatRole, message: string, images?: string[]) => {
+    const addMessage = (
+        role: ChatRole,
+        message: string,
+        images?: string[],
+        audios?: string[]
+    ) => {
         const content: ChatMessageContentItem[] = [];
 
         // Add text content if provided
@@ -74,6 +90,16 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
                 content.push({
                     type: ChatMessageContentType.Image,
                     base64Data: imageBase64,
+                });
+            });
+        }
+
+        // Add audio content if provided
+        if (audios && audios.length > 0) {
+            audios.forEach(audioBase64 => {
+                content.push({
+                    type: ChatMessageContentType.Audio,
+                    base64Data: audioBase64,
                 });
             });
         }
@@ -95,7 +121,8 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
     const requestCompletion = async (
         role?: ChatRole,
         message?: string,
-        images?: string[]
+        images?: string[],
+        audios?: string[]
     ) => {
         if (!currentModel) throw new Error("No model selected");
 
@@ -107,7 +134,12 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
         setToolUsed([]);
         setUsingTool(false);
         let newConversationHistory = currentConversation;
-        if (role && (message || (images && images.length > 0))) {
+        if (
+            role &&
+            (message ||
+                (images && images.length > 0) ||
+                (audios && audios.length > 0))
+        ) {
             const content: ChatMessageContentItem[] = [];
 
             // Add text content if provided
@@ -124,6 +156,16 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
                     content.push({
                         type: ChatMessageContentType.Image,
                         base64Data: imageBase64,
+                    });
+                });
+            }
+
+            // Add audio content if provided
+            if (audios && audios.length > 0) {
+                audios.forEach(audioBase64 => {
+                    content.push({
+                        type: ChatMessageContentType.Audio,
+                        base64Data: audioBase64,
                     });
                 });
             }

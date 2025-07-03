@@ -1,0 +1,135 @@
+/* Custom Audio Player Styles */
+.custom-audio-player {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+}
+
+.custom-audio-player.error {
+    gap: 6px;
+    opacity: 0.7;
+}
+
+.play-pause-button {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    padding: 0;
+    border-radius: 50%;
+    background-color: var(--colorBrandBackground);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.play-pause-button:hover {
+    background-color: var(--colorBrandBackgroundHover);
+}
+
+.play-pause-button:active {
+    background-color: var(--colorBrandBackgroundPressed);
+}
+
+.play-pause-button:disabled {
+    background-color: var(--colorNeutralBackground3);
+    color: var(--colorNeutralForeground3);
+    cursor: not-allowed;
+}
+
+.audio-progress-container {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.audio-progress-bar {
+    height: 4px;
+    background-color: var(--colorNeutralBackground3);
+    border-radius: 2px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.audio-progress-bar:hover {
+    background-color: var(--colorNeutralBackground4);
+}
+
+.audio-progress-fill {
+    height: 100%;
+    background-color: var(--colorBrandBackground);
+    border-radius: 2px;
+    transition: width 0.1s ease;
+}
+
+.audio-time {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--colorNeutralForeground3);
+    font-family: var(--fontFamilyMonospace);
+    line-height: 1;
+}
+
+.current-time {
+    color: var(--colorNeutralForeground2);
+}
+
+.duration {
+    color: var(--colorNeutralForeground3);
+}
+
+.error-text {
+    color: var(--colorNeutralForeground3);
+    font-style: italic;
+    font-size: 12px;
+}
+
+.audio-icon {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--colorNeutralForeground3);
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 480px) {
+    .custom-audio-player {
+        gap: 6px;
+    }
+
+    .play-pause-button {
+        width: 24px;
+        height: 24px;
+        min-width: 24px;
+    }
+
+    .audio-time {
+        font-size: 10px;
+    }
+
+    .audio-progress-bar {
+        height: 6px;
+    }
+}
+
+@media (max-width: 320px) {
+    .audio-time {
+        font-size: 9px;
+    }
+
+    .play-pause-button {
+        width: 22px;
+        height: 22px;
+        min-width: 22px;
+    }
+}

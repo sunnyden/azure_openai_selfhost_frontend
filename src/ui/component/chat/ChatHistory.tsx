@@ -43,6 +43,8 @@ import remarkGfm from "remark-gfm";
 import rehypeKatex from "rehype-katex";
 import "katex/dist/katex.min.css";
 import { CodeBlockWrapper } from "./CodeBlockWrapper";
+import { CustomAudioPlayer } from "./CustomAudioPlayer";
+import "./CustomAudioPlayer.css";
 import {
     BrowseWebPageTool,
     DefaultTool,
@@ -270,6 +272,8 @@ const ChatItem = memo(function ChatItem({
                         return item.text || "";
                     } else if (item.type === ChatMessageContentType.Image) {
                         return "[Image]"; // Placeholder for images
+                    } else if (item.type === ChatMessageContentType.Audio) {
+                        return "[Audio]"; // Placeholder for audio
                     }
                     return "";
                 })
@@ -294,6 +298,8 @@ const ChatItem = memo(function ChatItem({
                         return item.text || "";
                     } else if (item.type === ChatMessageContentType.Image) {
                         return "[Image]";
+                    } else if (item.type === ChatMessageContentType.Audio) {
+                        return "[Audio]";
                     }
                     return "";
                 })
@@ -743,6 +749,45 @@ const ChatItem = memo(function ChatItem({
                                                     );
                                                 }}
                                             />
+                                        </div>
+                                    );
+                                } else if (
+                                    item.type ===
+                                        ChatMessageContentType.Audio &&
+                                    item.base64Data
+                                ) {
+                                    return (
+                                        <div
+                                            key={index}
+                                            style={{
+                                                margin: "8px 0",
+                                                display: "block",
+                                                maxWidth: "100%",
+                                            }}
+                                        >
+                                            <div className="audio-message-container">
+                                                <div className="audio-icon">
+                                                    <span
+                                                        style={{
+                                                            fontSize: "10px",
+                                                            color: "white",
+                                                            fontWeight: "bold",
+                                                        }}
+                                                    >
+                                                        ♪
+                                                    </span>
+                                                </div>
+                                                <div className="audio-player-wrapper">
+                                                    <CustomAudioPlayer
+                                                        src={item.base64Data}
+                                                        onError={() => {
+                                                            console.error(
+                                                                "Audio failed to load"
+                                                            );
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
                                         </div>
                                     );
                                 }
