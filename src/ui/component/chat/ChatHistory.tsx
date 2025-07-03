@@ -24,7 +24,7 @@ import {
 import Editor from "@monaco-editor/react";
 import { useConversationContext } from "../../../data/context/ConversationContext";
 import { useTheme } from "../../../data/context/ThemeContext";
-import { ChatRole, ToolInfo } from "../../../api/interface/data/common/Chat";
+import { ChatRole, ToolInfo, ChatMessageContentItem, ChatMessageContentType } from "../../../api/interface/data/common/Chat";
 import React, {
     useMemo,
     useRef,
@@ -155,11 +155,11 @@ const markdownComponents = {
 
 const ChatItem = memo(function ChatItem({
     role,
-    message,
+    content,
     messageIndex,
 }: {
     role: ChatRole;
-    message: string;
+    content: ChatMessageContentItem[];
     messageIndex: number;
 }) {
     const [isHovered, setIsHovered] = useState(false);
@@ -168,7 +168,10 @@ const ChatItem = memo(function ChatItem({
         null
     );
     const [editDialogOpen, setEditDialogOpen] = useState(false);
-    const [editedMessage, setEditedMessage] = useState(message);
+    
+    // Extract text content for editing and thinking logic
+    const textContent = content.find(item => item.type === ChatMessageContentType.Text)?.text || "";
+    const [editedMessage, setEditedMessage] = useState(textContent);
     const [isThinkingExpanded, setIsThinkingExpanded] = useState(false);
     const { deleteMessage, updateMessage } = useConversationContext();
     const { resolvedTheme } = useTheme();
@@ -178,7 +181,7 @@ const ChatItem = memo(function ChatItem({
         // case 2, think finished, <think>data</think>
         // think is starting at the beginning of the message
         const regex = /^<think>([\s\S]*?)(?:<\/think>|$)/;
-        const match = message.match(regex);
+        const match = textContent.match(regex);
         if (match) {
             const thinkContent = match[1].trim();
             if (thinkContent) {
@@ -186,13 +189,13 @@ const ChatItem = memo(function ChatItem({
             }
         }
         return "";
-    }, [message]);
+    }, [textContent]);
 
     const restOfMessage = useMemo(() => {
         // Remove <think> tags and their content from the message
         const regex = /^<think>[\s\S]*?(?:<\/think>|$)/;
-        return message.replace(regex, "").trim();
-    }, [message]);
+        return textContent.replace(regex, "").trim();
+    }, [textContent]);
 
     const thinking = useMemo(
         () => !!thinkMessage && !restOfMessage,
@@ -253,7 +256,17 @@ const ChatItem = memo(function ChatItem({
 
     const handleCopyToClipboard = async () => {
         try {
-            await navigator.clipboard.writeText(message);
+            // Create a text representation of all content
+            const contentText = content.map(item => {
+                if (item.type === ChatMessageContentType.Text) {
+                    return item.text || "";
+                } else if (item.type === ChatMessageContentType.Image) {
+                    return "[Image]"; // Placeholder for images
+                }
+                return "";
+            }).filter(text => text.trim()).join("\n");
+            
+            await navigator.clipboard.writeText(contentText);
             setShowCopySuccess(true);
             if (timerRef.current) {
                 clearTimeout(timerRef.current);
@@ -265,7 +278,16 @@ const ChatItem = memo(function ChatItem({
             console.error("Failed to copy text: ", err);
             // Fallback for older browsers
             const textArea = document.createElement("textarea");
-            textArea.value = message;
+            const contentText = content.map(item => {
+                if (item.type === ChatMessageContentType.Text) {
+                    return item.text || "";
+                } else if (item.type === ChatMessageContentType.Image) {
+                    return "[Image]";
+                }
+                return "";
+            }).filter(text => text.trim()).join("\n");
+            
+            textArea.value = contentText;
             textArea.style.position = "fixed";
             textArea.style.left = "-999999px";
             textArea.style.top = "-999999px";
@@ -305,7 +327,7 @@ const ChatItem = memo(function ChatItem({
     };
 
     const handleEditMessage = () => {
-        setEditedMessage(message);
+        setEditedMessage(textContent);
         setEditDialogOpen(true);
     };
 
@@ -315,7 +337,7 @@ const ChatItem = memo(function ChatItem({
     };
 
     const handleCancelEdit = () => {
-        setEditedMessage(message);
+        setEditedMessage(textContent);
         setEditDialogOpen(false);
     };
 
@@ -635,13 +657,63 @@ const ChatItem = memo(function ChatItem({
                                     : ""
                             }
                         >
-                            <Markdown
-                                remarkPlugins={remarkPlugins}
-                                rehypePlugins={rehypePlugins}
-                                components={markdownComponents}
-                            >
-                                {restOfMessage}
-                            </Markdown>
+                            {/* Render all content items */}
+                            {content.map((item, index) => {
+                                if (item.type === ChatMessageContentType.Text) {
+                                    // For text content, only show the part without <think> tags
+                                    const textToShow = index === 0 ? restOfMessage : (item.text || "");
+                                    if (!textToShow.trim()) return null;
+                                    
+                                    return (
+                                        <div key={index}>
+                                            <Markdown
+                                                remarkPlugins={remarkPlugins}
+                                                rehypePlugins={rehypePlugins}
+                                                components={markdownComponents}
+                                            >
+                                                {textToShow}
+                                            </Markdown>
+                                        </div>
+                                    );
+                                } else if (item.type === ChatMessageContentType.Image && item.imageUrl) {
+                                    return (
+                                        <div 
+                                            key={index} 
+                                            style={{ 
+                                                margin: "8px 0",
+                                                display: "inline-block",
+                                                maxWidth: "100%"
+                                            }}
+                                        >
+                                            <img
+                                                src={item.imageUrl}
+                                                alt="Uploaded image"
+                                                style={{
+                                                    maxWidth: "100%",
+                                                    maxHeight: "400px",
+                                                    borderRadius: "8px",
+                                                    border: "1px solid var(--colorNeutralStroke2)",
+                                                    display: "block"
+                                                }}
+                                                onError={(e) => {
+                                                    // Handle image loading errors
+                                                    const target = e.target as HTMLImageElement;
+                                                    target.style.display = "none";
+                                                    const errorDiv = document.createElement("div");
+                                                    errorDiv.textContent = "[Image failed to load]";
+                                                    errorDiv.style.color = "var(--colorNeutralForeground3)";
+                                                    errorDiv.style.fontStyle = "italic";
+                                                    errorDiv.style.padding = "8px";
+                                                    errorDiv.style.border = "1px dashed var(--colorNeutralStroke2)";
+                                                    errorDiv.style.borderRadius = "4px";
+                                                    target.parentNode?.insertBefore(errorDiv, target);
+                                                }}
+                                            />
+                                        </div>
+                                    );
+                                }
+                                return null;
+                            })}
                         </div>
                     </div>
                 </div>
@@ -878,7 +950,7 @@ export function ChatHistory() {
                     <ChatItem
                         key={index}
                         role={message.role}
-                        message={message.content[0].text || ""}
+                        content={message.content}
                         messageIndex={index}
                     />
                 ))}

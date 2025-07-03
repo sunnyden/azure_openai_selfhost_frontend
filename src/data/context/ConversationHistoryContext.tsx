@@ -5,7 +5,7 @@ import React, {
     useEffect,
     useCallback,
 } from "react";
-import { ChatMessage } from "../../api/interface/data/common/Chat";
+import { ChatMessage, ChatMessageContentType } from "../../api/interface/data/common/Chat";
 
 export interface ConversationItem {
     id: string;
@@ -299,12 +299,11 @@ export function ConversationHistoryProvider({
                                   index === messageIndex
                                       ? {
                                             ...msg,
-                                            content: [
-                                                {
-                                                    ...msg.content[0],
-                                                    text: newContent,
-                                                },
-                                            ],
+                                            content: msg.content.map(item =>
+                                                item.type === ChatMessageContentType.Text
+                                                    ? { ...item, text: newContent }
+                                                    : item
+                                            ),
                                         }
                                       : msg
                               ),
