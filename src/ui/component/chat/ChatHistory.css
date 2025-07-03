@@ -5,3 +5,61 @@
     max-width: 100%;
 }
 
+/* Audio component responsive styling */
+.audio-message-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px;
+    background-color: var(--colorNeutralBackground2);
+    border: 1px solid var(--colorNeutralStroke2);
+    border-radius: 8px;
+    min-width: 240px;
+    max-width: min(360px, calc(100vw - 120px));
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 480px) {
+    .audio-message-container {
+        min-width: 200px;
+        max-width: calc(100vw - 60px);
+        padding: 6px;
+        gap: 6px;
+    }
+}
+
+/* Very small mobile devices */
+@media (max-width: 320px) {
+    .audio-message-container {
+        min-width: 160px;
+        max-width: calc(100vw - 40px);
+        padding: 4px;
+        gap: 4px;
+    }
+}
+
+.audio-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-color: var(--colorBrandBackground);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.audio-player-wrapper {
+    flex: 1;
+    min-width: 0;
+}
+
+/* Mobile audio player adjustments */
+@media (max-width: 480px) {
+    .audio-icon {
+        width: 18px;
+        height: 18px;
+    }
+}
