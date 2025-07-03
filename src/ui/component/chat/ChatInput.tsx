@@ -14,16 +14,13 @@ import {
     Tooltip,
 } from "@fluentui/react-components";
 import {
-    ChevronDown24Regular,
     Edit24Regular,
     ImageAdd24Regular,
     Delete24Regular,
     Mic24Regular,
     MicOff24Regular,
     SpeakerMute24Regular,
-    Play24Regular,
-    Pause24Regular,
-    Stop24Regular,
+    MusicNote224Regular,
 } from "@fluentui/react-icons";
 import React, { useCallback, useState, useRef, useEffect } from "react";
 import { ChatRole } from "../../../api/interface/data/common/Chat";
@@ -767,7 +764,7 @@ export function ChatInput({
                     {/* Audio file upload button */}
                     <Tooltip content="Add audio files" relationship="label">
                         <Button
-                            icon={<SpeakerMute24Regular />}
+                            icon={<MusicNote224Regular />}
                             appearance="subtle"
                             size="small"
                             onClick={() => audioFileInputRef.current?.click()}
