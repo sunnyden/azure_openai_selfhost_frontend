@@ -86,6 +86,7 @@ function ChatButtonGroup({
         </div>
     );
 }
+
 export function ChatInput({
     onOpenMCPManagement,
 }: {
@@ -479,7 +480,6 @@ export function ChatInput({
                         </Button>
                     </div>
                 )}
-
             <Divider />
 
             {/* Image Preview Section */}
@@ -686,7 +686,6 @@ export function ChatInput({
                     </div>
                 </div>
             )}
-
             {/* Message Input */}
             <div style={{ position: "relative" }}>
                 <Textarea
@@ -697,7 +696,6 @@ export function ChatInput({
                     resize="vertical"
                     style={{ width: "100%" }}
                 />
-
                 {/* Audio and Image Upload Buttons */}
                 <div
                     style={{
@@ -901,4 +899,3 @@ export function ChatInput({
         </div>
     );
 }
-
