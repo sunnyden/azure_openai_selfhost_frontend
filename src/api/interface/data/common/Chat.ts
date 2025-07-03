@@ -5,12 +5,13 @@ export enum ChatRole {
 }
 export enum ChatMessageContentType {
     Text = "text",
-    Image = "image_url",
+    Image = "image",
+    Audio = "audio",
 }
 export type ChatMessageContentItem = {
     type: ChatMessageContentType;
     text?: string;
-    imageUrl?: string;
+    base64Data?: string;
 };
 export type ChatMessage = {
     role: ChatRole;

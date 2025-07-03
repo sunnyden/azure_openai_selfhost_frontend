@@ -14,7 +14,11 @@ import { useMCPContext } from "./MCPContext";
 type ConversationData = {
     currentConversation: ChatMessage[];
     addMessage: (role: ChatRole, message: string, images?: string[]) => void;
-    requestCompletion: (role?: ChatRole, message?: string, images?: string[]) => Promise<void>;
+    requestCompletion: (
+        role?: ChatRole,
+        message?: string,
+        images?: string[]
+    ) => Promise<void>;
     clearConversation: () => void;
     lastStopReason: string;
     toolUsed: ToolInfo[];
@@ -58,22 +62,22 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
 
     const addMessage = (role: ChatRole, message: string, images?: string[]) => {
         const content: ChatMessageContentItem[] = [];
-        
+
         // Add text content if provided
         if (message.trim()) {
             content.push({ type: ChatMessageContentType.Text, text: message });
         }
-        
+
         // Add image content if provided
         if (images && images.length > 0) {
             images.forEach(imageBase64 => {
-                content.push({ 
-                    type: ChatMessageContentType.Image, 
-                    imageUrl: imageBase64 
+                content.push({
+                    type: ChatMessageContentType.Image,
+                    base64Data: imageBase64,
                 });
             });
         }
-        
+
         const newMessage: ChatMessage = {
             role,
             content,
@@ -88,7 +92,11 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
         }
     };
 
-    const requestCompletion = async (role?: ChatRole, message?: string, images?: string[]) => {
+    const requestCompletion = async (
+        role?: ChatRole,
+        message?: string,
+        images?: string[]
+    ) => {
         if (!currentModel) throw new Error("No model selected");
 
         // Create a new conversation if none exists
@@ -101,22 +109,25 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
         let newConversationHistory = currentConversation;
         if (role && (message || (images && images.length > 0))) {
             const content: ChatMessageContentItem[] = [];
-            
+
             // Add text content if provided
             if (message && message.trim()) {
-                content.push({ type: ChatMessageContentType.Text, text: message });
+                content.push({
+                    type: ChatMessageContentType.Text,
+                    text: message,
+                });
             }
-            
+
             // Add image content if provided
             if (images && images.length > 0) {
                 images.forEach(imageBase64 => {
-                    content.push({ 
-                        type: ChatMessageContentType.Image, 
-                        imageUrl: imageBase64 
+                    content.push({
+                        type: ChatMessageContentType.Image,
+                        base64Data: imageBase64,
                     });
                 });
             }
-            
+
             const userMessage: ChatMessage = {
                 role,
                 content,

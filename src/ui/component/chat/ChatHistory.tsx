@@ -24,7 +24,12 @@ import {
 import Editor from "@monaco-editor/react";
 import { useConversationContext } from "../../../data/context/ConversationContext";
 import { useTheme } from "../../../data/context/ThemeContext";
-import { ChatRole, ToolInfo, ChatMessageContentItem, ChatMessageContentType } from "../../../api/interface/data/common/Chat";
+import {
+    ChatRole,
+    ToolInfo,
+    ChatMessageContentItem,
+    ChatMessageContentType,
+} from "../../../api/interface/data/common/Chat";
 import React, {
     useMemo,
     useRef,
@@ -168,9 +173,11 @@ const ChatItem = memo(function ChatItem({
         null
     );
     const [editDialogOpen, setEditDialogOpen] = useState(false);
-    
+
     // Extract text content for editing and thinking logic
-    const textContent = content.find(item => item.type === ChatMessageContentType.Text)?.text || "";
+    const textContent =
+        content.find(item => item.type === ChatMessageContentType.Text)?.text ||
+        "";
     const [editedMessage, setEditedMessage] = useState(textContent);
     const [isThinkingExpanded, setIsThinkingExpanded] = useState(false);
     const { deleteMessage, updateMessage } = useConversationContext();
@@ -257,15 +264,18 @@ const ChatItem = memo(function ChatItem({
     const handleCopyToClipboard = async () => {
         try {
             // Create a text representation of all content
-            const contentText = content.map(item => {
-                if (item.type === ChatMessageContentType.Text) {
-                    return item.text || "";
-                } else if (item.type === ChatMessageContentType.Image) {
-                    return "[Image]"; // Placeholder for images
-                }
-                return "";
-            }).filter(text => text.trim()).join("\n");
-            
+            const contentText = content
+                .map(item => {
+                    if (item.type === ChatMessageContentType.Text) {
+                        return item.text || "";
+                    } else if (item.type === ChatMessageContentType.Image) {
+                        return "[Image]"; // Placeholder for images
+                    }
+                    return "";
+                })
+                .filter(text => text.trim())
+                .join("\n");
+
             await navigator.clipboard.writeText(contentText);
             setShowCopySuccess(true);
             if (timerRef.current) {
@@ -278,15 +288,18 @@ const ChatItem = memo(function ChatItem({
             console.error("Failed to copy text: ", err);
             // Fallback for older browsers
             const textArea = document.createElement("textarea");
-            const contentText = content.map(item => {
-                if (item.type === ChatMessageContentType.Text) {
-                    return item.text || "";
-                } else if (item.type === ChatMessageContentType.Image) {
-                    return "[Image]";
-                }
-                return "";
-            }).filter(text => text.trim()).join("\n");
-            
+            const contentText = content
+                .map(item => {
+                    if (item.type === ChatMessageContentType.Text) {
+                        return item.text || "";
+                    } else if (item.type === ChatMessageContentType.Image) {
+                        return "[Image]";
+                    }
+                    return "";
+                })
+                .filter(text => text.trim())
+                .join("\n");
+
             textArea.value = contentText;
             textArea.style.position = "fixed";
             textArea.style.left = "-999999px";
@@ -661,9 +674,12 @@ const ChatItem = memo(function ChatItem({
                             {content.map((item, index) => {
                                 if (item.type === ChatMessageContentType.Text) {
                                     // For text content, only show the part without <think> tags
-                                    const textToShow = index === 0 ? restOfMessage : (item.text || "");
+                                    const textToShow =
+                                        index === 0
+                                            ? restOfMessage
+                                            : item.text || "";
                                     if (!textToShow.trim()) return null;
-                                    
+
                                     return (
                                         <div key={index}>
                                             <Markdown
@@ -675,38 +691,56 @@ const ChatItem = memo(function ChatItem({
                                             </Markdown>
                                         </div>
                                     );
-                                } else if (item.type === ChatMessageContentType.Image && item.imageUrl) {
+                                } else if (
+                                    item.type ===
+                                        ChatMessageContentType.Image &&
+                                    item.base64Data
+                                ) {
                                     return (
-                                        <div 
-                                            key={index} 
-                                            style={{ 
+                                        <div
+                                            key={index}
+                                            style={{
                                                 margin: "8px 0",
                                                 display: "inline-block",
-                                                maxWidth: "100%"
+                                                maxWidth: "100%",
                                             }}
                                         >
                                             <img
-                                                src={item.imageUrl}
+                                                src={item.base64Data}
                                                 alt="Uploaded image"
                                                 style={{
                                                     maxWidth: "100%",
                                                     maxHeight: "400px",
                                                     borderRadius: "8px",
                                                     border: "1px solid var(--colorNeutralStroke2)",
-                                                    display: "block"
+                                                    display: "block",
                                                 }}
-                                                onError={(e) => {
+                                                onError={e => {
                                                     // Handle image loading errors
-                                                    const target = e.target as HTMLImageElement;
-                                                    target.style.display = "none";
-                                                    const errorDiv = document.createElement("div");
-                                                    errorDiv.textContent = "[Image failed to load]";
-                                                    errorDiv.style.color = "var(--colorNeutralForeground3)";
-                                                    errorDiv.style.fontStyle = "italic";
-                                                    errorDiv.style.padding = "8px";
-                                                    errorDiv.style.border = "1px dashed var(--colorNeutralStroke2)";
-                                                    errorDiv.style.borderRadius = "4px";
-                                                    target.parentNode?.insertBefore(errorDiv, target);
+                                                    const target =
+                                                        e.target as HTMLImageElement;
+                                                    target.style.display =
+                                                        "none";
+                                                    const errorDiv =
+                                                        document.createElement(
+                                                            "div"
+                                                        );
+                                                    errorDiv.textContent =
+                                                        "[Image failed to load]";
+                                                    errorDiv.style.color =
+                                                        "var(--colorNeutralForeground3)";
+                                                    errorDiv.style.fontStyle =
+                                                        "italic";
+                                                    errorDiv.style.padding =
+                                                        "8px";
+                                                    errorDiv.style.border =
+                                                        "1px dashed var(--colorNeutralStroke2)";
+                                                    errorDiv.style.borderRadius =
+                                                        "4px";
+                                                    target.parentNode?.insertBefore(
+                                                        errorDiv,
+                                                        target
+                                                    );
                                                 }}
                                             />
                                         </div>
