@@ -1,19 +1,16 @@
-import React, { useCallback, useState, Suspense } from "react";
+import React, { useCallback, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Spinner } from "@fluentui/react-components";
 import { ChatHistory } from "../../component/chat/ChatHistory";
 import { ChatInput } from "../../component/chat/ChatInput";
 import { ConversationSidePanel } from "../../component/ConversationSidePanel";
 import { ChatPageHeader } from "../../component/chat/ChatPageHeader";
-import { UsagePage, MCPManagementPage } from "../../component/DynamicPages";
-import { Loading } from "../../component/Loading";
 import { useModelContext } from "../../../data/context/ModelContext";
 
 export function ChatPage() {
     const { currentModel, modelList, setCurrentModel } = useModelContext();
+    const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [currentPage, setCurrentPage] = useState<"chat" | "usage" | "mcp">(
-        "chat"
-    );
 
     const onModelChange = useCallback(
         (modelId: string) => {
@@ -30,38 +27,14 @@ export function ChatPage() {
     };
 
     const handleNavigateToUsage = () => {
-        setCurrentPage("usage");
+        navigate("/usage");
         setSidebarOpen(false);
     };
 
     const handleNavigateToMCP = () => {
-        setCurrentPage("mcp");
+        navigate("/mcp");
         setSidebarOpen(false);
     };
-
-    const handleBackToChat = () => {
-        setCurrentPage("chat");
-    };
-
-    // Show usage page if that's the current page
-    if (currentPage === "usage") {
-        return (
-            <Suspense fallback={<Loading message="Loading usage page..." />}>
-                <UsagePage onBack={handleBackToChat} />
-            </Suspense>
-        );
-    }
-
-    // Show MCP management page if that's the current page
-    if (currentPage === "mcp") {
-        return (
-            <Suspense
-                fallback={<Loading message="Loading MCP management..." />}
-            >
-                <MCPManagementPage onBack={handleBackToChat} />
-            </Suspense>
-        );
-    }
 
     return modelList.length > 0 ? (
         <div
