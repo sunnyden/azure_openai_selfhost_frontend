@@ -13,6 +13,7 @@ import { MCPManagementPage } from "../../page/MCPManagementPage/MCPManagementPag
 import { UsagePage } from "../../page/UsagePage/UsagePage";
 import { TitleToolbar } from "../title/TitleToolbar";
 import { Spinner } from "@fluentui/react-components";
+import MagiPage from "../../page/MagiPage/MagiPage";
 
 function RouteComponents() {
     const navigate = useNavigate();
@@ -33,6 +34,7 @@ function RouteComponents() {
                 path="/mcp"
                 element={<MCPManagementPage onBack={handleBackToChat} />}
             />
+            <Route path="/magi" element={<MagiPage />} />
             <Route path="*" element={<Navigate to="/chat" replace />} />
         </Routes>
     );
@@ -81,3 +83,4 @@ export function AppRouter() {
         </HashRouter>
     );
 }
+
