@@ -12,50 +12,115 @@ export function AgentBox({ agent, position }: AgentBoxProps) {
 
     const getBackgroundColor = () => {
         if (agent.isProcessing) {
-            return "var(--colorBrandBackground)";
+            return "#FF6600"; // Orange for processing (審議中)
         }
 
         // If finalized
         if (agent.finalDecision !== undefined) {
             return agent.finalDecision === DecisionType.Approve
-                ? "#4caf50"
-                : "#f44336";
+                ? "#00FF00" // Bright green for approve (可決)
+                : "#FF0000"; // Bright red for reject (否決)
         }
 
         // Check current round decision
         if (agent.decisions.length > 0) {
             const lastDecision = agent.decisions[agent.decisions.length - 1];
             if (lastDecision.decision === DecisionType.Approve) {
-                return "#4caf50";
+                return "#00FF00";
             } else if (lastDecision.decision === DecisionType.Reject) {
-                return "#f44336";
+                return "#FF0000";
             }
         }
 
-        // Pending
-        return "#ffc107";
+        // Pending - using cyan like CASPER in the image
+        return "#00FFFF";
+    };
+
+    // Get gradient background for mixed states (like CASPER's cyan/red split)
+    const getBackgroundStyle = () => {
+        const baseColor = getBackgroundColor();
+        
+        // For bottom left (CASPER position), add gradient effect if it has mixed decisions
+        if (position === "bottomLeft" && agent.decisions.length > 0) {
+            const hasApprove = agent.decisions.some(d => d.decision === DecisionType.Approve);
+            const hasReject = agent.decisions.some(d => d.decision === DecisionType.Reject);
+            
+            if (hasApprove && hasReject && !agent.finalDecision) {
+                return {
+                    background: `linear-gradient(135deg, #00FFFF 0%, #00FFFF 50%, #FF0000 50%, #FF0000 100%)`,
+                };
+            }
+        }
+        
+        return {
+            backgroundColor: baseColor,
+        };
+    };
+
+    const getStatusText = () => {
+        if (agent.isProcessing) {
+            return "審議中"; // Judging/Deliberating
+        }
+        if (agent.finalDecision === DecisionType.Approve) {
+            return "可決"; // Approved
+        }
+        if (agent.finalDecision === DecisionType.Reject) {
+            return "否決"; // Rejected
+        }
+        return "待機"; // Waiting
     };
 
     const getPositionStyle = () => {
         switch (position) {
             case "top":
                 return {
-                    top: "80px",
+                    top: "10%",
                     left: "50%",
                     transform: "translateX(-50%)",
                 };
             case "bottomLeft":
                 return {
-                    bottom: "80px",
-                    left: "15%",
+                    bottom: "5%",
+                    left: "5%",
                 };
             case "bottomRight":
                 return {
-                    bottom: "80px",
-                    right: "15%",
+                    bottom: "5%",
+                    right: "5%",
                 };
         }
     };
+
+    // Extract agent number from name or use position
+    const agentNumber = agent.config.name.match(/\d+/)?.[0] || 
+        (position === "top" ? "1" : position === "bottomLeft" ? "2" : "3");
+
+    // Get shape based on position to match the reference image exactly
+    const getShapeClipPath = () => {
+        switch (position) {
+            case "top": 
+                // Top trapezoid - narrower at top, wider at bottom
+                return "polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%)";
+            case "bottomLeft": 
+                // Left pentagon - angled on right side
+                return "polygon(0% 0%, 75% 0%, 100% 40%, 75% 100%, 0% 100%)";
+            case "bottomRight": 
+                // Right pentagon - angled on left side  
+                return "polygon(25% 0%, 100% 0%, 100% 100%, 25% 100%, 0% 40%)";
+        }
+    };
+
+    const getShapeDimensions = () => {
+        switch (position) {
+            case "top":
+                return { width: "340px", height: "180px" };
+            case "bottomLeft":
+            case "bottomRight":
+                return { width: "320px", height: "160px" };
+        }
+    };
+
+    const dimensions = getShapeDimensions();
 
     return (
         <div
@@ -66,69 +131,68 @@ export function AgentBox({ agent, position }: AgentBoxProps) {
             onMouseEnter={() => setShowDetails(true)}
             onMouseLeave={() => setShowDetails(false)}
         >
-            <Card
+            <div
                 style={{
-                    width: "280px",
-                    padding: "20px",
-                    backgroundColor: getBackgroundColor(),
-                    color: "white",
+                    position: "relative",
+                    ...dimensions,
+                    ...getBackgroundStyle(),
+                    clipPath: getShapeClipPath(),
                     transition: "all 0.3s ease",
                     animation: agent.isProcessing
                         ? "flash 1s infinite"
                         : "none",
                     cursor: "pointer",
-                    boxShadow: tokens.shadow16,
+                    boxShadow: `0 0 30px ${getBackgroundColor()}80, inset 0 0 20px rgba(0,0,0,0.3)`,
+                    border: "4px solid #000",
                 }}
             >
-                <div style={{ marginBottom: "12px" }}>
-                    <h3
-                        style={{
-                            margin: 0,
-                            fontSize: "20px",
-                            fontWeight: 600,
-                        }}
-                    >
-                        {agent.config.name}
-                    </h3>
+                {/* Main content area */}
+                <div
+                    style={{
+                        padding: "20px",
+                        height: "100%",
+                        display: "flex",
+                        flexDirection: "column",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        color: "#000",
+                        fontFamily: "Courier New, monospace",
+                        fontWeight: "bold",
+                    }}
+                >
+                    {/* Agent name - large and centered */}
                     <div
                         style={{
-                            fontSize: "12px",
-                            opacity: 0.9,
-                            marginTop: "4px",
+                            fontSize: "42px",
+                            fontWeight: "bold",
+                            textAlign: "center",
+                            letterSpacing: "3px",
+                            textShadow: "3px 3px 6px rgba(0,0,0,0.5)",
+                            marginBottom: "15px",
                         }}
                     >
-                        Model: {agent.config.model}
+                        {agent.config.name.toUpperCase()}
+                        <span style={{ fontSize: "32px" }}>·{agentNumber}</span>
+                    </div>
+
+                    {/* Status in Japanese - bottom */}
+                    <div
+                        style={{
+                            display: "inline-block",
+                            padding: "6px 20px",
+                            border: "3px solid #000",
+                            backgroundColor: "rgba(0,0,0,0.25)",
+                            fontSize: "18px",
+                            letterSpacing: "2px",
+                        }}
+                    >
+                        {getStatusText()}
                     </div>
                 </div>
+            </div>
 
-                {agent.decisions.length > 0 && (
-                    <div style={{ fontSize: "14px" }}>
-                        <div style={{ fontWeight: 600, marginBottom: "4px" }}>
-                            Latest Decision:
-                        </div>
-                        <div>
-                            Round{" "}
-                            {agent.decisions[agent.decisions.length - 1].round}:{" "}
-                            {
-                                agent.decisions[agent.decisions.length - 1]
-                                    .decision
-                            }
-                        </div>
-                    </div>
-                )}
 
-                {agent.finalDecision !== undefined && (
-                    <div style={{ marginTop: "12px", fontSize: "14px" }}>
-                        <div style={{ fontWeight: 600 }}>
-                            Final: {agent.finalDecision}
-                        </div>
-                        <div style={{ fontSize: "12px", opacity: 0.9 }}>
-                            Score: {agent.finalScore?.toFixed(2)}
-                        </div>
-                    </div>
-                )}
-            </Card>
-
+            {/* Details tooltip - shown on hover */}
             {showDetails && agent.decisions.length > 0 && (
                 <Card
                     style={{
@@ -136,75 +200,93 @@ export function AgentBox({ agent, position }: AgentBoxProps) {
                         top: position === "top" ? "100%" : "auto",
                         bottom: position !== "top" ? "100%" : "auto",
                         left: 0,
-                        marginTop: position === "top" ? "8px" : "0",
-                        marginBottom: position !== "top" ? "8px" : "0",
-                        width: "350px",
+                        marginTop: position === "top" ? "12px" : "0",
+                        marginBottom: position !== "top" ? "12px" : "0",
+                        width: "380px",
                         padding: "16px",
-                        backgroundColor: "var(--colorNeutralBackground1)",
+                        backgroundColor: "#1a1a1a",
+                        color: "#00FF00",
+                        border: "2px solid #00FF00",
                         zIndex: 1000,
-                        boxShadow: tokens.shadow28,
+                        boxShadow: "0 0 20px rgba(0,255,0,0.3)",
+                        fontFamily: "Courier New, monospace",
                     }}
                 >
-                    <h4 style={{ margin: "0 0 12px 0", fontSize: "16px" }}>
-                        Decision History
+                    <h4 
+                        style={{ 
+                            margin: "0 0 12px 0", 
+                            fontSize: "14px",
+                            color: "#00FF00",
+                            borderBottom: "1px solid #00FF00",
+                            paddingBottom: "8px",
+                        }}
+                    >
+                        ■ DECISION HISTORY
                     </h4>
 
                     <div style={{ marginBottom: "12px" }}>
                         <div
                             style={{
-                                fontWeight: 600,
-                                fontSize: "14px",
+                                fontWeight: "bold",
+                                fontSize: "11px",
                                 marginBottom: "4px",
+                                color: "#FFa500",
                             }}
                         >
-                            Criteria:
+                            CRITERIA:
                         </div>
                         <div
                             style={{
-                                fontSize: "12px",
-                                color: "var(--colorNeutralForeground3)",
+                                fontSize: "11px",
+                                color: "#00FF00",
+                                opacity: 0.8,
                             }}
                         >
                             {agent.config.criteria}
                         </div>
                     </div>
 
+                    <div style={{ marginBottom: "8px", fontSize: "11px", color: "#FF6600" }}>
+                        MODEL: {agent.config.model}
+                    </div>
+
                     {agent.decisions.map((decision, index) => (
                         <div
                             key={index}
                             style={{
-                                marginBottom: "12px",
-                                paddingBottom: "12px",
+                                marginBottom: "10px",
+                                paddingBottom: "10px",
                                 borderBottom:
                                     index < agent.decisions.length - 1
-                                        ? "1px solid var(--colorNeutralStroke2)"
+                                        ? "1px solid #00FF0040"
                                         : "none",
                             }}
                         >
                             <div
                                 style={{
-                                    fontWeight: 600,
-                                    fontSize: "14px",
+                                    fontWeight: "bold",
+                                    fontSize: "12px",
                                     marginBottom: "4px",
                                 }}
                             >
-                                Round {decision.round}:{" "}
+                                ROUND {decision.round}:{" "}
                                 <span
                                     style={{
                                         color:
                                             decision.decision ===
                                             DecisionType.Approve
-                                                ? "#4caf50"
-                                                : "#f44336",
+                                                ? "#00FF00"
+                                                : "#FF0000",
                                     }}
                                 >
-                                    {decision.decision.toUpperCase()}
+                                    {decision.decision === DecisionType.Approve ? "可決" : "否決"}
                                 </span>
                             </div>
                             <div
                                 style={{
-                                    fontSize: "12px",
-                                    color: "var(--colorNeutralForeground3)",
+                                    fontSize: "11px",
+                                    color: "#00FF00",
+                                    opacity: 0.7,
                                 }}
                             >
                                 {decision.reason}
@@ -218,7 +300,7 @@ export function AgentBox({ agent, position }: AgentBoxProps) {
                 {`
                     @keyframes flash {
                         0%, 100% { opacity: 1; }
-                        50% { opacity: 0.6; }
+                        50% { opacity: 0.7; }
                     }
                 `}
             </style>

@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { Button, Spinner } from "@fluentui/react-components";
 import { AgentBox } from "./AgentDecision/AgentBox";
 import { useMagiContext } from "./JudgementContext/MagiContext";
-import { OverallStatus } from "../types";
+import { OverallStatus, DecisionType } from "../types";
 import { useApiClient } from "../../../../data/context/useApiClient";
 import { requestAgentDecision } from "../utils/judgmentEngine";
 
@@ -117,35 +117,55 @@ export function MagiJudgmentPage({ onBack }: MagiJudgmentPageProps) {
                 height: "100vh",
                 display: "flex",
                 flexDirection: "column",
-                backgroundColor: "var(--colorNeutralBackground1)",
+                backgroundColor: "#0a0a0a",
+                backgroundImage: `
+                    repeating-linear-gradient(
+                        0deg,
+                        transparent,
+                        transparent 2px,
+                        rgba(0, 255, 0, 0.03) 2px,
+                        rgba(0, 255, 0, 0.03) 4px
+                    )
+                `,
             }}
         >
             {/* Header */}
             <div
                 style={{
                     padding: "20px 40px",
-                    borderBottom: "1px solid var(--colorNeutralStroke1)",
+                    borderBottom: "2px solid #00FF00",
                     display: "flex",
                     justifyContent: "space-between",
                     alignItems: "center",
+                    backgroundColor: "#000",
+                    fontFamily: "Courier New, monospace",
                 }}
             >
                 <div>
-                    <h2 style={{ margin: 0, fontSize: "20px" }}>
-                        {magiState.title}
+                    <h2 
+                        style={{ 
+                            margin: 0, 
+                            fontSize: "20px",
+                            color: "#00FF00",
+                            fontWeight: "bold",
+                            letterSpacing: "1px",
+                        }}
+                    >
+                        ■ {magiState.title.toUpperCase()}
                     </h2>
                 </div>
                 <div
                     style={{
-                        fontSize: "18px",
-                        fontWeight: 600,
+                        fontSize: "16px",
+                        fontWeight: "bold",
                         color: getStatusColor(),
                         display: "flex",
                         alignItems: "center",
                         gap: "12px",
+                        letterSpacing: "1px",
                     }}
                 >
-                    Status: {magiState.overallStatus.toUpperCase()}
+                    STATUS: {magiState.overallStatus.toUpperCase()}
                     {magiState.overallStatus === OverallStatus.Judging && (
                         <Spinner size="tiny" />
                     )}
@@ -172,59 +192,86 @@ export function MagiJudgmentPage({ onBack }: MagiJudgmentPageProps) {
                         left: "50%",
                         transform: "translate(-50%, -50%)",
                         textAlign: "center",
-                        maxWidth: "500px",
+                        maxWidth: "600px",
+                        zIndex: 10,
                     }}
                 >
                     {magiState.overallStatus === OverallStatus.Judging && (
-                        <div>
+                        <div
+                            style={{
+                                fontFamily: "Courier New, monospace",
+                                color: "#00FF00",
+                            }}
+                        >
                             <div
                                 style={{
-                                    fontSize: "24px",
-                                    fontWeight: 600,
-                                    marginBottom: "8px",
+                                    fontSize: "64px",
+                                    fontWeight: "bold",
+                                    marginBottom: "12px",
+                                    textShadow: "0 0 20px #00FF00",
+                                    letterSpacing: "8px",
                                 }}
                             >
-                                Round {magiState.currentRound} / 3
+                                MAGI
                             </div>
                             <div
                                 style={{
-                                    color: "var(--colorNeutralForeground3)",
+                                    fontSize: "18px",
+                                    fontWeight: "bold",
+                                    marginBottom: "8px",
+                                    color: "#FF6600",
                                 }}
                             >
-                                Agents are evaluating...
+                                ROUND {magiState.currentRound} / 3
+                            </div>
+                            <div
+                                style={{
+                                    color: "#00FF00",
+                                    fontSize: "14px",
+                                    opacity: 0.7,
+                                }}
+                            >
+                                SYSTEM EVALUATION IN PROGRESS...
                             </div>
                         </div>
                     )}
 
                     {magiState.overallStatus !== OverallStatus.Judging &&
                         magiState.overallStatus !== OverallStatus.Idle && (
-                            <div>
+                            <div
+                                style={{
+                                    fontFamily: "Courier New, monospace",
+                                }}
+                            >
                                 <div
                                     style={{
-                                        fontSize: "32px",
-                                        fontWeight: 700,
+                                        fontSize: "64px",
+                                        fontWeight: "bold",
                                         color: getStatusColor(),
                                         marginBottom: "16px",
+                                        textShadow: `0 0 20px ${getStatusColor()}`,
+                                        letterSpacing: "4px",
                                     }}
                                 >
                                     {magiState.overallStatus ===
                                     OverallStatus.Approved
-                                        ? "APPROVED"
+                                        ? "可決"
                                         : magiState.overallStatus ===
                                             OverallStatus.Rejected
-                                          ? "REJECTED"
+                                          ? "否決"
                                           : "ERROR"}
                                 </div>
 
                                 {magiState.error && (
                                     <div
                                         style={{
-                                            color: "#f44336",
+                                            color: "#FF0000",
                                             marginBottom: "16px",
                                             padding: "12px",
-                                            backgroundColor:
-                                                "var(--colorNeutralBackground2)",
+                                            backgroundColor: "#1a0000",
+                                            border: "1px solid #FF0000",
                                             borderRadius: "4px",
+                                            fontSize: "12px",
                                         }}
                                     >
                                         {magiState.error}
@@ -235,11 +282,13 @@ export function MagiJudgmentPage({ onBack }: MagiJudgmentPageProps) {
                                     <div style={{ marginTop: "24px" }}>
                                         <div
                                             style={{
-                                                fontSize: "16px",
+                                                fontSize: "14px",
                                                 marginBottom: "12px",
+                                                color: "#00FF00",
+                                                fontWeight: "bold",
                                             }}
                                         >
-                                            Final Decision Breakdown:
+                                            FINAL DECISION BREAKDOWN:
                                         </div>
                                         {magiState.agents.map(
                                             (agent, index) => (
@@ -247,24 +296,26 @@ export function MagiJudgmentPage({ onBack }: MagiJudgmentPageProps) {
                                                     key={index}
                                                     style={{
                                                         padding: "8px 12px",
-                                                        backgroundColor:
-                                                            "var(--colorNeutralBackground2)",
-                                                        borderRadius: "4px",
+                                                        backgroundColor: "#000",
+                                                        border: "1px solid #00FF00",
+                                                        borderRadius: "2px",
                                                         marginBottom: "8px",
                                                         display: "flex",
-                                                        justifyContent:
-                                                            "space-between",
+                                                        justifyContent: "space-between",
+                                                        color: "#00FF00",
+                                                        fontSize: "12px",
                                                     }}
                                                 >
                                                     <span>
-                                                        {agent.config.name}
+                                                        {agent.config.name.toUpperCase()}
                                                     </span>
                                                     <span
                                                         style={{
-                                                            fontWeight: 600,
+                                                            fontWeight: "bold",
+                                                            color: agent.finalDecision === DecisionType.Approve ? "#00FF00" : "#FF0000",
                                                         }}
                                                     >
-                                                        {agent.finalDecision} (
+                                                        {agent.finalDecision === DecisionType.Approve ? "可決" : "否決"} (
                                                         {agent.finalScore?.toFixed(
                                                             2
                                                         )}
@@ -279,9 +330,15 @@ export function MagiJudgmentPage({ onBack }: MagiJudgmentPageProps) {
                                 <Button
                                     appearance="primary"
                                     onClick={onBack}
-                                    style={{ marginTop: "24px" }}
+                                    style={{ 
+                                        marginTop: "24px",
+                                        backgroundColor: "#00FF00",
+                                        color: "#000",
+                                        fontWeight: "bold",
+                                        border: "2px solid #00FF00",
+                                    }}
                                 >
-                                    Start New Judgment
+                                    START NEW JUDGMENT
                                 </Button>
                             </div>
                         )}
@@ -290,4 +347,3 @@ export function MagiJudgmentPage({ onBack }: MagiJudgmentPageProps) {
         </div>
     );
 }
-
