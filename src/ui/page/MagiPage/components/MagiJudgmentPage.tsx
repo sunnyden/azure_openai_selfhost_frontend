@@ -130,7 +130,7 @@ export function MagiJudgmentPage({ onBack }: MagiJudgmentPageProps) {
             }}
         >
             {/* Header */}
-            <div
+            {/* <div
                 style={{
                     padding: "20px 40px",
                     borderBottom: "2px solid #00FF00",
@@ -170,7 +170,7 @@ export function MagiJudgmentPage({ onBack }: MagiJudgmentPageProps) {
                         <Spinner size="tiny" />
                     )}
                 </div>
-            </div>
+            </div> */}
 
             {/* Judgment Arena */}
             <div
@@ -185,7 +185,7 @@ export function MagiJudgmentPage({ onBack }: MagiJudgmentPageProps) {
                 <AgentBox agent={magiState.agents[2]} position="bottomRight" />
 
                 {/* Center Info */}
-                <div
+                {/* <div
                     style={{
                         position: "absolute",
                         top: "50%",
@@ -301,7 +301,8 @@ export function MagiJudgmentPage({ onBack }: MagiJudgmentPageProps) {
                                                         borderRadius: "2px",
                                                         marginBottom: "8px",
                                                         display: "flex",
-                                                        justifyContent: "space-between",
+                                                        justifyContent:
+                                                            "space-between",
                                                         color: "#00FF00",
                                                         fontSize: "12px",
                                                     }}
@@ -312,10 +313,18 @@ export function MagiJudgmentPage({ onBack }: MagiJudgmentPageProps) {
                                                     <span
                                                         style={{
                                                             fontWeight: "bold",
-                                                            color: agent.finalDecision === DecisionType.Approve ? "#00FF00" : "#FF0000",
+                                                            color:
+                                                                agent.finalDecision ===
+                                                                DecisionType.Approve
+                                                                    ? "#00FF00"
+                                                                    : "#FF0000",
                                                         }}
                                                     >
-                                                        {agent.finalDecision === DecisionType.Approve ? "可決" : "否決"} (
+                                                        {agent.finalDecision ===
+                                                        DecisionType.Approve
+                                                            ? "可決"
+                                                            : "否決"}{" "}
+                                                        (
                                                         {agent.finalScore?.toFixed(
                                                             2
                                                         )}
@@ -330,7 +339,7 @@ export function MagiJudgmentPage({ onBack }: MagiJudgmentPageProps) {
                                 <Button
                                     appearance="primary"
                                     onClick={onBack}
-                                    style={{ 
+                                    style={{
                                         marginTop: "24px",
                                         backgroundColor: "#00FF00",
                                         color: "#000",
@@ -342,7 +351,7 @@ export function MagiJudgmentPage({ onBack }: MagiJudgmentPageProps) {
                                 </Button>
                             </div>
                         )}
-                </div>
+                </div> */}
             </div>
         </div>
     );

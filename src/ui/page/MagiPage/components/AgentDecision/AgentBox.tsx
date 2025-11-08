@@ -39,19 +39,23 @@ export function AgentBox({ agent, position }: AgentBoxProps) {
     // Get gradient background for mixed states (like CASPER's cyan/red split)
     const getBackgroundStyle = () => {
         const baseColor = getBackgroundColor();
-        
+
         // For bottom left (CASPER position), add gradient effect if it has mixed decisions
         if (position === "bottomLeft" && agent.decisions.length > 0) {
-            const hasApprove = agent.decisions.some(d => d.decision === DecisionType.Approve);
-            const hasReject = agent.decisions.some(d => d.decision === DecisionType.Reject);
-            
+            const hasApprove = agent.decisions.some(
+                d => d.decision === DecisionType.Approve
+            );
+            const hasReject = agent.decisions.some(
+                d => d.decision === DecisionType.Reject
+            );
+
             if (hasApprove && hasReject && !agent.finalDecision) {
                 return {
                     background: `linear-gradient(135deg, #00FFFF 0%, #00FFFF 50%, #FF0000 50%, #FF0000 100%)`,
                 };
             }
         }
-        
+
         return {
             backgroundColor: baseColor,
         };
@@ -92,31 +96,32 @@ export function AgentBox({ agent, position }: AgentBoxProps) {
     };
 
     // Extract agent number from name or use position
-    const agentNumber = agent.config.name.match(/\d+/)?.[0] || 
+    const agentNumber =
+        agent.config.name.match(/\d+/)?.[0] ||
         (position === "top" ? "1" : position === "bottomLeft" ? "2" : "3");
 
     // Get shape based on position to match the reference image exactly
     const getShapeClipPath = () => {
         switch (position) {
-            case "top": 
+            case "top":
                 // Top trapezoid - narrower at top, wider at bottom
-                return "polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%)";
-            case "bottomLeft": 
+                return "polygon(0 0, 100% 0, 100% 75%, 85% 100%, 15% 100%, 0 75%)";
+            case "bottomLeft":
                 // Left pentagon - angled on right side
-                return "polygon(0% 0%, 75% 0%, 100% 40%, 75% 100%, 0% 100%)";
-            case "bottomRight": 
-                // Right pentagon - angled on left side  
-                return "polygon(25% 0%, 100% 0%, 100% 100%, 25% 100%, 0% 40%)";
+                return "polygon(0 0, 65% 0, 100% 35%, 100% 100%, 0 100%)";
+            case "bottomRight":
+                // Right pentagon - angled on left side
+                return "polygon(0 35%, 35% 0, 100% 0, 100% 100%, 0 100%)";
         }
     };
 
     const getShapeDimensions = () => {
         switch (position) {
             case "top":
-                return { width: "340px", height: "180px" };
+                return { width: "28rem", height: "28rem" };
             case "bottomLeft":
             case "bottomRight":
-                return { width: "320px", height: "160px" };
+                return { width: "36rem", height: "20rem" };
         }
     };
 
@@ -191,7 +196,6 @@ export function AgentBox({ agent, position }: AgentBoxProps) {
                 </div>
             </div>
 
-
             {/* Details tooltip - shown on hover */}
             {showDetails && agent.decisions.length > 0 && (
                 <Card
@@ -212,9 +216,9 @@ export function AgentBox({ agent, position }: AgentBoxProps) {
                         fontFamily: "Courier New, monospace",
                     }}
                 >
-                    <h4 
-                        style={{ 
-                            margin: "0 0 12px 0", 
+                    <h4
+                        style={{
+                            margin: "0 0 12px 0",
                             fontSize: "14px",
                             color: "#00FF00",
                             borderBottom: "1px solid #00FF00",
@@ -246,7 +250,13 @@ export function AgentBox({ agent, position }: AgentBoxProps) {
                         </div>
                     </div>
 
-                    <div style={{ marginBottom: "8px", fontSize: "11px", color: "#FF6600" }}>
+                    <div
+                        style={{
+                            marginBottom: "8px",
+                            fontSize: "11px",
+                            color: "#FF6600",
+                        }}
+                    >
                         MODEL: {agent.config.model}
                     </div>
 
@@ -279,7 +289,9 @@ export function AgentBox({ agent, position }: AgentBoxProps) {
                                                 : "#FF0000",
                                     }}
                                 >
-                                    {decision.decision === DecisionType.Approve ? "可決" : "否決"}
+                                    {decision.decision === DecisionType.Approve
+                                        ? "可決"
+                                        : "否決"}
                                 </span>
                             </div>
                             <div
@@ -307,4 +319,3 @@ export function AgentBox({ agent, position }: AgentBoxProps) {
         </div>
     );
 }
-
