@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { Button, Spinner } from "@fluentui/react-components";
 import { AgentBox } from "./AgentDecision/AgentBox";
 import { useMagiContext } from "./JudgementContext/MagiContext";
@@ -101,13 +101,28 @@ export function MagiJudgmentPage({ onBack }: MagiJudgmentPageProps) {
             case OverallStatus.Approved:
                 return "#4caf50";
             case OverallStatus.Rejected:
-                return "#f44336";
+                return "rgb(211 1 14)";
             case OverallStatus.Error:
-                return "#ff9800";
+                return "#ff4d00ff";
             case OverallStatus.Judging:
-                return "#2196f3";
+                return "rgb(254 254 147)";
             default:
                 return "var(--colorNeutralForeground1)";
+        }
+    };
+
+    const getStatusText = () => {
+        switch (magiState.overallStatus) {
+            case OverallStatus.Approved:
+                return "可決";
+            case OverallStatus.Rejected:
+                return "否決";
+            case OverallStatus.Error:
+                return "ERROR";
+            case OverallStatus.Judging:
+                return "審議中";
+            default:
+                return "UNKNOWN";
         }
     };
 
@@ -175,15 +190,154 @@ export function MagiJudgmentPage({ onBack }: MagiJudgmentPageProps) {
             {/* Judgment Arena */}
             <div
                 style={{
-                    flex: 1,
                     position: "relative",
-                    padding: "40px",
+                    padding: "0px",
+                    width: "128rem",
+                    height: "72rem",
+                    border: "0.1rem solid #fff",
                 }}
             >
                 <AgentBox agent={magiState.agents[0]} position="top" />
                 <AgentBox agent={magiState.agents[1]} position="bottomLeft" />
                 <AgentBox agent={magiState.agents[2]} position="bottomRight" />
+                <div
+                    style={{
+                        position: "absolute",
+                        width: "128rem",
+                        top: 0,
+                        left: 0,
+                        height: "8rem",
+                        borderTop: "double 1rem rgb(95 252 165)",
+                        borderBottom: "double 1rem rgb(95 252 165)",
+                        display: "flex",
+                        fontSize: "7rem",
+                        justifyContent: "space-between",
+                        alignContent: "center",
+                        fontFamily: "MatissePro-Bolder",
+                        color: "#f78a09",
+                        lineHeight: "8rem",
+                    }}
+                >
+                    <div
+                        style={{
+                            marginLeft: "12rem",
+                            letterSpacing: "2rem",
+                            background: "transparent",
+                        }}
+                    >
+                        提訴
+                    </div>
+                    <div
+                        style={{
+                            marginRight: "12rem",
+                            letterSpacing: "2rem",
+                            background: "transparent",
+                        }}
+                    >
+                        決議
+                    </div>
+                </div>
+                <div
+                    style={{
+                        position: "absolute",
+                        top: "12rem",
+                        left: "1rem",
+                        fontSize: "2rem",
+                        lineHeight: "2rem",
+                        color: "#f78a09",
+                    }}
+                >
+                    <div>TITLE: {magiState.title.toUpperCase()}</div>
+                    <div style={{ fontSize: "1.2rem" }}>
+                        ROUND: {magiState.currentRound}
+                    </div>
+                    <div style={{ fontSize: "1.2rem" }}>TOTAL ROUNDS: 4</div>
+                </div>
+                {/* Triangle Border */}
+                <svg
+                    style={{
+                        position: "absolute",
+                        top: "61%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        width: "61rem",
+                        height: "50rem",
+                        zIndex: 1,
+                    }}
+                    viewBox="0 0 400 250"
+                >
+                    <polygon
+                        points="200,0 0,200 400,200"
+                        fill="none"
+                        stroke="#f78a09"
+                        strokeWidth="8"
+                    />
+                </svg>
+                <div
+                    style={{
+                        position: "absolute",
+                        top: "69%",
+                        left: "50%",
+                        transform: "translate(-50%, -50%)",
+                        width: "fit-content",
+                        height: "fit-content",
+                        color: "#f78a09",
+                        fontSize: "4rem",
+                        fontFamily: "serif",
+                        fontWeight: "bold",
+                        zIndex: 1,
+                    }}
+                >
+                    MAGI
+                </div>
+                <div
+                    style={{
+                        position: "absolute",
+                        top: "17rem",
+                        right: "5rem",
+                        width: "32rem",
+                        height: "36rem",
+                        alignItems: "center",
+                        display: "flex",
+                        flexDirection: "column",
+                    }}
+                >
+                    <div
+                        style={{
+                            width: "fit-content",
+                            height: "fit-content",
+                            lineHeight: "7rem",
+                            padding: "0rem 1rem",
+                            color: getStatusColor(),
+                            fontSize: "7rem",
+                            fontFamily: "MatissePro-Bolder",
+                            fontWeight: "bold",
+                            border: `double 0.5rem ${getStatusColor()}`,
+                            zIndex: 1,
+                            animation:
+                                magiState.overallStatus ===
+                                OverallStatus.Judging
+                                    ? "flashOverall 1s infinite"
+                                    : undefined,
+                        }}
+                        className={
+                            magiState.overallStatus === OverallStatus.Judging
+                                ? "flashOverall"
+                                : ""
+                        }
+                    >
+                        {getStatusText()}
+                    </div>
+                </div>
 
+                <style>
+                    {`
+                    @keyframes flashOverall {
+                        100% { opacity: 1; }
+                        0% { opacity: 0; }
+                    }
+                `}
+                </style>
                 {/* Center Info */}
                 {/* <div
                     style={{
@@ -356,3 +510,4 @@ export function MagiJudgmentPage({ onBack }: MagiJudgmentPageProps) {
         </div>
     );
 }
+

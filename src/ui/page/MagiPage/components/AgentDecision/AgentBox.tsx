@@ -12,29 +12,32 @@ export function AgentBox({ agent, position }: AgentBoxProps) {
 
     const getBackgroundColor = () => {
         if (agent.isProcessing) {
-            return "#FF6600"; // Orange for processing (審議中)
+            return "rgb(104 255 151)"; // Orange for processing (審議中)
         }
 
         // If finalized
         if (agent.finalDecision !== undefined) {
             return agent.finalDecision === DecisionType.Approve
-                ? "#00FF00" // Bright green for approve (可決)
-                : "#FF0000"; // Bright red for reject (否決)
+                ? "rgb(0 206 255)" // Bright green for approve (可決)
+                : "rgb(211 1 14)"; // Bright red for reject (否決)
         }
 
         // Check current round decision
         if (agent.decisions.length > 0) {
             const lastDecision = agent.decisions[agent.decisions.length - 1];
             if (lastDecision.decision === DecisionType.Approve) {
-                return "#00FF00";
+                return "rgb(0 206 255)";
             } else if (lastDecision.decision === DecisionType.Reject) {
-                return "#FF0000";
+                return "rgb(211 1 14)";
             }
         }
 
         // Pending - using cyan like CASPER in the image
-        return "#00FFFF";
+        return "rgb(0 206 255)";
     };
+    // rgb(0 206 255) cyan
+    // green: rgb(104 255 151)
+    // red: rgb(211 1 14)
 
     // Get gradient background for mixed states (like CASPER's cyan/red split)
     const getBackgroundStyle = () => {
@@ -51,7 +54,7 @@ export function AgentBox({ agent, position }: AgentBoxProps) {
 
             if (hasApprove && hasReject && !agent.finalDecision) {
                 return {
-                    background: `linear-gradient(135deg, #00FFFF 0%, #00FFFF 50%, #FF0000 50%, #FF0000 100%)`,
+                    background: `linear-gradient(135deg, rgb(0 206 255) 0%, rgb(0 206 255) 50%, rgb(211 1 14) 50%, rgb(211 1 14) 100%)`,
                 };
             }
         }
@@ -66,10 +69,18 @@ export function AgentBox({ agent, position }: AgentBoxProps) {
             return "審議中"; // Judging/Deliberating
         }
         if (agent.finalDecision === DecisionType.Approve) {
-            return "可決"; // Approved
+            return "承認"; // Approved
         }
         if (agent.finalDecision === DecisionType.Reject) {
-            return "否決"; // Rejected
+            return "否定"; // Rejected
+        }
+        if (agent.decisions.length > 0) {
+            const lastDecision = agent.decisions[agent.decisions.length - 1];
+            if (lastDecision.decision === DecisionType.Approve) {
+                return "承認"; // Approved in deliberation
+            } else if (lastDecision.decision === DecisionType.Reject) {
+                return "否定"; // Rejected in deliberation
+            }
         }
         return "待機"; // Waiting
     };
@@ -78,19 +89,19 @@ export function AgentBox({ agent, position }: AgentBoxProps) {
         switch (position) {
             case "top":
                 return {
-                    top: "10%",
+                    top: "0%",
                     left: "50%",
                     transform: "translateX(-50%)",
                 };
             case "bottomLeft":
                 return {
-                    bottom: "5%",
-                    left: "5%",
+                    bottom: "17%",
+                    left: "4%",
                 };
             case "bottomRight":
                 return {
-                    bottom: "5%",
-                    right: "5%",
+                    bottom: "17%",
+                    right: "4%",
                 };
         }
     };
@@ -105,23 +116,63 @@ export function AgentBox({ agent, position }: AgentBoxProps) {
         switch (position) {
             case "top":
                 // Top trapezoid - narrower at top, wider at bottom
-                return "polygon(0 0, 100% 0, 100% 75%, 85% 100%, 15% 100%, 0 75%)";
+                return "polygon(0 0, 100% 0, 100% 73%, 71% 100%, 29% 100%, 0 73%)";
             case "bottomLeft":
                 // Left pentagon - angled on right side
-                return "polygon(0 0, 65% 0, 100% 35%, 100% 100%, 0 100%)";
+                return "polygon(0 0, 65% 0, 100% 65%, 100% 100%, 0 100%)";
             case "bottomRight":
                 // Right pentagon - angled on left side
-                return "polygon(0 35%, 35% 0, 100% 0, 100% 100%, 0 100%)";
+                return "polygon(0 65%, 35% 0, 100% 0, 100% 100%, 0 100%)";
         }
     };
 
     const getShapeDimensions = () => {
         switch (position) {
             case "top":
-                return { width: "28rem", height: "28rem" };
+                return { width: "42rem", height: "46rem" };
             case "bottomLeft":
             case "bottomRight":
-                return { width: "36rem", height: "20rem" };
+                return { width: "49rem", height: "26rem" };
+        }
+    };
+
+    const getModelTextAlign = () => {
+        switch (position) {
+            case "top":
+                return {
+                    bottom: "30rem",
+                    left: "50%",
+                };
+            case "bottomLeft":
+                return {
+                    bottom: "15rem",
+                    left: "50%",
+                };
+            case "bottomRight":
+                return {
+                    bottom: "15rem",
+                    left: "50%",
+                };
+        }
+    };
+
+    const getModelStatusAlign = () => {
+        switch (position) {
+            case "top":
+                return {
+                    bottom: "15rem",
+                    left: "50%",
+                };
+            case "bottomLeft":
+                return {
+                    bottom: "1rem",
+                    left: "50%",
+                };
+            case "bottomRight":
+                return {
+                    bottom: "1rem",
+                    left: "50%",
+                };
         }
     };
 
@@ -131,6 +182,7 @@ export function AgentBox({ agent, position }: AgentBoxProps) {
         <div
             style={{
                 position: "absolute",
+                zIndex: 2,
                 ...getPositionStyle(),
             }}
             onMouseEnter={() => setShowDetails(true)}
@@ -142,13 +194,13 @@ export function AgentBox({ agent, position }: AgentBoxProps) {
                     ...dimensions,
                     ...getBackgroundStyle(),
                     clipPath: getShapeClipPath(),
-                    transition: "all 0.3s ease",
+                    transition: "all 0.1s ease",
                     animation: agent.isProcessing
-                        ? "flash 1s infinite"
+                        ? "flash 0.2s infinite"
                         : "none",
                     cursor: "pointer",
-                    boxShadow: `0 0 30px ${getBackgroundColor()}80, inset 0 0 20px rgba(0,0,0,0.3)`,
-                    border: "4px solid #000",
+                    boxShadow: `0 0 30px transparent, inset 0 0 20px transparent`,
+                    border: "4px solid transparent",
                 }}
             >
                 {/* Main content area */}
@@ -163,32 +215,41 @@ export function AgentBox({ agent, position }: AgentBoxProps) {
                         color: "#000",
                         fontFamily: "Courier New, monospace",
                         fontWeight: "bold",
+                        position: "relative",
                     }}
                 >
                     {/* Agent name - large and centered */}
                     <div
                         style={{
-                            fontSize: "42px",
+                            fontSize: "6rem",
                             fontWeight: "bold",
+                            width: "100%",
                             textAlign: "center",
-                            letterSpacing: "3px",
-                            textShadow: "3px 3px 6px rgba(0,0,0,0.5)",
-                            marginBottom: "15px",
+                            // letterSpacing: "3px",
+                            fontFamily: "sans-serif",
+                            position: "absolute",
+                            ...getModelTextAlign(),
+                            transform: "translate(-50%, -50%)",
                         }}
                     >
                         {agent.config.name.toUpperCase()}
-                        <span style={{ fontSize: "32px" }}>·{agentNumber}</span>
                     </div>
 
                     {/* Status in Japanese - bottom */}
                     <div
                         style={{
-                            display: "inline-block",
-                            padding: "6px 20px",
-                            border: "3px solid #000",
+                            width: "fit-content",
+                            height: "6rem",
+                            border: "0.8rem solid #000",
                             backgroundColor: "rgba(0,0,0,0.25)",
-                            fontSize: "18px",
-                            letterSpacing: "2px",
+                            fontSize: "6rem",
+                            lineHeight: "6rem",
+                            letterSpacing: "0.1rem",
+                            fontWeight: "bolder",
+                            fontFamily: "MatissePro-Bolder",
+                            position: "absolute",
+                            transform: "translate(-50%, -50%)",
+                            ...getModelStatusAlign(),
                         }}
                     >
                         {getStatusText()}
@@ -290,8 +351,8 @@ export function AgentBox({ agent, position }: AgentBoxProps) {
                                     }}
                                 >
                                     {decision.decision === DecisionType.Approve
-                                        ? "可決"
-                                        : "否決"}
+                                        ? "承認"
+                                        : "否定"}
                                 </span>
                             </div>
                             <div
@@ -311,11 +372,12 @@ export function AgentBox({ agent, position }: AgentBoxProps) {
             <style>
                 {`
                     @keyframes flash {
-                        0%, 100% { opacity: 1; }
-                        50% { opacity: 0.7; }
+                        100% { filter: brightness(1); }
+                        0% { filter: brightness(0); }
                     }
                 `}
             </style>
         </div>
     );
 }
+

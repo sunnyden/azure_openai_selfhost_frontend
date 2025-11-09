@@ -99,7 +99,7 @@ export function MagiProvider({ children }: { children: React.ReactNode }) {
             if (!prev) return prev;
 
             // Calculate final scores for each agent
-            const weights = [0.1, 0.4, 0.5]; // weights for round 1, 2, 3
+            const weights = [0.25, 0.35, 0.4]; // weights for round 1, 2, 3
             const newAgents = prev.agents.map((agent: AgentState) => {
                 let score = 0;
                 agent.decisions.forEach((decision: RoundDecision) => {

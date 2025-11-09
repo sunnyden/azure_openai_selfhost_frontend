@@ -88,3 +88,13 @@ code {
         transform: scale(1);
     }
 }
+
+@font-face {
+    font-family: MatissePro;
+    src: url("font/FOT-MatissePro-B.otf") format("opentype");
+}
+
+@font-face {
+    font-family: MatissePro-Bolder;
+    src: url("font/FOT-MatissePro-EB.otf") format("opentype");
+}
