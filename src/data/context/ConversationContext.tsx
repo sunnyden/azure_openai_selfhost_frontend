@@ -10,6 +10,7 @@ import { useApiClient } from "./useApiClient";
 import { useModelContext } from "./ModelContext";
 import { useConversationHistory } from "./ConversationHistoryContext";
 import { useMCPContext } from "./MCPContext";
+import { useTitleGenerator } from "./useTitleGenerator";
 
 type ConversationData = {
     currentConversation: ChatMessage[];
@@ -70,6 +71,7 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
     const [usingTool, setUsingTool] = React.useState<boolean>(false);
     const [lastStopReason, setLastStopReason] = React.useState<string>("init");
     const { currentModel } = useModelContext();
+    const { generateTitle } = useTitleGenerator();
 
     // Get current conversation messages from conversation history
     const currentConversation = getCurrentConversation()?.messages || [];
@@ -243,6 +245,17 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
                 { ...newMessage },
             ];
             await updateCurrentConversation(finalMessages, true); // Sync to cloud
+
+            // Trigger async title generation for first assistant response
+            if (currentConversationId && !currentConversationId.startsWith("local_")) {
+                generateTitle({
+                    conversationId: currentConversationId,
+                    messages: finalMessages,
+                    modelIdentifier: currentModel.identifier,
+                }).catch(err => {
+                    console.error("Title generation failed silently:", err);
+                });
+            }
         } catch (error) {
             // Handle any errors in streaming
             newMessage.content[0].text +=
@@ -252,6 +265,17 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
                 { ...newMessage },
             ];
             await updateCurrentConversation(updatedMessages, true); // Sync to cloud even on error
+
+            // Trigger async title generation even after error
+            if (currentConversationId && !currentConversationId.startsWith("local_")) {
+                generateTitle({
+                    conversationId: currentConversationId,
+                    messages: updatedMessages,
+                    modelIdentifier: currentModel.identifier,
+                }).catch(err => {
+                    console.error("Title generation failed silently:", err);
+                });
+            }
         }
 
         setLastStopReason(stopReason);
