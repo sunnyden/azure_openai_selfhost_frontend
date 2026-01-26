@@ -44,10 +44,12 @@ function ChatButtonGroup({
     onSend,
     onAppend,
     onOpenMCPManagement,
+    disabled,
 }: {
     onSend: () => void;
     onAppend: () => void;
     onOpenMCPManagement: () => void;
+    disabled?: boolean;
 }) {
     const [menuOpen, setMenuOpen] = useState(false);
 
@@ -68,10 +70,12 @@ function ChatButtonGroup({
                         appearance="primary"
                         primaryActionButton={{
                             onClick: onSend,
-                            children: "Send",
+                            children: disabled ? "Syncing..." : "Send",
+                            disabled: disabled,
                         }}
                         menuButton={{
                             "aria-label": "More options",
+                            disabled: disabled,
                         }}
                     />
                 </MenuTrigger>
@@ -121,8 +125,10 @@ export function ChatInput({
         clearConversation,
         currentConversation,
         lastStopReason,
+        isSyncing,
     } = useConversationContext();
     const [isLoading, setLoading] = useState(false);
+    const isDisabled = isLoading || isSyncing;
 
     // Cleanup effect for recording
     useEffect(() => {
@@ -695,6 +701,7 @@ export function ChatInput({
                     rows={4}
                     resize="vertical"
                     style={{ width: "100%" }}
+                    disabled={isDisabled}
                 />
                 {/* Audio and Image Upload Buttons */}
                 <div
@@ -748,7 +755,7 @@ export function ChatInput({
                             onClick={
                                 isRecording ? stopRecording : startRecording
                             }
-                            disabled={isProcessingAudios}
+                            disabled={isProcessingAudios || isDisabled}
                             style={{
                                 backgroundColor: isRecording
                                     ? "var(--colorPaletteRedBackground3)"
@@ -766,7 +773,7 @@ export function ChatInput({
                             appearance="subtle"
                             size="small"
                             onClick={() => audioFileInputRef.current?.click()}
-                            disabled={isProcessingAudios}
+                            disabled={isProcessingAudios || isDisabled}
                             style={{
                                 backgroundColor:
                                     "var(--colorNeutralBackground1)",
@@ -782,7 +789,7 @@ export function ChatInput({
                             appearance="subtle"
                             size="small"
                             onClick={() => fileInputRef.current?.click()}
-                            disabled={isProcessingImages}
+                            disabled={isProcessingImages || isDisabled}
                             style={{
                                 backgroundColor:
                                     "var(--colorNeutralBackground1)",
@@ -893,6 +900,7 @@ export function ChatInput({
                         onSend={onSend}
                         onAppend={onAppend}
                         onOpenMCPManagement={handleOpenMCPManagement}
+                        disabled={isDisabled}
                     />
                 </div>
             </div>

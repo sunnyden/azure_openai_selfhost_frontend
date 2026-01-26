@@ -29,6 +29,7 @@ type ConversationData = {
     lastStopReason: string;
     toolUsed: ToolInfo[];
     usingTool: boolean;
+    isSyncing: boolean;
     deleteMessage: (messageIndex: number) => void;
     updateMessage: (messageIndex: number, newContent: string) => void;
 };
@@ -46,6 +47,7 @@ const defaultData: ConversationData = {
     lastStopReason: "",
     toolUsed: [],
     usingTool: false,
+    isSyncing: false,
     deleteMessage: (messageIndex: number) => {},
     updateMessage: (messageIndex: number, newContent: string) => {},
 };
@@ -62,6 +64,7 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
         currentConversationId,
         deleteMessage,
         updateMessage,
+        isSyncing,
     } = useConversationHistory();
     const [toolUsed, setToolUsed] = React.useState<ToolInfo[]>([]);
     const [usingTool, setUsingTool] = React.useState<boolean>(false);
@@ -175,7 +178,7 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
                 content,
             };
             newConversationHistory = [...currentConversation, userMessage];
-            updateCurrentConversation(newConversationHistory);
+            updateCurrentConversation(newConversationHistory, false); // Don't sync to cloud yet, wait for completion
         }
         const response = chatClient.requestCompletionStream({
             model: currentModel.identifier,
@@ -201,7 +204,7 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
 
         // Add the empty message right away so the user sees a response is coming
         const messagesWithResponse = [...newConversationHistory, newMessage];
-        updateCurrentConversation(messagesWithResponse);
+        updateCurrentConversation(messagesWithResponse, false); // Don't sync to cloud yet
 
         let stopReason = "";
         try {
@@ -222,17 +225,24 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
                 // Update the message with the new data
                 newMessage.content[0].text += chunk.data;
 
-                // Update the conversation in history
+                // Update the conversation in history (local only during streaming)
                 const updatedMessages = [
                     ...newConversationHistory,
                     { ...newMessage },
                 ];
-                updateCurrentConversation(updatedMessages);
+                updateCurrentConversation(updatedMessages, false); // Don't sync to cloud during streaming
 
                 if (!!chunk.finishReason) {
                     stopReason = chunk.finishReason;
                 }
             }
+
+            // After streaming completes, sync final messages to cloud
+            const finalMessages = [
+                ...newConversationHistory,
+                { ...newMessage },
+            ];
+            await updateCurrentConversation(finalMessages, true); // Sync to cloud
         } catch (error) {
             // Handle any errors in streaming
             newMessage.content[0].text +=
@@ -241,7 +251,7 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
                 ...newConversationHistory,
                 { ...newMessage },
             ];
-            updateCurrentConversation(updatedMessages);
+            await updateCurrentConversation(updatedMessages, true); // Sync to cloud even on error
         }
 
         setLastStopReason(stopReason);
@@ -256,6 +266,7 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
                 lastStopReason,
                 toolUsed,
                 usingTool,
+                isSyncing,
                 deleteMessage,
                 updateMessage,
             }}

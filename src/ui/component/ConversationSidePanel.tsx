@@ -33,6 +33,7 @@ import {
     ArrowUpload24Regular,
     MoreVertical24Regular,
 } from "@fluentui/react-icons";
+import { Spinner } from "@fluentui/react-components";
 import { useConversationHistory } from "../../data/context/ConversationHistoryContext";
 import { isElectron } from "../../utils/electronUtils";
 
@@ -52,6 +53,10 @@ export function ConversationSidePanel({
     const {
         conversations,
         currentConversationId,
+        isLoading,
+        error,
+        migrationProgress,
+        loadingConversationId,
         createNewConversation,
         deleteConversation,
         updateConversationTitle,
@@ -72,15 +77,28 @@ export function ConversationSidePanel({
     const [exportConversationId, setExportConversationId] = useState<
         string | null
     >(null);
+    const [isCreating, setIsCreating] = useState(false);
+    const [isDeletingId, setIsDeletingId] = useState<string | null>(null);
 
-    const handleNewConversation = () => {
-        createNewConversation();
-        onClose();
+    const handleNewConversation = async () => {
+        setIsCreating(true);
+        try {
+            await createNewConversation();
+            onClose();
+        } catch (error) {
+            alert("Failed to create conversation: " + (error instanceof Error ? error.message : "Unknown error"));
+        } finally {
+            setIsCreating(false);
+        }
     };
 
-    const handleSelectConversation = (id: string) => {
-        selectConversation(id);
-        onClose();
+    const handleSelectConversation = async (id: string) => {
+        try {
+            await selectConversation(id);
+            onClose();
+        } catch (error) {
+            alert("Failed to load conversation: " + (error instanceof Error ? error.message : "Unknown error"));
+        }
     };
 
     const handleStartEdit = (id: string, currentTitle: string) => {
@@ -88,9 +106,13 @@ export function ConversationSidePanel({
         setEditTitle(currentTitle);
     };
 
-    const handleSaveEdit = () => {
+    const handleSaveEdit = async () => {
         if (editingId && editTitle.trim()) {
-            updateConversationTitle(editingId, editTitle.trim());
+            try {
+                await updateConversationTitle(editingId, editTitle.trim());
+            } catch (error) {
+                alert("Failed to update title: " + (error instanceof Error ? error.message : "Unknown error"));
+            }
         }
         setEditingId(null);
         setEditTitle("");
@@ -106,9 +128,16 @@ export function ConversationSidePanel({
         setDeleteDialogOpen(true);
     };
 
-    const handleConfirmDelete = () => {
+    const handleConfirmDelete = async () => {
         if (conversationToDelete) {
-            deleteConversation(conversationToDelete);
+            setIsDeletingId(conversationToDelete);
+            try {
+                await deleteConversation(conversationToDelete);
+            } catch (error) {
+                alert("Failed to delete conversation: " + (error instanceof Error ? error.message : "Unknown error"));
+            } finally {
+                setIsDeletingId(null);
+            }
         }
         setDeleteDialogOpen(false);
         setConversationToDelete(null);
@@ -169,6 +198,109 @@ export function ConversationSidePanel({
             });
         }
     };
+    // Show migration progress
+    if (migrationProgress) {
+        return (
+            <Drawer
+                open={open}
+                onOpenChange={(_, { open }) => !open && onClose()}
+                position="start"
+                style={{
+                    maxWidth: "320px",
+                    width: "320px",
+                    ...(isElectron() && {
+                        WebkitAppRegion: "no-drag",
+                    }),
+                }}
+            >
+                <DrawerBody>
+                    <div
+                        style={{
+                            padding: "32px 20px",
+                            textAlign: "center",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: "16px",
+                        }}
+                    >
+                        <Spinner size="large" />
+                        <div>
+                            <Text size={400} weight="semibold" style={{ display: "block", marginBottom: "8px" }}>
+                                Migrating Chat History
+                            </Text>
+                            <Text size={300} style={{ color: "var(--colorNeutralForeground3)" }}>
+                                {migrationProgress.current} of {migrationProgress.total} conversations
+                            </Text>
+                            <Text size={200} style={{ display: "block", marginTop: "8px", color: "var(--colorNeutralForeground3)" }}>
+                                Please wait while we migrate your chat history to the cloud...
+                            </Text>
+                        </div>
+                    </div>
+                </DrawerBody>
+            </Drawer>
+        );
+    }
+
+    // Show loading state
+    if (isLoading) {
+        return (
+            <Drawer
+                open={open}
+                onOpenChange={(_, { open }) => !open && onClose()}
+                position="start"
+                style={{
+                    maxWidth: "320px",
+                    width: "320px",
+                    ...(isElectron() && {
+                        WebkitAppRegion: "no-drag",
+                    }),
+                }}
+            >
+                <DrawerBody>
+                    <div
+                        style={{
+                            padding: "32px 20px",
+                            textAlign: "center",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: "16px",
+                        }}
+                    >
+                        <Spinner size="large" label="Loading conversations..." />
+                    </div>
+                </DrawerBody>
+            </Drawer>
+        );
+    }
+
+    // Show error state
+    if (error) {
+        return (
+            <Drawer
+                open={open}
+                onOpenChange={(_, { open }) => !open && onClose()}
+                position="start"
+                style={{
+                    maxWidth: "320px",
+                    width: "320px",
+                    ...(isElectron() && {
+                        WebkitAppRegion: "no-drag",
+                    }),
+                }}
+            >
+                <DrawerBody>
+                    <div style={{ padding: "20px" }}>
+                        <Text style={{ color: "var(--colorPaletteRedForeground1)" }}>
+                            Error: {error}
+                        </Text>
+                    </div>
+                </DrawerBody>
+            </Drawer>
+        );
+    }
+
     return (
         <>
             <Drawer
@@ -242,12 +374,13 @@ export function ConversationSidePanel({
                     <div style={{ padding: "16px" }}>
                         <Button
                             appearance="primary"
-                            icon={<Add24Regular />}
+                            icon={isCreating ? <Spinner size="tiny" /> : <Add24Regular />}
                             onClick={handleNewConversation}
                             size="small"
                             style={{ width: "100%" }}
+                            disabled={isCreating}
                         >
-                            New Conversation
+                            {isCreating ? "Creating..." : "New Conversation"}
                         </Button>
                     </div>
                     <div
@@ -302,68 +435,70 @@ export function ConversationSidePanel({
                                             )
                                         }
                                     >
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            {editingId === conversation.id ? (
-                                                <Input
-                                                    value={editTitle}
-                                                    onChange={(_, data) =>
-                                                        setEditTitle(data.value)
-                                                    }
-                                                    onKeyDown={e => {
-                                                        if (e.key === "Enter") {
-                                                            handleSaveEdit();
-                                                        } else if (
-                                                            e.key === "Escape"
-                                                        ) {
-                                                            handleCancelEdit();
+                                        <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: "8px" }}>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                {editingId === conversation.id ? (
+                                                    <Input
+                                                        value={editTitle}
+                                                        onChange={(_, data) =>
+                                                            setEditTitle(data.value)
                                                         }
-                                                    }}
-                                                    onBlur={handleSaveEdit}
-                                                    size="small"
-                                                    autoFocus
-                                                />
-                                            ) : (
-                                                <div>
-                                                    <Text
-                                                        size={300}
-                                                        weight={
-                                                            currentConversationId ===
-                                                            conversation.id
-                                                                ? "medium"
-                                                                : "regular"
-                                                        }
-                                                        style={{
-                                                            display: "block",
-                                                            overflow: "hidden",
-                                                            textOverflow:
-                                                                "ellipsis",
-                                                            whiteSpace:
-                                                                "nowrap",
-                                                            lineHeight: "1.4",
+                                                        onKeyDown={e => {
+                                                            if (e.key === "Enter") {
+                                                                handleSaveEdit();
+                                                            } else if (
+                                                                e.key === "Escape"
+                                                            ) {
+                                                                handleCancelEdit();
+                                                            }
                                                         }}
-                                                    >
-                                                        {conversation.title}
-                                                    </Text>
-                                                    <Text
-                                                        size={200}
-                                                        style={{
-                                                            color: "var(--colorNeutralForeground3)",
-                                                            display: "block",
-                                                            lineHeight: "1.2",
-                                                            marginTop: "2px",
-                                                        }}
-                                                    >
-                                                        {formatDate(
-                                                            conversation.updatedAt
-                                                        )}{" "}
-                                                        •{" "}
-                                                        {
-                                                            conversation
-                                                                .messages.length
-                                                        }{" "}
-                                                        messages
-                                                    </Text>
-                                                </div>
+                                                        onBlur={handleSaveEdit}
+                                                        size="small"
+                                                        autoFocus
+                                                    />
+                                                ) : (
+                                                    <div>
+                                                        <Text
+                                                            size={300}
+                                                            weight={
+                                                                currentConversationId ===
+                                                                conversation.id
+                                                                    ? "medium"
+                                                                    : "regular"
+                                                            }
+                                                            style={{
+                                                                display: "block",
+                                                                overflow: "hidden",
+                                                                textOverflow:
+                                                                    "ellipsis",
+                                                                whiteSpace:
+                                                                    "nowrap",
+                                                                lineHeight: "1.4",
+                                                            }}
+                                                        >
+                                                            {conversation.title}
+                                                        </Text>
+                                                        <Text
+                                                            size={200}
+                                                            style={{
+                                                                color: "var(--colorNeutralForeground3)",
+                                                                display: "block",
+                                                                lineHeight: "1.2",
+                                                                marginTop: "2px",
+                                                            }}
+                                                        >
+                                                            {formatDate(
+                                                                conversation.updatedAt
+                                                            )}{" "}
+                                                            •{" "}
+                                                            {conversation.messageCount ?? conversation.messages.length}{" "}
+                                                            messages
+                                                        </Text>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {loadingConversationId === conversation.id && (
+                                                <Spinner size="tiny" />
                                             )}
                                         </div>
                                         {editingId !== conversation.id && (
@@ -520,6 +655,7 @@ export function ConversationSidePanel({
                                 <Button
                                     appearance="secondary"
                                     onClick={handleCancelDelete}
+                                    disabled={Boolean(isDeletingId)}
                                 >
                                     Cancel
                                 </Button>
@@ -527,8 +663,10 @@ export function ConversationSidePanel({
                             <Button
                                 appearance="primary"
                                 onClick={handleConfirmDelete}
+                                disabled={Boolean(isDeletingId)}
+                                icon={isDeletingId ? <Spinner size="tiny" /> : undefined}
                             >
-                                Delete
+                                {isDeletingId ? "Deleting..." : "Delete"}
                             </Button>
                         </DialogActions>
                     </DialogBody>

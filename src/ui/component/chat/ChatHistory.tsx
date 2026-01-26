@@ -23,6 +23,7 @@ import {
 } from "@fluentui/react-icons";
 import Editor from "@monaco-editor/react";
 import { useConversationContext } from "../../../data/context/ConversationContext";
+import { useConversationHistory } from "../../../data/context/ConversationHistoryContext";
 import { useTheme } from "../../../data/context/ThemeContext";
 import {
     ChatRole,
@@ -985,8 +986,10 @@ const ToolListItem = memo(function ToolListItem({
 export function ChatHistory() {
     const { currentConversation, toolUsed, usingTool } =
         useConversationContext();
+    const { loadingConversationId, currentConversationId } = useConversationHistory();
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const isLoadingMessages = loadingConversationId === currentConversationId;
 
     const scrollToBottom = () => {
         if (scrollContainerRef.current) {
@@ -1025,21 +1028,58 @@ export function ChatHistory() {
                     flexDirection: "column",
                 }}
             >
-                {currentConversation.map((message, index, array) => (
-                    <ChatItem
-                        key={index}
-                        role={message.role}
-                        content={message.content}
-                        messageIndex={index}
-                    />
-                ))}
-                {toolUsed.map((tool, index, array) => (
-                    <ToolListItem
-                        key={index}
-                        tool={tool}
-                        working={usingTool && array.length === index + 1}
-                    />
-                ))}
+                {isLoadingMessages ? (
+                    <div
+                        style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: "48px 24px",
+                            gap: "16px",
+                            minHeight: "300px",
+                        }}
+                    >
+                        <Spinner size="large" />
+                        <Text
+                            size={400}
+                            weight="semibold"
+                            style={{
+                                color: "var(--colorNeutralForeground2)",
+                            }}
+                        >
+                            Loading conversation...
+                        </Text>
+                        <Text
+                            size={300}
+                            style={{
+                                color: "var(--colorNeutralForeground3)",
+                                textAlign: "center",
+                                maxWidth: "400px",
+                            }}
+                        >
+                            Fetching messages from the cloud. This may take a moment.
+                        </Text>
+                    </div>
+                ) : (
+                    <>
+                        {currentConversation.map((message, index, array) => (
+                            <ChatItem
+                                key={index}
+                                role={message.role}
+                                content={message.content}
+                                messageIndex={index}
+                            />
+                        ))}
+                        {toolUsed.map((tool, index, array) => (
+                            <ToolListItem
+                                key={index}
+                                tool={tool}
+                                working={usingTool && array.length === index + 1}
+                            />
+                        ))}
+                    </>
+                )}
             </div>
             <div ref={messagesEndRef} />
         </div>

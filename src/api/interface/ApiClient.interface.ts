@@ -6,12 +6,21 @@ import { Transaction } from "./data/common/Transaction";
 import { ChatCompletionRequest } from "./data/requests/chat/ChatRequests";
 import { ChatResponse, PartialChatResponse } from "./data/common/Chat";
 import { Tool } from "@modelcontextprotocol/sdk/types";
+import { ChatHistoryItem, ChatHistorySummary } from "./data/common/ChatHistory";
+import {
+    CreateChatHistoryRequest,
+    UpdateChatHistoryTitleRequest,
+    UpdateChatHistoryRequest,
+    AppendMessagesRequest,
+    DeleteChatHistoryRequest,
+} from "./data/requests/chat-history/ChatHistoryRequests";
 
 export interface IApiClient {
     get userClient(): IUserClient;
     get modelClient(): IModelClient;
     get transactionClient(): ITransactionClient;
     get chatClient(): IChatClient;
+    get chatHistoryClient(): IChatHistoryClient;
     get mcpHubService(): IHubService;
 }
 
@@ -75,4 +84,14 @@ export interface IHubService {
     getClientNames(): string[];
     isRunning(): boolean;
     restart(): Promise<void>;
+}
+
+export interface IChatHistoryClient {
+    create(request: CreateChatHistoryRequest): Promise<ChatHistoryItem>;
+    get(id: string): Promise<ChatHistoryItem>;
+    list(): Promise<ChatHistorySummary[]>;
+    updateTitle(request: UpdateChatHistoryTitleRequest): Promise<void>;
+    update(request: UpdateChatHistoryRequest): Promise<ChatHistoryItem>;
+    appendMessages(request: AppendMessagesRequest): Promise<ChatHistoryItem>;
+    delete(request: DeleteChatHistoryRequest): Promise<void>;
 }

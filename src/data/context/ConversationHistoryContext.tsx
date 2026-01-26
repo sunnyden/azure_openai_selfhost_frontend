@@ -5,7 +5,12 @@ import React, {
     useEffect,
     useCallback,
 } from "react";
-import { ChatMessage, ChatMessageContentType } from "../../api/interface/data/common/Chat";
+import {
+    ChatMessage,
+    ChatMessageContentType,
+} from "../../api/interface/data/common/Chat";
+import { useApiClient } from "./useApiClient";
+import { useUserContext } from "./UserContext";
 
 export interface ConversationItem {
     id: string;
@@ -13,20 +18,25 @@ export interface ConversationItem {
     messages: ChatMessage[];
     createdAt: Date;
     updatedAt: Date;
+    messageCount?: number; // Available for cloud conversations that haven't been fully loaded
 }
 
 interface ConversationHistoryData {
     conversations: ConversationItem[];
     currentConversationId: string | null;
-    createNewConversation: () => string;
-    deleteConversation: (id: string) => void;
-    updateConversationTitle: (id: string, title: string) => void;
-    selectConversation: (id: string) => void;
-    updateCurrentConversation: (messages: ChatMessage[]) => void;
+    isLoading: boolean;
+    error: string | null;
+    migrationProgress: { current: number; total: number } | null;
+    loadingConversationId: string | null;
+    isSyncing: boolean;
+    createNewConversation: () => Promise<string>;
+    deleteConversation: (id: string) => Promise<void>;
+    updateConversationTitle: (id: string, title: string) => Promise<void>;
+    selectConversation: (id: string) => Promise<void>;
+    updateCurrentConversation: (messages: ChatMessage[], syncToCloud?: boolean) => Promise<void>;
     getCurrentConversation: () => ConversationItem | null;
-    deleteMessage: (messageIndex: number) => void;
-    updateMessage: (messageIndex: number, newContent: string) => void;
-    // Export and load functionality
+    deleteMessage: (messageIndex: number) => Promise<void>;
+    updateMessage: (messageIndex: number, newContent: string) => Promise<void>;
     exportConversation: (conversationId: string) => void;
     exportAllConversations: () => void;
     loadConversationsFromFile: () => void;
@@ -43,291 +53,542 @@ export function ConversationHistoryProvider({
 }: {
     children: React.ReactNode;
 }) {
+    const apiClient = useApiClient();
+    const userContext = useUserContext();
+
     const [conversations, setConversations] = useState<ConversationItem[]>([]);
     const [currentConversationId, setCurrentConversationId] = useState<
         string | null
     >(null);
-    const [isLoaded, setIsLoaded] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [migrationProgress, setMigrationProgress] = useState<{
+        current: number;
+        total: number;
+    } | null>(null);
+    const [loadedConversationIds, setLoadedConversationIds] = useState<
+        Set<string>
+    >(new Set());
+    const [hasInitialized, setHasInitialized] = useState(false);
+    const [loadingConversationId, setLoadingConversationId] = useState<string | null>(null);
+    const [isSyncing, setIsSyncing] = useState(false);
 
-    // Load conversations from localStorage on mount
-    useEffect(() => {
-        console.log("Loading conversations from localStorage...");
-        const savedConversations = localStorage.getItem(STORAGE_KEY);
-        const savedCurrentId = localStorage.getItem(CURRENT_CONVERSATION_KEY);
-        console.log(
-            "Found saved conversations:",
-            !!savedConversations,
-            "Found saved current ID:",
-            !!savedCurrentId
-        );
+    // Migration function
+    const performMigration = useCallback(
+        async (migrationKey: string) => {
+            console.log("Starting migration from localStorage to cloud...");
 
-        if (savedConversations) {
+            const savedConversations = localStorage.getItem(STORAGE_KEY);
+            if (!savedConversations) {
+                localStorage.setItem(migrationKey, "true");
+                await loadFromCloud();
+                return;
+            }
+
             try {
                 const parsed = JSON.parse(savedConversations);
-                console.log(
-                    "Parsed conversations:",
-                    parsed.length,
-                    "conversations"
+
+                // Filter out conversations with empty messages
+                const conversationsToMigrate = parsed.filter(
+                    (conv: any) => conv.messages && conv.messages.length > 0
                 );
-                // Convert date strings back to Date objects
-                const conversationsWithDates = parsed.map((conv: any) => ({
-                    ...conv,
-                    createdAt: new Date(conv.createdAt),
-                    updatedAt: new Date(conv.updatedAt),
-                }));
-                setConversations(conversationsWithDates);
 
-                if (savedCurrentId) {
-                    setCurrentConversationId(savedCurrentId);
-                    console.log(
-                        "Set current conversation ID from storage:",
-                        savedCurrentId
-                    );
-                } else if (conversationsWithDates.length > 0) {
-                    // If we have conversations but no saved current ID, select the first one
-                    setCurrentConversationId(conversationsWithDates[0].id);
-                    console.log(
-                        "Set current conversation ID to first conversation:",
-                        conversationsWithDates[0].id
-                    );
+                const total = conversationsToMigrate.length;
+                const skippedCount = parsed.length - total;
+
+                if (skippedCount > 0) {
+                    console.log(`Skipping ${skippedCount} conversation(s) with no messages`);
                 }
+
+                // If no conversations to migrate (all were empty), just mark as complete
+                if (total === 0) {
+                    console.log("No conversations to migrate (all conversations were empty)");
+                    localStorage.setItem(migrationKey, "true");
+                    localStorage.setItem("chat_conversations_backup", savedConversations);
+                    localStorage.removeItem(STORAGE_KEY);
+                    localStorage.removeItem(CURRENT_CONVERSATION_KEY);
+                    await loadFromCloud();
+                    return;
+                }
+
+                let successCount = 0;
+                let failureCount = 0;
+                const failedConversations: string[] = [];
+
+                setMigrationProgress({ current: 0, total });
+
+                for (let i = 0; i < conversationsToMigrate.length; i++) {
+                    const conv = conversationsToMigrate[i];
+
+                    try {
+                        await apiClient.chatHistoryClient.create({
+                            title: conv.title,
+                            messages: conv.messages,
+                        });
+                        successCount++;
+                        console.log(`Migrated: ${conv.title}`);
+                    } catch (error) {
+                        failureCount++;
+                        failedConversations.push(conv.title);
+                        console.error(
+                            `Failed to migrate "${conv.title}":`,
+                            error
+                        );
+                    }
+
+                    setMigrationProgress({ current: i + 1, total });
+                }
+
+                if (failureCount > 0) {
+                    console.warn(
+                        `Migration completed with ${failureCount} failures`
+                    );
+                    setError(
+                        `Failed to migrate ${failureCount} of ${total} conversations: ${failedConversations.join(", ")}`
+                    );
+                } else {
+                    const message = skippedCount > 0
+                        ? `Migration completed successfully (${successCount} migrated, ${skippedCount} empty conversations skipped)`
+                        : "Migration completed successfully";
+                    console.log(message);
+                }
+
+                localStorage.setItem(migrationKey, "true");
+                localStorage.setItem(
+                    "chat_conversations_backup",
+                    savedConversations
+                );
+                localStorage.removeItem(STORAGE_KEY);
+                localStorage.removeItem(CURRENT_CONVERSATION_KEY);
+
+                await loadFromCloud();
             } catch (error) {
-                console.error("Failed to parse saved conversations:", error);
-                // If parsing fails, create a new conversation
-                const now = new Date();
-                const id = `conv_${Date.now()}_${Math.random()
-                    .toString(36)
-                    .substr(2, 9)}`;
-                const title = `Conversation ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
-
-                const newConversation: ConversationItem = {
-                    id,
-                    title,
-                    messages: [],
-                    createdAt: now,
-                    updatedAt: now,
-                };
-
-                setConversations([newConversation]);
-                setCurrentConversationId(id);
-                console.log("Created new conversation due to parse error:", id);
+                console.error("Migration failed:", error);
+                throw new Error(
+                    "Migration failed: " +
+                        (error instanceof Error ? error.message : "Unknown error")
+                );
+            } finally {
+                setMigrationProgress(null);
             }
-        } else {
-            // No saved conversations, create a new one
-            console.log("No saved conversations found, creating new one...");
-            const now = new Date();
-            const id = `conv_${Date.now()}_${Math.random()
-                .toString(36)
-                .substr(2, 9)}`;
-            const title = `Conversation ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+        },
+        [apiClient]
+    );
 
-            const newConversation: ConversationItem = {
-                id,
-                title,
-                messages: [],
-                createdAt: now,
-                updatedAt: now,
-            };
+    // Load full conversation
+    const loadFullConversation = useCallback(
+        async (id: string) => {
+            if (loadedConversationIds.has(id)) {
+                return;
+            }
 
-            setConversations([newConversation]);
-            setCurrentConversationId(id);
-            console.log("Created new conversation:", id);
-        }
-        setIsLoaded(true);
-        console.log("Conversation loading complete");
-    }, []);
+            try {
+                setLoadingConversationId(id);
+                const fullConv = await apiClient.chatHistoryClient.get(id);
 
-    // Save conversations to localStorage whenever they change (but only after initial load)
-    useEffect(() => {
-        if (!isLoaded) return; // Don't save during initial load
+                setConversations((prev) =>
+                    prev.map((conv) =>
+                        conv.id === id
+                            ? { ...conv, messages: fullConv.messages }
+                            : conv
+                    )
+                );
 
-        if (conversations.length > 0) {
-            console.log(
-                "Saving conversations to localStorage:",
-                conversations.length,
-                "conversations"
-            );
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(conversations));
-        } else {
-            console.log(
-                "Removing conversations from localStorage (empty array)"
-            );
-            localStorage.removeItem(STORAGE_KEY);
-        }
-    }, [conversations, isLoaded]);
+                setLoadedConversationIds((prev) => new Set(prev).add(id));
+            } catch (error) {
+                console.error(`Failed to load conversation ${id}:`, error);
+                throw error;
+            } finally {
+                setLoadingConversationId(null);
+            }
+        },
+        [apiClient, loadedConversationIds]
+    );
 
-    // Save current conversation ID whenever it changes (but only after initial load)
-    useEffect(() => {
-        if (!isLoaded) return; // Don't save during initial load
-
-        if (currentConversationId) {
-            localStorage.setItem(
-                CURRENT_CONVERSATION_KEY,
-                currentConversationId
-            );
-        } else {
-            localStorage.removeItem(CURRENT_CONVERSATION_KEY);
-        }
-    }, [currentConversationId, isLoaded]);
-
-    const createNewConversation = useCallback(() => {
+    // Create a local-only conversation (not synced to cloud until it has messages)
+    const createLocalConversation = useCallback(() => {
         const now = new Date();
-        const id = `conv_${Date.now()}_${Math.random()
-            .toString(36)
-            .substr(2, 9)}`;
+        const localId = `local_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
         const title = `Conversation ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
 
-        const newConversation: ConversationItem = {
-            id,
+        const newConv: ConversationItem = {
+            id: localId,
             title,
             messages: [],
             createdAt: now,
             updatedAt: now,
         };
 
-        setConversations(prev => [newConversation, ...prev]);
-        setCurrentConversationId(id);
-        return id;
+        setConversations((prev) => [newConv, ...prev]);
+        setCurrentConversationId(localId);
+        setLoadedConversationIds((prev) => new Set(prev).add(localId));
+
+        console.log("Created local conversation (will sync to cloud when first message is added)");
+        return localId;
     }, []);
 
-    const deleteConversation = useCallback(
-        (id: string) => {
-            const wasCurrentConversation = currentConversationId === id;
+    // Load from cloud
+    const loadFromCloud = useCallback(async () => {
+        try {
+            const summaries = await apiClient.chatHistoryClient.list();
 
-            setConversations(prev => {
-                const filtered = prev.filter(conv => conv.id !== id);
+            const conversations: ConversationItem[] = summaries.map(
+                (summary) => ({
+                    id: summary.id,
+                    title: summary.title,
+                    messages: [],
+                    messageCount: summary.messageCount,
+                    createdAt: new Date(summary.createdAt),
+                    updatedAt: new Date(summary.updatedAt),
+                })
+            );
 
-                if (wasCurrentConversation) {
-                    if (filtered.length > 0) {
-                        // Select the most recent remaining conversation
-                        setCurrentConversationId(filtered[0].id);
-                    } else {
-                        // No conversations left, create a new one
-                        const now = new Date();
-                        const newId = `conv_${Date.now()}_${Math.random()
-                            .toString(36)
-                            .substr(2, 9)}`;
-                        const title = `Conversation ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+            setConversations(conversations);
 
-                        const newConversation: ConversationItem = {
-                            id: newId,
-                            title,
-                            messages: [],
-                            createdAt: now,
-                            updatedAt: now,
-                        };
+            if (conversations.length > 0) {
+                const firstId = conversations[0].id;
+                await loadFullConversation(firstId);
+                setCurrentConversationId(firstId);
+            } else {
+                // Create a local-only conversation (not synced to cloud until it has messages)
+                createLocalConversation();
+            }
+        } catch (error) {
+            console.error("Failed to load from cloud:", error);
+            throw error;
+        }
+    }, [apiClient, loadFullConversation, createLocalConversation]);
 
-                        setCurrentConversationId(newId);
-                        return [newConversation];
-                    }
+    // Initialize conversations
+    useEffect(() => {
+        if (!userContext.initialized) return;
+        if (hasInitialized) return; // Prevent re-initialization
+
+        const initialize = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
+
+                if (!userContext.authenticatedUser) {
+                    setError("Please log in to access chat history");
+                    setIsLoading(false);
+                    setHasInitialized(true);
+                    return;
                 }
 
-                return filtered;
-            });
+                const migrationKey = `chat_migration_complete_${userContext.authenticatedUser.id}`;
+                const migrationComplete = localStorage.getItem(migrationKey);
+
+                if (!migrationComplete) {
+                    await performMigration(migrationKey);
+                } else {
+                    await loadFromCloud();
+                }
+
+                setHasInitialized(true);
+            } catch (err) {
+                console.error("Failed to initialize:", err);
+                setError(
+                    err instanceof Error
+                        ? err.message
+                        : "Failed to load chat history"
+                );
+                setHasInitialized(true);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        initialize();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [userContext.initialized, userContext.authenticatedUser?.id, hasInitialized]);
+
+    const createNewConversation = useCallback(async (): Promise<string> => {
+        // Just create a local conversation - it will be synced when messages are added
+        return createLocalConversation();
+    }, [createLocalConversation]);
+
+    const deleteConversation = useCallback(
+        async (id: string) => {
+            try {
+                // Only delete from cloud if it's not a local conversation
+                const isLocalConversation = id.startsWith("local_");
+                if (!isLocalConversation) {
+                    await apiClient.chatHistoryClient.delete({ id });
+                }
+
+                const wasCurrentConversation = currentConversationId === id;
+
+                setConversations((prev) => {
+                    const filtered = prev.filter((conv) => conv.id !== id);
+
+                    if (wasCurrentConversation && filtered.length > 0) {
+                        const nextId = filtered[0].id;
+                        setCurrentConversationId(nextId);
+                        if (!loadedConversationIds.has(nextId)) {
+                            loadFullConversation(nextId);
+                        }
+                    }
+
+                    return filtered;
+                });
+
+                if (
+                    wasCurrentConversation &&
+                    conversations.length === 1
+                ) {
+                    await createNewConversation();
+                }
+
+                setLoadedConversationIds((prev) => {
+                    const next = new Set(prev);
+                    next.delete(id);
+                    return next;
+                });
+            } catch (error) {
+                console.error("Failed to delete conversation:", error);
+                throw error;
+            }
         },
-        [currentConversationId]
+        [
+            apiClient,
+            currentConversationId,
+            conversations.length,
+            loadedConversationIds,
+            loadFullConversation,
+            createNewConversation,
+        ]
     );
 
-    const updateConversationTitle = useCallback((id: string, title: string) => {
-        setConversations(prev =>
-            prev.map(conv =>
-                conv.id === id
-                    ? { ...conv, title, updatedAt: new Date() }
-                    : conv
-            )
-        );
-    }, []);
+    const updateConversationTitle = useCallback(
+        async (id: string, title: string) => {
+            try {
+                // Only update in cloud if it's not a local conversation
+                const isLocalConversation = id.startsWith("local_");
+                if (!isLocalConversation) {
+                    await apiClient.chatHistoryClient.updateTitle({ id, title });
+                }
 
-    const selectConversation = useCallback((id: string) => {
-        setCurrentConversationId(id);
-    }, []);
+                setConversations((prev) =>
+                    prev.map((conv) =>
+                        conv.id === id
+                            ? { ...conv, title, updatedAt: new Date() }
+                            : conv
+                    )
+                );
+            } catch (error) {
+                console.error("Failed to update title:", error);
+                throw error;
+            }
+        },
+        [apiClient]
+    );
+
+    const selectConversation = useCallback(
+        async (id: string) => {
+            setCurrentConversationId(id);
+
+            // Only load from cloud if it's not a local conversation
+            const isLocalConversation = id.startsWith("local_");
+            if (!isLocalConversation && !loadedConversationIds.has(id)) {
+                try {
+                    await loadFullConversation(id);
+                } catch (error) {
+                    console.error("Failed to load conversation:", error);
+                    setError("Failed to load conversation");
+                }
+            }
+        },
+        [loadedConversationIds, loadFullConversation]
+    );
 
     const updateCurrentConversation = useCallback(
-        (messages: ChatMessage[]) => {
+        async (messages: ChatMessage[], syncToCloud: boolean = true) => {
             if (!currentConversationId) return;
 
-            setConversations(prev =>
-                prev.map(conv =>
-                    conv.id === currentConversationId
-                        ? { ...conv, messages, updatedAt: new Date() }
-                        : conv
-                )
-            );
+            try {
+                const currentConv = conversations.find(
+                    (c) => c.id === currentConversationId
+                );
+                if (!currentConv) return;
+
+                // If not syncing to cloud, just update local state
+                if (!syncToCloud) {
+                    setConversations((prev) =>
+                        prev.map((conv) =>
+                            conv.id === currentConversationId
+                                ? { ...conv, messages, updatedAt: new Date() }
+                                : conv
+                        )
+                    );
+                    return;
+                }
+
+                // Set syncing state before API calls
+                setIsSyncing(true);
+
+                // Check if this is a local conversation that needs to be synced to cloud
+                const isLocalConversation = currentConversationId.startsWith("local_");
+
+                if (isLocalConversation) {
+                    // Create in cloud for the first time (only if there are messages)
+                    if (messages.length > 0) {
+                        console.log("Syncing local conversation to cloud...");
+                        const created = await apiClient.chatHistoryClient.create({
+                            title: currentConv.title,
+                            messages,
+                        });
+
+                        // Update the conversation with the cloud ID
+                        setConversations((prev) =>
+                            prev.map((conv) =>
+                                conv.id === currentConversationId
+                                    ? {
+                                          ...conv,
+                                          id: created.id,
+                                          messages: created.messages,
+                                          createdAt: new Date(created.createdAt),
+                                          updatedAt: new Date(created.updatedAt),
+                                      }
+                                    : conv
+                            )
+                        );
+
+                        // Update current conversation ID to the cloud ID
+                        setCurrentConversationId(created.id);
+                        setLoadedConversationIds((prev) => {
+                            const next = new Set(prev);
+                            next.delete(currentConversationId);
+                            next.add(created.id);
+                            return next;
+                        });
+
+                        console.log("Conversation synced to cloud with ID:", created.id);
+                    } else {
+                        // No messages yet, just update local state
+                        setConversations((prev) =>
+                            prev.map((conv) =>
+                                conv.id === currentConversationId
+                                    ? { ...conv, messages, updatedAt: new Date() }
+                                    : conv
+                            )
+                        );
+                    }
+                } else {
+                    // Cloud conversation - update normally
+                    const isAppending = messages.length > currentConv.messages.length;
+
+                    if (isAppending) {
+                        const newMessages = messages.slice(
+                            currentConv.messages.length
+                        );
+                        const updated =
+                            await apiClient.chatHistoryClient.appendMessages({
+                                id: currentConversationId,
+                                messages: newMessages,
+                            });
+
+                        setConversations((prev) =>
+                            prev.map((conv) =>
+                                conv.id === currentConversationId
+                                    ? {
+                                          ...conv,
+                                          messages: updated.messages,
+                                          updatedAt: new Date(updated.updatedAt),
+                                      }
+                                    : conv
+                            )
+                        );
+                    } else {
+                        await apiClient.chatHistoryClient.update({
+                            id: currentConversationId,
+                            title: currentConv.title,
+                            messages,
+                        });
+
+                        setConversations((prev) =>
+                            prev.map((conv) =>
+                                conv.id === currentConversationId
+                                    ? { ...conv, messages, updatedAt: new Date() }
+                                    : conv
+                            )
+                        );
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to update conversation:", error);
+                throw error;
+            } finally {
+                setIsSyncing(false);
+            }
         },
-        [currentConversationId]
+        [currentConversationId, conversations, apiClient]
     );
 
     const getCurrentConversation = useCallback(() => {
         if (!currentConversationId) return null;
         return (
-            conversations.find(conv => conv.id === currentConversationId) ||
+            conversations.find((conv) => conv.id === currentConversationId) ||
             null
         );
     }, [conversations, currentConversationId]);
 
     const deleteMessage = useCallback(
-        (messageIndex: number) => {
-            if (currentConversationId === null) return;
+        async (messageIndex: number) => {
+            if (!currentConversationId) return;
 
-            setConversations(prev =>
-                prev.map(conv =>
-                    conv.id === currentConversationId
-                        ? {
-                              ...conv,
-                              messages: conv.messages.filter(
-                                  (_, index) => index !== messageIndex
-                              ),
-                              updatedAt: new Date(),
-                          }
-                        : conv
-                )
+            const currentConv = conversations.find(
+                (c) => c.id === currentConversationId
             );
+            if (!currentConv) return;
+
+            const newMessages = currentConv.messages.filter(
+                (_, index) => index !== messageIndex
+            );
+            await updateCurrentConversation(newMessages);
         },
-        [currentConversationId]
+        [currentConversationId, conversations, updateCurrentConversation]
     );
 
     const updateMessage = useCallback(
-        (messageIndex: number, newContent: string) => {
-            if (currentConversationId === null) return;
+        async (messageIndex: number, newContent: string) => {
+            if (!currentConversationId) return;
 
-            setConversations(prev =>
-                prev.map(conv =>
-                    conv.id === currentConversationId
-                        ? {
-                              ...conv,
-                              messages: conv.messages.map((msg, index) =>
-                                  index === messageIndex
-                                      ? {
-                                            ...msg,
-                                            content: msg.content.map(item =>
-                                                item.type === ChatMessageContentType.Text
-                                                    ? { ...item, text: newContent }
-                                                    : item
-                                            ),
-                                        }
-                                      : msg
-                              ),
-                              updatedAt: new Date(),
-                          }
-                        : conv
-                )
+            const currentConv = conversations.find(
+                (c) => c.id === currentConversationId
             );
+            if (!currentConv) return;
+
+            const newMessages = currentConv.messages.map((msg, index) =>
+                index === messageIndex
+                    ? {
+                          ...msg,
+                          content: msg.content.map((item) =>
+                              item.type === ChatMessageContentType.Text
+                                  ? { ...item, text: newContent }
+                                  : item
+                          ),
+                      }
+                    : msg
+            );
+
+            await updateCurrentConversation(newMessages);
         },
-        [currentConversationId]
+        [currentConversationId, conversations, updateCurrentConversation]
     );
 
-    // Export single conversation to JSON file
     const exportConversation = useCallback(
         (conversationId: string) => {
             try {
                 const conversation = conversations.find(
-                    conv => conv.id === conversationId
+                    (conv) => conv.id === conversationId
                 );
                 if (!conversation) {
                     console.error("Conversation not found:", conversationId);
                     alert("Conversation not found. Export failed.");
                     return;
-                } // Create a sanitized copy of the conversation to ensure proper JSON serialization
+                }
+
                 const sanitizedConversation = {
                     ...conversation,
                     createdAt: conversation.createdAt.toISOString(),
@@ -372,19 +633,21 @@ export function ConversationHistoryProvider({
         [conversations]
     );
 
-    // Export all conversations to JSON file
     const exportAllConversations = useCallback(() => {
         try {
             if (conversations.length === 0) {
                 console.warn("No conversations to export");
                 alert("No conversations available to export.");
                 return;
-            } // Create sanitized copies of conversations to ensure proper JSON serialization
-            const sanitizedConversations = conversations.map(conversation => ({
-                ...conversation,
-                createdAt: conversation.createdAt.toISOString(),
-                updatedAt: conversation.updatedAt.toISOString(),
-            }));
+            }
+
+            const sanitizedConversations = conversations.map(
+                (conversation) => ({
+                    ...conversation,
+                    createdAt: conversation.createdAt.toISOString(),
+                    updatedAt: conversation.updatedAt.toISOString(),
+                })
+            );
 
             const exportData = {
                 version: "1.0",
@@ -394,7 +657,9 @@ export function ConversationHistoryProvider({
             };
 
             const dataStr = JSON.stringify(exportData, null, 2);
-            const dataBlob = new Blob([dataStr], { type: "application/json" });
+            const dataBlob = new Blob([dataStr], {
+                type: "application/json",
+            });
             const url = URL.createObjectURL(dataBlob);
 
             const link = document.createElement("a");
@@ -421,37 +686,32 @@ export function ConversationHistoryProvider({
         }
     }, [conversations]);
 
-    // Load conversations from JSON file
     const loadConversationsFromFile = useCallback(() => {
         const input = document.createElement("input");
         input.type = "file";
         input.accept = ".json";
-        input.onchange = event => {
+        input.onchange = (event) => {
             const file = (event.target as HTMLInputElement).files?.[0];
             if (!file) return;
 
             const reader = new FileReader();
-            reader.onload = e => {
+            reader.onload = async (e) => {
                 try {
                     const result = e.target?.result as string;
                     const importData = JSON.parse(result);
 
-                    // Validate the import data structure
                     if (!importData.version) {
                         throw new Error("Invalid file format: missing version");
                     }
 
                     let conversationsToImport: ConversationItem[] = [];
 
-                    // Handle both single conversation and all conversations export formats
                     if (importData.conversation) {
-                        // Single conversation export
                         conversationsToImport = [importData.conversation];
                     } else if (
                         importData.conversations &&
                         Array.isArray(importData.conversations)
                     ) {
-                        // All conversations export
                         conversationsToImport = importData.conversations;
                     } else {
                         throw new Error(
@@ -459,39 +719,56 @@ export function ConversationHistoryProvider({
                         );
                     }
 
-                    // Convert date strings back to Date objects and generate new IDs to avoid conflicts
-                    const processedConversations = conversationsToImport.map(
-                        (conv: any) => {
-                            const now = new Date();
-                            const newId = `conv_${Date.now()}_${Math.random()
-                                .toString(36)
-                                .substr(2, 9)}`;
+                    const imported: ConversationItem[] = [];
+                    let skippedEmpty = 0;
 
-                            return {
-                                ...conv,
-                                id: newId, // Generate new ID to avoid conflicts
-                                title: conv.title + " (Imported)", // Mark as imported
-                                createdAt: new Date(conv.createdAt),
-                                updatedAt: now, // Update the timestamp
-                                messages: conv.messages || [], // Ensure messages array exists
-                            };
+                    for (const conv of conversationsToImport) {
+                        // Skip conversations with no messages
+                        if (!conv.messages || conv.messages.length === 0) {
+                            skippedEmpty++;
+                            console.log(`Skipping empty conversation: ${conv.title}`);
+                            continue;
                         }
-                    );
 
-                    // Add imported conversations to the existing ones
-                    setConversations(prev => [
-                        ...processedConversations,
-                        ...prev,
-                    ]);
+                        try {
+                            const created =
+                                await apiClient.chatHistoryClient.create({
+                                    title: conv.title + " (Imported)",
+                                    messages: conv.messages,
+                                });
 
-                    // Select the first imported conversation if there are any
-                    if (processedConversations.length > 0) {
-                        setCurrentConversationId(processedConversations[0].id);
+                            imported.push({
+                                id: created.id,
+                                title: created.title,
+                                messages: created.messages,
+                                createdAt: new Date(created.createdAt),
+                                updatedAt: new Date(created.updatedAt),
+                            });
+                        } catch (error) {
+                            console.error(
+                                "Failed to import conversation:",
+                                error
+                            );
+                        }
+                    }
+
+                    if (skippedEmpty > 0) {
+                        console.log(`Skipped ${skippedEmpty} empty conversation(s) during import`);
+                    }
+
+                    setConversations((prev) => [...imported, ...prev]);
+
+                    if (imported.length > 0) {
+                        setCurrentConversationId(imported[0].id);
+                        setLoadedConversationIds(
+                            (prev) =>
+                                new Set([...prev, ...imported.map((c) => c.id)])
+                        );
                     }
 
                     console.log(
                         "Successfully imported",
-                        processedConversations.length,
+                        imported.length,
                         "conversation(s)"
                     );
                 } catch (error) {
@@ -511,11 +788,16 @@ export function ConversationHistoryProvider({
         document.body.appendChild(input);
         input.click();
         document.body.removeChild(input);
-    }, []);
+    }, [apiClient]);
 
     const value: ConversationHistoryData = {
         conversations,
         currentConversationId,
+        isLoading,
+        error,
+        migrationProgress,
+        loadingConversationId,
+        isSyncing,
         createNewConversation,
         deleteConversation,
         updateConversationTitle,
