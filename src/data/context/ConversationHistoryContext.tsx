@@ -261,6 +261,12 @@ export function ConversationHistoryProvider({
         }
     }, [apiClient, loadFullConversation, createLocalConversation]);
 
+    // Reset initialization state when user changes (login/logout)
+    useEffect(() => {
+        if (!userContext.initialized) return;
+        setHasInitialized(false);
+    }, [userContext.authenticatedUser?.id, userContext.initialized]);
+
     // Initialize conversations
     useEffect(() => {
         if (!userContext.initialized) return;
@@ -272,7 +278,8 @@ export function ConversationHistoryProvider({
                 setError(null);
 
                 if (!userContext.authenticatedUser) {
-                    setError("Please log in to access chat history");
+                    // User is not authenticated yet - this is not an error state
+                    // Just skip initialization and wait for user to log in
                     setIsLoading(false);
                     setHasInitialized(true);
                     return;
