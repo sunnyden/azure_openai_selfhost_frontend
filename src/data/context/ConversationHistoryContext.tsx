@@ -4,6 +4,7 @@ import React, {
     useState,
     useEffect,
     useCallback,
+    useRef,
 } from "react";
 import {
     ChatMessage,
@@ -74,6 +75,9 @@ export function ConversationHistoryProvider({
     const [hasInitialized, setHasInitialized] = useState(false);
     const [loadingConversationId, setLoadingConversationId] = useState<string | null>(null);
     const [isSyncing, setIsSyncing] = useState(false);
+    
+    // Track previous user ID to detect actual user changes
+    const previousUserIdRef = useRef<number | undefined>(undefined);
 
     // Migration function
     const performMigration = useCallback(
@@ -261,10 +265,17 @@ export function ConversationHistoryProvider({
         }
     }, [apiClient, loadFullConversation, createLocalConversation]);
 
-    // Reset initialization state when user changes (login/logout)
+    // Reset initialization state when user actually changes (login/logout)
     useEffect(() => {
         if (!userContext.initialized) return;
-        setHasInitialized(false);
+        
+        const currentUserId = userContext.authenticatedUser?.id;
+        
+        // Only reset if user ID actually changed
+        if (previousUserIdRef.current !== currentUserId) {
+            previousUserIdRef.current = currentUserId;
+            setHasInitialized(false);
+        }
     }, [userContext.authenticatedUser?.id, userContext.initialized]);
 
     // Initialize conversations
