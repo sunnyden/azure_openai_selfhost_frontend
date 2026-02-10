@@ -289,8 +289,8 @@ export function ConversationHistoryProvider({
                 setError(null);
 
                 if (!userContext.authenticatedUser) {
-                    // User is not authenticated yet - this is not an error state
-                    // Just skip initialization and wait for user to log in
+                    // User is not authenticated - skip initialization gracefully
+                    // When user logs in, the reset effect (lines 268-279) will trigger re-initialization
                     setIsLoading(false);
                     setHasInitialized(true);
                     return;
