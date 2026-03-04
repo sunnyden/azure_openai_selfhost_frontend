@@ -7,5 +7,8 @@ export type Model = {
     costResponseToken: number;
     isVision: boolean;
     maxTokens: number;
+    supportTool: boolean;
+    apiVersionOverride?: string | null;
+    reasoningModel: boolean;
     key?: string;
 };

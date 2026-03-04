@@ -36,6 +36,11 @@ export function ChatPage() {
         setSidebarOpen(false);
     };
 
+    const handleNavigateToAdmin = () => {
+        navigate("/admin");
+        setSidebarOpen(false);
+    };
+
     return modelList.length > 0 ? (
         <div
             style={{
@@ -89,6 +94,7 @@ export function ChatPage() {
                 onClose={() => setSidebarOpen(false)}
                 onOpen={() => setSidebarOpen(true)}
                 onNavigateToUsage={handleNavigateToUsage}
+                onNavigateToAdmin={handleNavigateToAdmin}
             />
         </div>
     ) : (

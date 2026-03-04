@@ -168,4 +168,66 @@ export class ChatHistoryClient implements IChatHistoryClient {
             throw error;
         }
     }
+
+    public async allHistories(): Promise<ChatHistorySummary[]> {
+        try {
+            const response = await this.context.get<ChatHistorySummary[]>(
+                "/chat-history/all"
+            );
+
+            if (!response.isSuccess || !response.data) {
+                throw new Error(
+                    response.error || "Failed to fetch all chat histories"
+                );
+            }
+
+            return response.data;
+        } catch (error) {
+            if (error instanceof TypeError && error.message.includes("fetch")) {
+                throw new Error("Network error: Unable to connect to server");
+            }
+            throw error;
+        }
+    }
+
+    public async listByUser(userId: number): Promise<ChatHistorySummary[]> {
+        try {
+            const response = await this.context.get<ChatHistorySummary[]>(
+                `/chat-history/list?userId=${userId}`
+            );
+
+            if (!response.isSuccess || !response.data) {
+                throw new Error(
+                    response.error || "Failed to fetch user chat histories"
+                );
+            }
+
+            return response.data;
+        } catch (error) {
+            if (error instanceof TypeError && error.message.includes("fetch")) {
+                throw new Error("Network error: Unable to connect to server");
+            }
+            throw error;
+        }
+    }
+
+    public async deleteAllByUser(userId: number): Promise<void> {
+        try {
+            const response = await this.context.post<{ userId: number }, void>(
+                "/chat-history/delete-all",
+                { userId }
+            );
+
+            if (!response.isSuccess) {
+                throw new Error(
+                    response.error || "Failed to delete user chat histories"
+                );
+            }
+        } catch (error) {
+            if (error instanceof TypeError && error.message.includes("fetch")) {
+                throw new Error("Network error: Unable to connect to server");
+            }
+            throw error;
+        }
+    }
 }
