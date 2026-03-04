@@ -61,15 +61,15 @@ export function AdminPage({ onBack }: AdminPageProps) {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [transactionsLoading, setTransactionsLoading] = useState(false);
 
-    const showSuccess = (msg: string) => {
+    const showSuccess = useCallback((msg: string) => {
         setSuccessMessage(msg);
         setTimeout(() => setSuccessMessage(null), 3000);
-    };
+    }, []);
 
-    const showError = (msg: string) => {
+    const showError = useCallback((msg: string) => {
         setError(msg);
         setTimeout(() => setError(null), 5000);
-    };
+    }, []);
 
     const loadTransactions = useCallback(async () => {
         setTransactionsLoading(true);

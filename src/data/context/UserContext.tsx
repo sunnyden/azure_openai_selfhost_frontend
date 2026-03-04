@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import { User } from "../../api/interface/data/common/User";
 import { useApiClient } from "./useApiClient";
 
@@ -24,11 +24,11 @@ export function UserContextProvider(props: { children: React.ReactNode }) {
     const [userList, setUserList] = React.useState<User[]>([]);
     const [initialized, setInitialized] = React.useState(false);
     const client = useApiClient();
-    const authenticate = async (username: string, password: string) => {
+    const authenticate = useCallback(async (username: string, password: string) => {
         await client.userClient.auth({ userName: username, password });
         await client.mcpHubService.start();
         setAuthenticatedUser(await client.userClient.getMyInfo());
-    };
+    }, [client]);
 
     useEffect(() => {
         client.userClient
@@ -42,25 +42,27 @@ export function UserContextProvider(props: { children: React.ReactNode }) {
             });
     }, []);
 
-    const logout = () => {
+    const logout = useCallback(() => {
         setAuthenticatedUser(undefined);
         client.userClient.logout();
-    };
+    }, [client]);
 
-    const fetchUserList = async () => {
+    const fetchUserList = useCallback(async () => {
         setUserList(await client.userClient.list());
-    };
+    }, [client]);
+
+    const contextValue = useMemo(() => ({
+        authenticatedUser,
+        authenticate,
+        logout,
+        userList,
+        fetchUserList,
+        initialized,
+    }), [authenticatedUser, authenticate, logout, userList, fetchUserList, initialized]);
 
     return (
         <UserContext.Provider
-            value={{
-                authenticatedUser,
-                authenticate,
-                logout,
-                userList,
-                fetchUserList,
-                initialized,
-            }}
+            value={contextValue}
         >
             {props.children}
         </UserContext.Provider>
