@@ -32,9 +32,11 @@ import {
     ArrowDownload24Regular,
     ArrowUpload24Regular,
     MoreVertical24Regular,
+    ShieldTask24Regular,
 } from "@fluentui/react-icons";
 import { Spinner } from "@fluentui/react-components";
 import { useConversationHistory } from "../../data/context/ConversationHistoryContext";
+import { useUserContext } from "../../data/context/UserContext";
 import { isElectron } from "../../utils/electronUtils";
 
 interface ConversationSidePanelProps {
@@ -42,6 +44,7 @@ interface ConversationSidePanelProps {
     onClose: () => void;
     onOpen: () => void;
     onNavigateToUsage: () => void;
+    onNavigateToAdmin: () => void;
 }
 
 export function ConversationSidePanel({
@@ -49,6 +52,7 @@ export function ConversationSidePanel({
     onClose,
     onOpen,
     onNavigateToUsage,
+    onNavigateToAdmin,
 }: ConversationSidePanelProps) {
     const {
         conversations,
@@ -65,6 +69,8 @@ export function ConversationSidePanel({
         exportAllConversations,
         loadConversationsFromFile,
     } = useConversationHistory();
+
+    const { authenticatedUser } = useUserContext();
 
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editTitle, setEditTitle] = useState("");
@@ -599,6 +605,17 @@ export function ConversationSidePanel({
                         >
                             View Usage Analytics
                         </Button>
+                        {authenticatedUser?.isAdmin && (
+                            <Button
+                                appearance="outline"
+                                icon={<ShieldTask24Regular />}
+                                onClick={onNavigateToAdmin}
+                                size="small"
+                                style={{ width: "100%", marginTop: "8px" }}
+                            >
+                                Admin Portal
+                            </Button>
+                        )}
                     </div>
                 </DrawerBody>
             </Drawer>

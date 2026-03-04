@@ -11,12 +11,14 @@ import { ChatPage } from "../../page/ChatPage/ChatPage";
 import { LoginPage } from "../../page/LoginPage/LoginPage";
 import { MCPManagementPage } from "../../page/MCPManagementPage/MCPManagementPage";
 import { UsagePage } from "../../page/UsagePage/UsagePage";
+import { AdminPage } from "../../page/AdminPage/AdminPage";
 import { TitleToolbar } from "../title/TitleToolbar";
 import { Spinner } from "@fluentui/react-components";
 import MagiPage from "../../page/MagiPage/MagiPage";
 
 function RouteComponents() {
     const navigate = useNavigate();
+    const { authenticatedUser } = useUserContext();
 
     const handleBackToChat = () => {
         navigate("/chat");
@@ -35,6 +37,12 @@ function RouteComponents() {
                 element={<MCPManagementPage onBack={handleBackToChat} />}
             />
             <Route path="/magi" element={<MagiPage />} />
+            {authenticatedUser?.isAdmin && (
+                <Route
+                    path="/admin"
+                    element={<AdminPage onBack={handleBackToChat} />}
+                />
+            )}
             <Route path="*" element={<Navigate to="/chat" replace />} />
         </Routes>
     );

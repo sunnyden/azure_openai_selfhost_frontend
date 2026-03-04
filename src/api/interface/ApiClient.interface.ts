@@ -94,4 +94,7 @@ export interface IChatHistoryClient {
     update(request: UpdateChatHistoryRequest): Promise<ChatHistoryItem>;
     appendMessages(request: AppendMessagesRequest): Promise<ChatHistoryItem>;
     delete(request: DeleteChatHistoryRequest): Promise<void>;
+    allHistories(): Promise<ChatHistorySummary[]>;
+    listByUser(userId: number): Promise<ChatHistorySummary[]>;
+    deleteAllByUser(userId: number): Promise<void>;
 }
