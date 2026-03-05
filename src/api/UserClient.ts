@@ -48,7 +48,7 @@ export class UserClient implements IUserClient {
     }
     public async modify(modifiedUser: User): Promise<void> {
         const response = await this.context.post<User, void>(
-            "/user/modify",
+            "/user/update",
             modifiedUser
         );
         if (!response.isSuccess) {
