@@ -24,7 +24,7 @@ export class ModelClient implements IModelClient {
     }
     public async listByUser(userId: number): Promise<Model[]> {
         const response = await this.context.get<Model[]>(
-            `/model/list?userId=${userId}`
+            `/model/user-assigned?userId=${userId}`
         );
         if (!response.isSuccess || !response.data) {
             throw Error("Failed to fetch models for user");
