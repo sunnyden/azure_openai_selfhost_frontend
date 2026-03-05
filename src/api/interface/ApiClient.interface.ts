@@ -39,6 +39,7 @@ export interface IUserClient {
 export interface IModelClient {
     allModels(): Promise<Model[]>;
     myModels(): Promise<Model[]>;
+    listByUser(userId: number): Promise<Model[]>;
     add(newModel: Model): Promise<Model>;
     update(newModel: Model): Promise<Model>;
     remove(modelId: string): Promise<void>;

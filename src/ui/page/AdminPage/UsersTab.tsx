@@ -21,6 +21,7 @@ import {
     Switch,
     Badge,
     Tooltip,
+    Checkbox,
 } from "@fluentui/react-components";
 import {
     Add20Regular,
@@ -28,10 +29,12 @@ import {
     Edit20Regular,
     People20Regular,
     ArrowClockwise20Regular,
+    LinkMultiple20Regular,
 } from "@fluentui/react-icons";
 import { useApiClient } from "../../../data/context/useApiClient";
 import { useUserContext } from "../../../data/context/UserContext";
 import { User } from "../../../api/interface/data/common/User";
+import { Model } from "../../../api/interface/data/common/Model";
 import { useAdminStyles } from "./adminStyles";
 import { formatDate } from "./formatDate";
 
@@ -59,6 +62,16 @@ export function UsersTab({ onSuccess, onError }: UsersTabProps) {
     const [userForm, setUserForm] = useState<User>(emptyUser);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState<User | null>(null);
+
+    // Model management state
+    const [modelDialogOpen, setModelDialogOpen] = useState(false);
+    const [managingUser, setManagingUser] = useState<User | null>(null);
+    const [allModels, setAllModels] = useState<Model[]>([]);
+    const [assignedModelIds, setAssignedModelIds] = useState<Set<string>>(
+        new Set()
+    );
+    const [modelDialogLoading, setModelDialogLoading] = useState(false);
+    const [modelActionLoading, setModelActionLoading] = useState(false);
 
     const openCreateDialog = () => {
         setEditingUser(null);
@@ -104,6 +117,55 @@ export function UsersTab({ onSuccess, onError }: UsersTabProps) {
             onError(e.message || "Failed to delete user");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const openModelDialog = async (user: User) => {
+        setManagingUser(user);
+        setModelDialogOpen(true);
+        setModelDialogLoading(true);
+        try {
+            const [all, userModels] = await Promise.all([
+                apiClient.modelClient.allModels(),
+                apiClient.modelClient.listByUser(user.id!),
+            ]);
+            setAllModels(all);
+            setAssignedModelIds(new Set(userModels.map(m => m.identifier)));
+        } catch (e: any) {
+            onError(e.message || "Failed to load models");
+            setModelDialogOpen(false);
+        } finally {
+            setModelDialogLoading(false);
+        }
+    };
+
+    const handleToggleModel = async (model: Model, checked: boolean) => {
+        if (!managingUser?.id) return;
+        setModelActionLoading(true);
+        try {
+            if (checked) {
+                await apiClient.modelClient.assign({
+                    userId: managingUser.id,
+                    modelIdentifier: model.identifier,
+                });
+                setAssignedModelIds(prev => new Set([...prev, model.identifier]));
+                onSuccess(`Model "${model.friendlyName}" assigned`);
+            } else {
+                await apiClient.modelClient.unassign({
+                    userId: managingUser.id,
+                    modelIdentifier: model.identifier,
+                });
+                setAssignedModelIds(prev => {
+                    const next = new Set(prev);
+                    next.delete(model.identifier);
+                    return next;
+                });
+                onSuccess(`Model "${model.friendlyName}" unassigned`);
+            }
+        } catch (e: any) {
+            onError(e.message || "Failed to update model assignment");
+        } finally {
+            setModelActionLoading(false);
         }
     };
 
@@ -166,6 +228,15 @@ export function UsersTab({ onSuccess, onError }: UsersTabProps) {
                                     <TableCell>{formatDate(user.lastCreditReset)}</TableCell>
                                     <TableCell>
                                         <div className={styles.actionButtons}>
+                                            <Tooltip content="Manage Models" relationship="label">
+                                                <Button
+                                                    size="small"
+                                                    appearance="subtle"
+                                                    icon={<LinkMultiple20Regular />}
+                                                    onClick={() => openModelDialog(user)}
+                                                    disabled={!user.id}
+                                                />
+                                            </Tooltip>
                                             <Tooltip content="Edit" relationship="label">
                                                 <Button
                                                     size="small"
@@ -339,6 +410,107 @@ export function UsersTab({ onSuccess, onError }: UsersTabProps) {
                                 }
                             >
                                 Delete
+                            </Button>
+                        </DialogActions>
+                    </DialogBody>
+                </DialogSurface>
+            </Dialog>
+
+            {/* Manage Models Dialog */}
+            <Dialog
+                open={modelDialogOpen}
+                onOpenChange={(_, data) =>
+                    !data.open && setModelDialogOpen(false)
+                }
+            >
+                <DialogSurface style={{ minWidth: "480px", maxHeight: "80vh" }}>
+                    <DialogBody>
+                        <DialogTitle>
+                            Manage Models — {managingUser?.userName}
+                        </DialogTitle>
+                        <DialogContent>
+                            {modelDialogLoading ? (
+                                <div
+                                    style={{
+                                        padding: "32px",
+                                        textAlign: "center",
+                                    }}
+                                >
+                                    <Spinner label="Loading models..." />
+                                </div>
+                            ) : (
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        gap: "8px",
+                                        paddingTop: "8px",
+                                        overflowY: "auto",
+                                        maxHeight: "50vh",
+                                    }}
+                                >
+                                    {allModels.length === 0 && (
+                                        <Text
+                                            style={{
+                                                color: "var(--colorNeutralForeground3)",
+                                            }}
+                                        >
+                                            No models available.
+                                        </Text>
+                                    )}
+                                    {allModels.map(model => (
+                                        <div
+                                            key={model.identifier}
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: "12px",
+                                                padding: "8px 12px",
+                                                border: "1px solid var(--colorNeutralStroke2)",
+                                                borderRadius: "6px",
+                                            }}
+                                        >
+                                            <Checkbox
+                                                checked={assignedModelIds.has(
+                                                    model.identifier
+                                                )}
+                                                disabled={modelActionLoading}
+                                                onChange={(_, d) =>
+                                                    handleToggleModel(
+                                                        model,
+                                                        d.checked as boolean
+                                                    )
+                                                }
+                                            />
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    flexDirection: "column",
+                                                }}
+                                            >
+                                                <Text weight="semibold">
+                                                    {model.friendlyName}
+                                                </Text>
+                                                <Text
+                                                    size={200}
+                                                    style={{
+                                                        color: "var(--colorNeutralForeground3)",
+                                                    }}
+                                                >
+                                                    {model.identifier}
+                                                </Text>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </DialogContent>
+                        <DialogActions>
+                            <Button
+                                appearance="secondary"
+                                onClick={() => setModelDialogOpen(false)}
+                            >
+                                Close
                             </Button>
                         </DialogActions>
                     </DialogBody>
