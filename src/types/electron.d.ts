@@ -20,6 +20,7 @@ declare global {
             isElectron: boolean;
             openExternal: (url: string) => Promise<void>;
             getVersion: () => Promise<string>;
+            captureScreenshot: () => Promise<string | null>;
             mcpStart: (
                 config: MCPConnectionRequest,
                 sessionId: string

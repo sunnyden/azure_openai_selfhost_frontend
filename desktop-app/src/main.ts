@@ -3,6 +3,7 @@ import * as path from "path";
 import { spawn, ChildProcess } from "child_process";
 import { createServer } from "net";
 import { MCPConnectionManager } from "./mcp/MCPConnectionManager";
+import { captureScreenshotRegion } from "./screenshot/regionSelector";
 
 class MainApp {
     private mainWindow: BrowserWindow | null = null;
@@ -227,6 +228,17 @@ class MainApp {
 
         ipcMain.handle("get-version", () => {
             return app.getVersion();
+        });
+
+        // Screenshot capture handler
+        ipcMain.handle("capture-screenshot", async () => {
+            if (!this.mainWindow) return null;
+            try {
+                return await captureScreenshotRegion(this.mainWindow);
+            } catch (error) {
+                console.error("Screenshot capture failed:", error);
+                return null;
+            }
         });
     }
 

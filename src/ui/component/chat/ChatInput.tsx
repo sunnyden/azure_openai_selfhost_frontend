@@ -21,6 +21,7 @@ import {
     MicOff24Regular,
     SpeakerMute24Regular,
     MusicNote224Regular,
+    ScreenCutRegular,
 } from "@fluentui/react-icons";
 import React, { useCallback, useState, useRef, useEffect } from "react";
 import { ChatRole } from "../../../api/interface/data/common/Chat";
@@ -31,6 +32,7 @@ import {
     isValidImageFile,
     formatFileSize,
 } from "../../../utils/imageUtils";
+import { isElectron } from "../../../utils/electronUtils";
 import {
     audioToBase64,
     isValidAudioFile,
@@ -797,6 +799,50 @@ export function ChatInput({
                             }}
                         />
                     </Tooltip>
+
+                    {/* Screenshot capture button (Electron only) */}
+                    {isElectron() && (
+                        <Tooltip content="Take screenshot" relationship="label">
+                            <Button
+                                icon={<ScreenCutRegular />}
+                                appearance="subtle"
+                                size="small"
+                                onClick={async () => {
+                                    try {
+                                        const base64 =
+                                            await window.electronAPI?.captureScreenshot();
+                                        if (base64) {
+                                            // Convert base64 data URL to a File for the preview
+                                            const res = await fetch(base64);
+                                            const blob = await res.blob();
+                                            const file = new File(
+                                                [blob],
+                                                `screenshot-${Date.now()}.png`,
+                                                { type: "image/png" }
+                                            );
+                                            const preview =
+                                                URL.createObjectURL(file);
+                                            setSelectedImages(prev => [
+                                                ...prev,
+                                                { file, preview, base64 },
+                                            ]);
+                                        }
+                                    } catch (error) {
+                                        console.error(
+                                            "Screenshot capture failed:",
+                                            error
+                                        );
+                                    }
+                                }}
+                                disabled={isDisabled}
+                                style={{
+                                    backgroundColor:
+                                        "var(--colorNeutralBackground1)",
+                                    border: "1px solid var(--colorNeutralStroke2)",
+                                }}
+                            />
+                        </Tooltip>
+                    )}
                 </div>
             </div>
 
