@@ -46,10 +46,10 @@ export class ModelClient implements IModelClient {
             "/model/update",
             newModel
         );
-        if (!response.isSuccess || !response.data) {
+        if (!response.isSuccess) {
             throw Error("Failed to update model");
         }
-        return response.data;
+        return response.data ?? newModel;
     }
     public async remove(modelId: string): Promise<void> {
         const response = await this.context.post<ModelDeleteRequest, void>(
