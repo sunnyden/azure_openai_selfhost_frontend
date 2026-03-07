@@ -46,6 +46,7 @@ const emptyModel: Model = {
     costPromptToken: 0,
     costResponseToken: 0,
     isVision: false,
+    isAudio: false,
     maxTokens: 128000,
     supportTool: true,
     apiVersionOverride: null,
@@ -246,6 +247,11 @@ export function ModelsTab({ onSuccess, onError }: ModelsTabProps) {
                                                 {model.isVision && (
                                                     <Badge size="small" color="success">
                                                         Vision
+                                                    </Badge>
+                                                )}
+                                                {model.isAudio && (
+                                                    <Badge size="small" color="success">
+                                                        Audio
                                                     </Badge>
                                                 )}
                                                 {model.supportTool && (
@@ -637,6 +643,16 @@ export function ModelsTab({ onSuccess, onError }: ModelsTabProps) {
                                             setModelForm(f => ({
                                                 ...f,
                                                 isVision: d.checked,
+                                            }))
+                                        }
+                                    />
+                                    <Switch
+                                        label="Audio Support"
+                                        checked={modelForm.isAudio}
+                                        onChange={(_, d) =>
+                                            setModelForm(f => ({
+                                                ...f,
+                                                isAudio: d.checked,
                                             }))
                                         }
                                     />

@@ -182,10 +182,38 @@ export function ConversationProvider(props: { children: React.ReactNode }) {
             newConversationHistory = [...currentConversation, userMessage];
             updateCurrentConversation(newConversationHistory, false); // Don't sync to cloud yet, wait for completion
         }
+        // Filter out content types not supported by the current model,
+        // and skip messages that have no remaining content after filtering.
+        const filteredHistory: ChatMessage[] = newConversationHistory
+            .map(msg => {
+                if (!Array.isArray(msg.content)) {
+                    return msg;
+                }
+                const filteredContent = msg.content.filter(item => {
+                    if (
+                        item.type === ChatMessageContentType.Image &&
+                        !currentModel.isVision
+                    ) {
+                        return false;
+                    }
+                    if (
+                        item.type === ChatMessageContentType.Audio &&
+                        !currentModel.isAudio
+                    ) {
+                        return false;
+                    }
+                    return true;
+                });
+                return { ...msg, content: filteredContent };
+            })
+            .filter(
+                msg =>
+                    !Array.isArray(msg.content) || msg.content.length > 0
+            );
         const response = chatClient.requestCompletionStream({
             model: currentModel.identifier,
             request: {
-                messages: newConversationHistory,
+                messages: filteredHistory,
                 // Pass the session ID as correlation ID for backend to correlate MCP connection
                 // Fetch the current session ID dynamically from the hub at request time
                 MCPCorrelationId: isHubRunning

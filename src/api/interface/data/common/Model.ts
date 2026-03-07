@@ -6,6 +6,7 @@ export type Model = {
     costPromptToken: number;
     costResponseToken: number;
     isVision: boolean;
+    isAudio: boolean;
     maxTokens: number;
     supportTool: boolean;
     apiVersionOverride?: string | null;

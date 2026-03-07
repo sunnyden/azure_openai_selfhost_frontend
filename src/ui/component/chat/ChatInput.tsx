@@ -26,6 +26,7 @@ import {
 import React, { useCallback, useState, useRef, useEffect } from "react";
 import { ChatRole } from "../../../api/interface/data/common/Chat";
 import { useConversationContext } from "../../../data/context/ConversationContext";
+import { useModelContext } from "../../../data/context/ModelContext";
 import { MCPStatusIndicator } from "./MCPStatusIndicator";
 import {
     resizeImageToBase64,
@@ -129,6 +130,7 @@ export function ChatInput({
         lastStopReason,
         isSyncing,
     } = useConversationContext();
+    const { currentModel } = useModelContext();
     const [isLoading, setLoading] = useState(false);
     const isDisabled = isLoading || isSyncing;
 
@@ -735,7 +737,8 @@ export function ChatInput({
                         onChange={handleImageSelect}
                     />
 
-                    {/* Recording button */}
+                    {/* Recording button - only shown when model supports audio */}
+                    {currentModel?.isAudio && (
                     <Tooltip
                         content={
                             isRecording
@@ -767,8 +770,10 @@ export function ChatInput({
                             }}
                         />
                     </Tooltip>
+                    )}
 
-                    {/* Audio file upload button */}
+                    {/* Audio file upload button - only shown when model supports audio */}
+                    {currentModel?.isAudio && (
                     <Tooltip content="Add audio files" relationship="label">
                         <Button
                             icon={<MusicNote224Regular />}
@@ -783,8 +788,10 @@ export function ChatInput({
                             }}
                         />
                     </Tooltip>
+                    )}
 
-                    {/* Image upload button */}
+                    {/* Image upload button - only shown when model supports vision */}
+                    {currentModel?.isVision && (
                     <Tooltip content="Add images" relationship="label">
                         <Button
                             icon={<ImageAdd24Regular />}
@@ -799,9 +806,10 @@ export function ChatInput({
                             }}
                         />
                     </Tooltip>
+                    )}
 
-                    {/* Screenshot capture button (Electron only) */}
-                    {isElectron() && (
+                    {/* Screenshot capture button (Electron only, when model supports vision) */}
+                    {isElectron() && currentModel?.isVision && (
                         <Tooltip content="Take screenshot" relationship="label">
                             <Button
                                 icon={<ScreenCutRegular />}
