@@ -147,6 +147,58 @@ export function ChatInput({
         };
     }, [isRecording, recordingStream, recordingTimer]);
 
+    // Paste handler for clipboard images
+    const handlePaste = useCallback(
+        async (event: React.ClipboardEvent) => {
+            if (!currentModel?.isVision) return;
+
+            const items = event.clipboardData?.items;
+            if (!items) return;
+
+            const imageFiles: File[] = [];
+            for (let i = 0; i < items.length; i++) {
+                const item = items[i];
+                if (item.kind === "file" && item.type.startsWith("image/")) {
+                    const file = item.getAsFile();
+                    if (file) {
+                        imageFiles.push(file);
+                    }
+                }
+            }
+
+            if (imageFiles.length === 0) return;
+
+            event.preventDefault();
+            setIsProcessingImages(true);
+            const newImages: {
+                file: File;
+                preview: string;
+                base64?: string;
+            }[] = [];
+
+            for (const file of imageFiles) {
+                if (!isValidImageFile(file)) {
+                    alert(`Pasted file is not a supported image format.`);
+                    continue;
+                }
+                const preview = URL.createObjectURL(file);
+                try {
+                    const base64 = await resizeImageToBase64(file);
+                    newImages.push({ file, preview, base64 });
+                } catch (error) {
+                    URL.revokeObjectURL(preview);
+                    console.error("Failed to process pasted image:", error);
+                    alert("Failed to process pasted image. Please try again.");
+                }
+            }
+
+            setIsProcessingImages(false);
+            if (newImages.length === 0) return;
+            setSelectedImages(prev => [...prev, ...newImages]);
+        },
+        [currentModel?.isVision]
+    );
+
     // Image handling functions
     const handleImageSelect = useCallback(
         async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -702,6 +754,7 @@ export function ChatInput({
                     placeholder="Type your message here..."
                     value={prompt}
                     onChange={(e, data) => setPrompt(data.value)}
+                    onPaste={handlePaste}
                     rows={4}
                     resize="vertical"
                     style={{ width: "100%" }}
